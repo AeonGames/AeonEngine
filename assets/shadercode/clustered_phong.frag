@@ -455,6 +455,28 @@ vec3 fresnel_schlick ( float cosTheta, vec3 F0 )
       return F0 + ( 1.0 - F0 ) * pow ( clamp ( 1.0 - cosTheta, 0.0, 1.0 ), 5.0 );
 }
 
+// Fresnel-Schlick with a roughness term (Lagarde): rough surfaces keep a lower
+// grazing reflectance, which stops the ambient specular from over-brightening
+// the silhouettes of rough materials. Used only by the ambient (IBL) term;
+// direct lights use the sharp fresnel_schlick above.
+vec3 fresnel_schlick_roughness ( float cosTheta, vec3 F0, float roughness )
+{
+      vec3 Fr = max ( vec3 ( 1.0 - roughness ), F0 );
+      return F0 + ( Fr - F0 ) * pow ( clamp ( 1.0 - cosTheta, 0.0, 1.0 ), 5.0 );
+}
+
+// Analytic fit of the split-sum "environment BRDF" (Karis / Lazarov): the
+// (scale, bias) applied to F0 for the specular ambient term, avoiding a
+// precomputed BRDF LUT. A future real-IBL pass may swap this for a LUT lookup.
+vec2 env_brdf_approx ( float NoV, float roughness )
+{
+      const vec4 c0 = vec4 ( -1.0, -0.0275, -0.572, 0.022 );
+      const vec4 c1 = vec4 ( 1.0, 0.0425, 1.04, -0.04 );
+      vec4 r = roughness * c0 + c1;
+      float a004 = min ( r.x * r.x, exp2 ( -9.28 * NoV ) ) * r.x + r.y;
+      return vec2 ( -1.04, 1.04 ) * a004 + r.zw;
+}
+
 // Cook-Torrance contribution of a single light, accumulated into the running
 // outgoing-radiance sum Lo. aShadow scales the radiance (1.0 = fully lit). The
 // light direction and attenuation are computed exactly as before; only the BRDF
@@ -647,12 +669,23 @@ void main()
             }
       }
 
-      // Crude ambient fill (the engine has no global illumination): the scene
-      // ambient colour lights the base colour uniformly. ambient.rgb * ambient.a
-      // is the same flat term the Phong path used; the default reproduces the
-      // former constant vec3(0.25). Supplied per frame via the Globals UBO.
-      // Both backends render this linear HDR radiance into an off-screen target
-      // that the fullscreen tonemap pass resolves (exposure + ACES + sRGB).
-      vec3 color = ambient.rgb * ambient.a * albedo * ao + Lo + emissive;
+      // Ambient light via the split-sum IBL form. The engine has no environment
+      // map yet, so the scene ambient colour (ambient.rgb * ambient.a) stands in
+      // as a uniform environment radiance for both the diffuse irradiance and
+      // the specular reflection; a future cubemap pass replaces these two
+      // constants with irradiance(N) and prefiltered(R, roughness) lookups.
+      // Splitting it this way gives metals a Fresnel-weighted ambient reflection
+      // (F0-tinted) instead of a flat albedo fill, and keeps energy roughly
+      // conserved. The result is linear HDR radiance that the fullscreen tonemap
+      // pass resolves (exposure + ACES + sRGB) on both backends.
+      vec3  env              = ambient.rgb * ambient.a;
+      float NdotV_ambient    = max ( dot ( N, V ), 0.0 );
+      vec3  F_ambient        = fresnel_schlick_roughness ( NdotV_ambient, F0, roughness );
+      vec3  kd_ambient       = ( vec3 ( 1.0 ) - F_ambient ) * ( 1.0 - metallic );
+      vec2  ambient_brdf     = env_brdf_approx ( NdotV_ambient, roughness );
+      vec3  diffuse_ambient  = env * albedo;
+      vec3  specular_ambient = env * ( F0 * ambient_brdf.x + ambient_brdf.y );
+      vec3  ambient_term     = ( kd_ambient * diffuse_ambient + specular_ambient ) * ao;
+      vec3 color = ambient_term + Lo + emissive;
       FragColor = vec4 ( color, tex.a * BaseColorFactor.a );
 }
