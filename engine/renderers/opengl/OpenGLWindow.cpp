@@ -91,6 +91,17 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_CULL_FACE );
         OPENGL_CHECK_ERROR_THROW;
+        // Preload the renderer-owned pipelines so their synchronous GLSL compile
+        // happens here, during window init, rather than stalling the first frame
+        // that first needs each one (which showed up as a one-off startup hitch).
+        mClusterMarkPipeline.LoadFromFile ( "shaders/cluster_mark" );
+        mClusterMarkLoaded = true;
+        mShadowDepthPipeline.LoadFromFile ( "shaders/shadow_depth" );
+        mShadowDepthLoaded = true;
+        mPointShadowDepthPipeline.LoadFromFile ( "shaders/point_shadow_depth" );
+        mPointShadowDepthLoaded = true;
+        mTonemapPipeline.LoadFromFile ( "shaders/tonemap" );
+        mTonemapLoaded = true;
         /// @todo Initial clear color should be configurable.
         glClearColor ( 0.5f, 0.5f, 0.5f, 1.0f );
         OPENGL_CHECK_ERROR_THROW;
@@ -1154,7 +1165,12 @@ namespace AeonGames
 
     void OpenGLWindow::ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
-        if ( aWidth && aHeight )
+        // Skip no-op resizes. ShowWindow posts a redundant WM_SIZE at the same
+        // client size the constructor already applied; reallocating the offscreen
+        // HDR target (glTexImage2D with no data) would blank it for one frame and
+        // flash a partial black frame. The Vulkan path already skips no-op resizes
+        // via its surface-caps guard.
+        if ( aWidth && aHeight && ( aWidth != mViewportWidth || aHeight != mViewportHeight ) )
         {
 #if defined(_WIN32)
             mOpenGLRenderer.MakeCurrent ( mDeviceContext );
