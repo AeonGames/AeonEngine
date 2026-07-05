@@ -211,6 +211,11 @@ namespace AeonGames
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
             FinalizePointShadowMap();
+            if ( glIsTexture ( mEquirectTexture ) )
+            {
+                glDeleteTextures ( 1, &mEquirectTexture );
+                mEquirectTexture = 0;
+            }
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -299,6 +304,11 @@ namespace AeonGames
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
             FinalizePointShadowMap();
+            if ( glIsTexture ( mEquirectTexture ) )
+            {
+                glDeleteTextures ( 1, &mEquirectTexture );
+                mEquirectTexture = 0;
+            }
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
             mWindowId = nullptr;
@@ -712,6 +722,52 @@ namespace AeonGames
         mGlobals.WriteMemory ( 0, sizeof ( GpuGlobals ), &aGlobals );
     }
 
+    void OpenGLWindow::SetEnvironmentMap ( const Texture* aEnvironmentMap )
+    {
+        // Upload only when the source texture changes (it is handed in every
+        // frame). Same pointer -> nothing to do; a full re-upload of a 4K HDR is
+        // far too expensive to repeat per frame.
+        if ( aEnvironmentMap == mEnvironmentTexture )
+        {
+            return;
+        }
+        mEnvironmentTexture = aEnvironmentMap;
+#if defined(_WIN32)
+        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+#elif defined(__unix__)
+        mOpenGLRenderer.MakeCurrent ( mWindowId );
+#endif
+        if ( aEnvironmentMap == nullptr )
+        {
+            return;
+        }
+        // Compile the skybox pipeline the first time a scene provides an env.
+        if ( !mSkyboxLoaded )
+        {
+            mSkyboxPipeline.LoadFromFile ( "shaders/skybox" );
+            mSkyboxLoaded = true;
+        }
+        if ( mEquirectTexture == 0 )
+        {
+            glGenTextures ( 1, &mEquirectTexture );
+        }
+        glBindTexture ( GL_TEXTURE_2D, mEquirectTexture );
+        // The decoder hands back linear float pixels; store as *16F. Longitude
+        // wraps (REPEAT), latitude clamps at the poles (CLAMP_TO_EDGE).
+        const bool has_alpha = aEnvironmentMap->GetFormat() == Texture::Format::RGBA;
+        glTexImage2D ( GL_TEXTURE_2D, 0, has_alpha ? GL_RGBA16F : GL_RGB16F,
+                       static_cast<GLsizei> ( aEnvironmentMap->GetWidth() ),
+                       static_cast<GLsizei> ( aEnvironmentMap->GetHeight() ),
+                       0, has_alpha ? GL_RGBA : GL_RGB, GL_FLOAT,
+                       aEnvironmentMap->GetPixels().data() );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+        glBindTexture ( GL_TEXTURE_2D, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
     void OpenGLWindow::SetSpotShadowParams ( const GpuSpotShadowParams& aSpotShadowParams )
     {
         mSpotShadowParams.WriteMemory ( 0, sizeof ( GpuSpotShadowParams ), &aSpotShadowParams );
@@ -1008,6 +1064,25 @@ namespace AeonGames
 
     void OpenGLWindow::EndRender()
     {
+        // Draw the skybox into the still-bound HDR target before resolving it:
+        // depth-tested at (just inside) the far plane so geometry occludes it,
+        // shaded in linear space so the tonemap pass exposes it with everything
+        // else. Only when the scene provided an environment map.
+        if ( mSkyboxLoaded && mEquirectTexture != 0 )
+        {
+            if ( mFullscreenVAO == 0 )
+            {
+                glGenVertexArrays ( 1, &mFullscreenVAO );
+                OPENGL_CHECK_ERROR_NO_THROW;
+            }
+            glDisable ( GL_BLEND );
+            mOpenGLRenderer.BindPipeline ( mSkyboxPipeline );
+            mOpenGLRenderer.SetMatrices ( mMatrices );
+            glBindTextureUnit ( 0, mEquirectTexture );
+            glBindVertexArray ( mFullscreenVAO );
+            glDrawArrays ( GL_TRIANGLES, 0, 3 );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
         // Resolve the off-screen linear HDR target to the default framebuffer: a
         // buffer-less fullscreen triangle runs the tonemap pipeline (exposure +
         // ACES tone map + sRGB encode), sampling the HDR colour texture.

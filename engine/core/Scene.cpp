@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/LogLevel.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Pipeline.hpp"
+#include "aeongames/Texture.hpp"
 #include "aeongames/Mesh.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/AABB.hpp"
@@ -158,6 +159,20 @@ namespace AeonGames
             return nullptr;
         }
         return mLightingPipeline.Get<Pipeline>();
+    }
+
+    void Scene::SetEnvironmentMap ( const ResourceId& aResourceId )
+    {
+        mEnvironmentMap = aResourceId;
+    }
+
+    const Texture* Scene::GetEnvironmentMap() const
+    {
+        if ( mEnvironmentMap.GetPath() == 0 )
+        {
+            return nullptr;
+        }
+        return mEnvironmentMap.Get<Texture>();
     }
 
     bool Scene::GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection,
@@ -1085,6 +1100,18 @@ namespace AeonGames
                 scene_buffer.mutable_lighting_pipeline()->set_id ( mLightingPipeline.GetPath() );
             }
         }
+        if ( mEnvironmentMap.GetPath() != 0 )
+        {
+            std::string path = mEnvironmentMap.GetPathString();
+            if ( !path.empty() )
+            {
+                *scene_buffer.mutable_environment_map()->mutable_path() = path;
+            }
+            else
+            {
+                scene_buffer.mutable_environment_map()->set_id ( mEnvironmentMap.GetPath() );
+            }
+        }
         scene_buffer.mutable_ambient()->set_x ( mAmbient.GetX() );
         scene_buffer.mutable_ambient()->set_y ( mAmbient.GetY() );
         scene_buffer.mutable_ambient()->set_z ( mAmbient.GetZ() );
@@ -1176,6 +1203,14 @@ namespace AeonGames
         else
         {
             mLightingPipeline = ResourceId{};
+        }
+        if ( scene_buffer.has_environment_map() )
+        {
+            mEnvironmentMap = ResourceId{ "Texture"_crc32, GetReferenceMsgId ( scene_buffer.environment_map() ) };
+        }
+        else
+        {
+            mEnvironmentMap = ResourceId{};
         }
         if ( scene_buffer.has_ambient() )
         {

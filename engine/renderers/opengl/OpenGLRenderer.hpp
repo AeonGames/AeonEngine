@@ -114,6 +114,7 @@ namespace AeonGames
         void SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix ) final;
         void SetLights ( void* aWindowId, std::span<const GpuLight> aLights ) final;
         void SetGlobals ( void* aWindowId, const GpuGlobals& aGlobals ) final;
+        void SetEnvironmentMap ( void* aWindowId, const Texture* aEnvironmentMap ) final;
         void SetClearColor ( void* aWindowId, float R, float G, float B, float A ) final;
         void ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight ) final;
         void BeginRender ( void* aWindowId, const Pipeline* aComputePipeline = nullptr ) final;

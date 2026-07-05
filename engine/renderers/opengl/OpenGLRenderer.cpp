@@ -935,6 +935,16 @@ void main()
         it->second.SetGlobals ( aGlobals );
     }
 
+    void OpenGLRenderer::SetEnvironmentMap ( void* aWindowId, const Texture* aEnvironmentMap )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetEnvironmentMap ( aEnvironmentMap );
+    }
+
     void OpenGLRenderer::SetClearColor ( void* aWindowId, float R, float G, float B, float A )
     {
         auto it = mWindowStore.find ( aWindowId );

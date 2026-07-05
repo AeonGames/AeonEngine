@@ -9,6 +9,9 @@ camera {
 lighting_pipeline {
   path: "shaders/lighting"
 }
+environment_map {
+  path: "sponza/textures/kloppenheim_05_4k.hdr"
+}
 node {
   name: "Lamps 1st Floor 21"
   local {

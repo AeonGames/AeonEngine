@@ -606,6 +606,7 @@ namespace AeonGames
                 }
                 mRenderer->SetLights ( mWindowId, aScene.GetFrameLights() );
                 mRenderer->SetGlobals ( mWindowId, aScene.GetGlobals() );
+                mRenderer->SetEnvironmentMap ( mWindowId, aScene.GetEnvironmentMap() );
                 // Compute skinning pre-pass: dispatch skinning before the render
                 // pass begins so the skinned vertex buffers are ready for both
                 // the depth and shading traversals.

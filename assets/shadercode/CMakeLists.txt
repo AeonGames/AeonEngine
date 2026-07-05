@@ -26,6 +26,8 @@ set(PIPELINES
     # Fullscreen HDR resolve: exposure + ACES tone map + sRGB encode from the
     # off-screen linear HDR target to the swapchain.
     "tonemap|vert=tonemap.vert|frag=tonemap.frag|topology=TRIANGLE"
+    # Equirectangular HDR environment drawn behind the scene as a skybox.
+    "skybox|vert=skybox.vert|frag=skybox.frag|topology=TRIANGLE"
     # Engine debug + example pipelines (sources recovered from the previously
     # hand-committed game/shaders/*.txt, now generated like every other pipeline).
     "debug_grid|vert=debug_grid.vert|frag=debug_grid.frag|topology=TRIANGLE"

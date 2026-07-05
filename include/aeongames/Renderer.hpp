@@ -170,6 +170,19 @@ namespace AeonGames
             ( void ) aWindowId;
             ( void ) aGlobals;
         }
+        /** Sets the scene environment map (an equirectangular HDR) for a window,
+         *  drawn as a skybox and used for image-based lighting. Virtual with an
+         *  empty default so a backend without skybox support is a no-op. The
+         *  backend uploads the texture only when it changes, so this is cheap to
+         *  call every frame; pass nullptr to clear it.
+         *  @param aWindowId Platform depended window handle.
+         *  @param aEnvironmentMap Equirectangular HDR texture, or nullptr.
+         */
+        virtual void SetEnvironmentMap ( void* aWindowId, const Texture* aEnvironmentMap )
+        {
+            ( void ) aWindowId;
+            ( void ) aEnvironmentMap;
+        }
         /** Sets the color to be used to clear the window background.
          * @param aWindowId Platform depended window handle.
          * @param R Red component of the clear color.

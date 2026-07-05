@@ -41,6 +41,7 @@ namespace AeonGames
     class Renderer;
     class InputSystem;
     class Pipeline;
+    class Texture;
     class Frustum;
     /*! \brief Scene class.
       Scene is the container for all elements in a game level,
@@ -235,6 +236,13 @@ namespace AeonGames
         /** @brief Get the per-frame compute pipeline, loading it from the cache
          *  if set, or nullptr when none is configured. */
         DLL const Pipeline* GetLightingPipeline() const;
+        /** @brief Set the scene environment map (an equirectangular HDR) by
+         *  resource id. Drawn as a skybox and, later, the source for image-based
+         *  lighting. Pass an empty id to disable. */
+        DLL void SetEnvironmentMap ( const ResourceId& aResourceId );
+        /** @brief Get the environment map texture, loading it from the cache if
+         *  set, or nullptr when none is configured. */
+        DLL const Texture* GetEnvironmentMap() const;
         /** @brief Compute the directional shadow caster's world-to-light-clip
          *  matrix for the current frame. Selects the first directional light
          *  submitted this frame and fits an orthographic light view-projection
@@ -423,6 +431,7 @@ namespace AeonGames
         mutable std::vector<Matrix4x4> mInstanceTransforms{};
         FrameLightContainer mFrameLights{};
         ResourceId mLightingPipeline{};
+        ResourceId mEnvironmentMap{};
         /// @brief Hash of all shadow-casting geometry's world poses, recomputed
         /// each frame during Update (folded into its existing traversal). Read
         /// by GetShadowGeometrySignature so the renderer can skip re-rendering

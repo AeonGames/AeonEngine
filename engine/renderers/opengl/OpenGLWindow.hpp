@@ -151,6 +151,9 @@ namespace AeonGames
         void SetLights ( std::span<const GpuLight> aLights );
         /// @brief Upload the per-frame scene-wide globals (ambient) to this window's Globals UBO.
         void SetGlobals ( const GpuGlobals& aGlobals );
+        /// @brief Set the equirectangular HDR environment map drawn as a skybox.
+        /// Uploads to a GL texture only when the source Texture changes.
+        void SetEnvironmentMap ( const Texture* aEnvironmentMap );
         /// @brief Set the clear color for this window.
         void SetClearColor ( float R, float G, float B, float A );
         /// @brief Get the current projection matrix.
@@ -265,6 +268,14 @@ namespace AeonGames
         Pipeline mTonemapPipeline{};
         bool mTonemapLoaded{false};
         GLuint mFullscreenVAO{0};
+        // Equirectangular HDR environment: the scene's environment Texture
+        // (tracked so it is uploaded only when it changes), the GL float texture
+        // it is copied into, and the renderer-owned skybox pipeline drawn behind
+        // the geometry.
+        const Texture* mEnvironmentTexture{nullptr};
+        GLuint mEquirectTexture{0};
+        Pipeline mSkyboxPipeline{};
+        bool mSkyboxLoaded{false};
         // Off-screen directional shadow map: a sampleable depth texture and its
         // framebuffer, plus the ShadowParams UBO (light view-projection +
         // filtering params) and the renderer-owned depth-only pipeline that

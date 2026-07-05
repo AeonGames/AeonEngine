@@ -140,6 +140,7 @@ add_custom_target(install-sponza
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/wood_tile_01_Metalness.png"
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/wood_tile_01_Normal.png"
     "${CMAKE_SOURCE_DIR}/assets/sponza/textures/wood_tile_01_Roughness.png"
+    "${CMAKE_SOURCE_DIR}/assets/sponza/textures/kloppenheim_05_4k.hdr"
     "${CMAKE_SOURCE_DIR}/game/sponza/textures/"
     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Installing Sponza assets"
