@@ -52,7 +52,8 @@ namespace AeonGames
             Unknown = 0,                ///< Unspecified or invalid type.
             UNSIGNED_BYTE,              ///< 8-bit unsigned integer per channel.
             UNSIGNED_SHORT,             ///< 16-bit unsigned integer per channel.
-            UNSIGNED_INT_8_8_8_8_REV    ///< Packed 32-bit unsigned integer with reversed byte order.
+            UNSIGNED_INT_8_8_8_8_REV,   ///< Packed 32-bit unsigned integer with reversed byte order.
+            FLOAT                       ///< 32-bit IEEE-754 float per channel (HDR).
         };
         /** @brief Destructor. */
         DLL ~Texture();
@@ -132,8 +133,14 @@ namespace AeonGames
      */
     static constexpr size_t GetPixelSize ( Texture::Format aFormat, Texture::Type aType )
     {
-        return ( aFormat == Texture::Format::Unknown || aType == Texture::Type::Unknown ) ? 0 :
-               ( ( aFormat == Texture::Format::RGB ) ? 3 : 4 ) * ( ( aType == Texture::Type::UNSIGNED_BYTE ) ? 1 : 2 );
+        if ( aFormat == Texture::Format::Unknown || aType == Texture::Type::Unknown )
+        {
+            return 0;
+        }
+        const size_t channels = ( aFormat == Texture::Format::RGB ) ? 3 : 4;
+        const size_t component = ( aType == Texture::Type::UNSIGNED_BYTE ) ? 1 :
+                                 ( aType == Texture::Type::FLOAT ) ? 4 : 2;
+        return channels * component;
     }
 }
 #endif

@@ -15,6 +15,7 @@
 include_directories(${GTEST_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/include
                     ${CMAKE_SOURCE_DIR}/engine/include
+                    ${CMAKE_SOURCE_DIR}/engine/images/hdr
                     ${CMAKE_CURRENT_BINARY_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
                     ${ZLIB_INCLUDE_DIR}
@@ -50,7 +51,9 @@ set(TEST_SRCS
     UniqueAnyPtrTests.cpp
     CollisionTests.cpp
     ComputeTests.cpp
-    OctreeTests.cpp)
+    OctreeTests.cpp
+    HdrDecoderTests.cpp
+    ${CMAKE_SOURCE_DIR}/engine/images/hdr/RadianceImage.cpp)
 
 source_group("Tested" FILES ${TESTED_SRCS})
 source_group("Tests" FILES ${TEST_SRCS})
