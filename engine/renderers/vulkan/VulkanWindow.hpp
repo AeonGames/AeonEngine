@@ -159,6 +159,9 @@ namespace AeonGames
         void SetLights ( std::span<const GpuLight> aLights );
         /// @brief Upload per-frame scene-wide globals (ambient) to the Globals UBO.
         void SetGlobals ( const GpuGlobals& aGlobals );
+        /// @brief Set the equirectangular HDR environment map drawn as a skybox;
+        /// uploads to a device image only when the source Texture changes.
+        void SetEnvironmentMap ( const Texture* aEnvironmentMap );
         /// @brief Get the current projection matrix.
         const Matrix4x4& GetProjectionMatrix() const;
         /// @brief Get the current view matrix.
@@ -216,6 +219,7 @@ namespace AeonGames
         void FinalizeDepthStencil();
         void FinalizeRenderPass();
         void FinalizeFrameBuffers();
+        void FinalizeEnvironmentMap();
         void FinalizeCommandBuffer();
         void FinalizeMatrices();
         void FinalizeLights();
@@ -441,6 +445,19 @@ namespace AeonGames
         VkDescriptorSet mTonemapDescriptorSet{VK_NULL_HANDLE};
         Pipeline mTonemapPipeline{};
         bool mTonemapLoaded{false};
+        // Equirectangular HDR environment (skybox). The source Texture is tracked
+        // so the device image is uploaded only when it changes; the image is
+        // RGBA32F (RGB expanded, alpha unused) sampled by the skybox pass through
+        // its own combined-image-sampler descriptor set.
+        const Texture* mEnvironmentTexture{nullptr};
+        VkImage mVkEnvImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkEnvImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkEnvImageView{VK_NULL_HANDLE};
+        VkSampler mVkEnvSampler{VK_NULL_HANDLE};
+        VkDescriptorPool mEnvDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mEnvDescriptorSet{VK_NULL_HANDLE};
+        Pipeline mSkyboxPipeline{};
+        bool mSkyboxLoaded{false};
         ::std::vector<VkSemaphore> mVkSubmitSemaphores{};
     };
 }

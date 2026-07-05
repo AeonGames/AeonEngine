@@ -121,6 +121,13 @@ namespace AeonGames
         std::swap ( mVkTonemapRenderPass, aVulkanWindow.mVkTonemapRenderPass );
         std::swap ( mTonemapDescriptorPool, aVulkanWindow.mTonemapDescriptorPool );
         std::swap ( mTonemapDescriptorSet, aVulkanWindow.mTonemapDescriptorSet );
+        std::swap ( mEnvironmentTexture, aVulkanWindow.mEnvironmentTexture );
+        std::swap ( mVkEnvImage, aVulkanWindow.mVkEnvImage );
+        std::swap ( mVkEnvImageMemory, aVulkanWindow.mVkEnvImageMemory );
+        std::swap ( mVkEnvImageView, aVulkanWindow.mVkEnvImageView );
+        std::swap ( mVkEnvSampler, aVulkanWindow.mVkEnvSampler );
+        std::swap ( mEnvDescriptorPool, aVulkanWindow.mEnvDescriptorPool );
+        std::swap ( mEnvDescriptorSet, aVulkanWindow.mEnvDescriptorSet );
         std::swap ( mMatricesDescriptorPool, aVulkanWindow.mMatricesDescriptorPool );
         std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
         std::swap ( mLightsDescriptorPool, aVulkanWindow.mLightsDescriptorPool );
@@ -993,6 +1000,205 @@ namespace AeonGames
     void VulkanWindow::SetGlobals ( const GpuGlobals& aGlobals )
     {
         mGlobals.WriteMemory ( 0, sizeof ( GpuGlobals ), &aGlobals );
+    }
+
+    void VulkanWindow::FinalizeEnvironmentMap()
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        if ( mEnvDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( device, mEnvDescriptorPool, nullptr );
+            mEnvDescriptorPool = VK_NULL_HANDLE;
+            mEnvDescriptorSet = VK_NULL_HANDLE;
+        }
+        if ( mVkEnvSampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( device, mVkEnvSampler, nullptr );
+            mVkEnvSampler = VK_NULL_HANDLE;
+        }
+        if ( mVkEnvImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkEnvImageView, nullptr );
+            mVkEnvImageView = VK_NULL_HANDLE;
+        }
+        if ( mVkEnvImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkEnvImage, nullptr );
+            mVkEnvImage = VK_NULL_HANDLE;
+        }
+        if ( mVkEnvImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkEnvImageMemory, nullptr );
+            mVkEnvImageMemory = VK_NULL_HANDLE;
+        }
+    }
+
+    void VulkanWindow::SetEnvironmentMap ( const Texture* aEnvironmentMap )
+    {
+        // Upload only when the source changes (it is handed in every frame). A 4K
+        // HDR re-upload is far too expensive to repeat per frame.
+        if ( aEnvironmentMap == mEnvironmentTexture )
+        {
+            return;
+        }
+        mEnvironmentTexture = aEnvironmentMap;
+        if ( aEnvironmentMap == nullptr )
+        {
+            return;
+        }
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        // Compile the skybox pipeline the first time a scene provides an env.
+        if ( !mSkyboxLoaded )
+        {
+            mSkyboxPipeline.LoadFromFile ( "shaders/skybox" );
+            mSkyboxLoaded = true;
+        }
+        const uint32_t width = aEnvironmentMap->GetWidth();
+        const uint32_t height = aEnvironmentMap->GetHeight();
+        if ( width == 0 || height == 0 )
+        {
+            return;
+        }
+        // Release any previous environment (scene swap) before rebuilding.
+        vkDeviceWaitIdle ( device );
+        FinalizeEnvironmentMap();
+
+        // Device-local RGBA32F equirect image. RGBA (not RGB) because 3-channel
+        // 32F images are not a guaranteed sampled format.
+        VkImageCreateInfo image_create_info{};
+        image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        image_create_info.imageType = VK_IMAGE_TYPE_2D;
+        image_create_info.extent = { width, height, 1 };
+        image_create_info.mipLevels = 1;
+        image_create_info.arrayLayers = 1;
+        image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vkCreateImage ( device, &image_create_info, nullptr, &mVkEnvImage );
+        VkMemoryRequirements memory_requirements;
+        vkGetImageMemoryRequirements ( device, mVkEnvImage, &memory_requirements );
+        VkMemoryAllocateInfo memory_allocate_info{};
+        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memory_allocate_info.allocationSize = memory_requirements.size;
+        memory_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+        vkAllocateMemory ( device, &memory_allocate_info, nullptr, &mVkEnvImageMemory );
+        vkBindImageMemory ( device, mVkEnvImage, mVkEnvImageMemory, 0 );
+
+        VkImageViewCreateInfo view_create_info{};
+        view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        view_create_info.image = mVkEnvImage;
+        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        view_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        view_create_info.subresourceRange.levelCount = 1;
+        view_create_info.subresourceRange.layerCount = 1;
+        vkCreateImageView ( device, &view_create_info, nullptr, &mVkEnvImageView );
+
+        // Linear sampler; longitude wraps (REPEAT U), latitude clamps (CLAMP V).
+        VkSamplerCreateInfo sampler_create_info{};
+        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_create_info.magFilter = VK_FILTER_LINEAR;
+        sampler_create_info.minFilter = VK_FILTER_LINEAR;
+        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.maxLod = 1.0f;
+        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        vkCreateSampler ( device, &sampler_create_info, nullptr, &mVkEnvSampler );
+
+        // Staging buffer with RGB -> RGBA float expansion (alpha unused).
+        const VkDeviceSize pixel_count = static_cast<VkDeviceSize> ( width ) * height;
+        const VkDeviceSize staging_size = pixel_count * 4 * sizeof ( float );
+        VkBuffer staging_buffer{};
+        VkDeviceMemory staging_memory{};
+        VkBufferCreateInfo buffer_create_info{};
+        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        buffer_create_info.size = staging_size;
+        buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        vkCreateBuffer ( device, &buffer_create_info, nullptr, &staging_buffer );
+        VkMemoryRequirements buffer_requirements;
+        vkGetBufferMemoryRequirements ( device, staging_buffer, &buffer_requirements );
+        VkMemoryAllocateInfo buffer_allocate_info{};
+        buffer_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        buffer_allocate_info.allocationSize = buffer_requirements.size;
+        buffer_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( buffer_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+        vkAllocateMemory ( device, &buffer_allocate_info, nullptr, &staging_memory );
+        vkBindBufferMemory ( device, staging_buffer, staging_memory, 0 );
+
+        void* mapped = nullptr;
+        vkMapMemory ( device, staging_memory, 0, staging_size, 0, &mapped );
+        const float* src = reinterpret_cast<const float*> ( aEnvironmentMap->GetPixels().data() );
+        float* dst = static_cast<float*> ( mapped );
+        const bool src_has_alpha = aEnvironmentMap->GetFormat() == Texture::Format::RGBA;
+        const uint32_t src_channels = src_has_alpha ? 4u : 3u;
+        for ( VkDeviceSize i = 0; i < pixel_count; ++i )
+        {
+            dst[i * 4 + 0] = src[i * src_channels + 0];
+            dst[i * 4 + 1] = src[i * src_channels + 1];
+            dst[i * 4 + 2] = src[i * src_channels + 2];
+            dst[i * 4 + 3] = src_has_alpha ? src[i * src_channels + 3] : 1.0f;
+        }
+        vkUnmapMemory ( device, staging_memory );
+
+        // Upload + layout transitions (UNDEFINED -> TRANSFER_DST -> SHADER_READ).
+        VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = mVkEnvImage;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier ( command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier );
+        VkBufferImageCopy copy{};
+        copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        copy.imageSubresource.layerCount = 1;
+        copy.imageExtent = { width, height, 1 };
+        vkCmdCopyBufferToImage ( command_buffer, staging_buffer, mVkEnvImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy );
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier );
+        mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
+        vkDestroyBuffer ( device, staging_buffer, nullptr );
+        vkFreeMemory ( device, staging_memory, nullptr );
+
+        // Descriptor set: the equirect image sampled by skybox.frag. Mirrors the
+        // tonemap set (1 combined image sampler, VK_SHADER_STAGE_ALL).
+        VkDescriptorSetLayoutCreateInfo layout_create_info{};
+        layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding layout_binding{};
+        layout_binding.binding = 0;
+        layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        layout_binding.descriptorCount = 1;
+        layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        layout_create_info.pBindings = &layout_binding;
+        mEnvDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
+        mEnvDescriptorSet = CreateDescriptorSet ( device, mEnvDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( layout_create_info ) );
+        VkDescriptorImageInfo image_info{};
+        image_info.sampler = mVkEnvSampler;
+        image_info.imageView = mVkEnvImageView;
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet = mEnvDescriptorSet;
+        write.dstBinding = 0;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.descriptorCount = 1;
+        write.pImageInfo = &image_info;
+        vkUpdateDescriptorSets ( device, 1, &write, 0, nullptr );
     }
 
     void VulkanWindow::InitializeShadowMap()
@@ -2212,6 +2418,7 @@ namespace AeonGames
         }
         FinalizeCommandBuffer();
         FinalizeFrameBuffers();
+        FinalizeEnvironmentMap();
         FinalizeDepthStencil();
         FinalizeImageViews();
         FinalizeSwapchain();
@@ -2555,6 +2762,30 @@ namespace AeonGames
 
     void VulkanWindow::EndRender()
     {
+        // Draw the skybox into the still-open scene pass (HDR colour + depth):
+        // depth-tested at (just inside) the far plane so geometry occludes it,
+        // shaded in linear space so the tonemap pass exposes it with the rest of
+        // the frame. Only when the scene provided an environment map.
+        if ( mSkyboxLoaded && mEnvDescriptorSet != VK_NULL_HANDLE )
+        {
+            const VulkanPipeline* skybox_pipeline = mVulkanRenderer.GetVulkanPipeline ( mSkyboxPipeline, mVkRenderPass );
+            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, skybox_pipeline->GetVkPipeline() );
+            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST );
+            vkCmdSetDepthBias ( mVkCommandBuffer, 0.0f, 0.0f, 0.0f );
+            if ( uint32_t matrices_set = skybox_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::MATRICES );
+                 matrices_set != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          skybox_pipeline->GetPipelineLayout(), matrices_set, 1, &mMatricesDescriptorSet, 0, nullptr );
+            }
+            if ( uint32_t sampler_set = skybox_pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::SAMPLERS );
+                 sampler_set != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          skybox_pipeline->GetPipelineLayout(), sampler_set, 1, &mEnvDescriptorSet, 0, nullptr );
+            }
+            vkCmdDraw ( mVkCommandBuffer, 3, 1, 0, 0 );
+        }
         vkCmdEndRenderPass ( mVkCommandBuffer );
 
         // Resolve the linear HDR scene target to the swapchain: a second render

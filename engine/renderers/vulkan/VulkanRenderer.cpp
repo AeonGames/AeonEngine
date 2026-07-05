@@ -1006,6 +1006,16 @@ namespace AeonGames
         it->second.SetGlobals ( aGlobals );
     }
 
+    void VulkanRenderer::SetEnvironmentMap ( void* aWindowId, const Texture* aEnvironmentMap )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.SetEnvironmentMap ( aEnvironmentMap );
+    }
+
     void VulkanRenderer::ResizeViewport ( void* aWindowId, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight )
     {
         auto it = mWindowStore.find ( aWindowId );
