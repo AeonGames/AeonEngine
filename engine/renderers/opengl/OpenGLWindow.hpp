@@ -276,6 +276,11 @@ namespace AeonGames
         GLuint mEquirectTexture{0};
         Pipeline mSkyboxPipeline{};
         bool mSkyboxLoaded{false};
+        // GGX-prefiltered specular IBL: an equirectangular RGBA16F mip chain
+        // (built on the CPU from the environment) sampled by the shading pass
+        // along the reflection vector. A 1x1 fallback stands in when a scene has
+        // no environment so the shader's textureSize gate keeps the flat look.
+        GLuint mPrefilteredEnvTexture{0};
         // Off-screen directional shadow map: a sampleable depth texture and its
         // framebuffer, plus the ShadowParams UBO (light view-projection +
         // filtering params) and the renderer-owned depth-only pipeline that

@@ -199,6 +199,15 @@ namespace AeonGames
         void InitializeClusterParams();
         void InitializeGlobals();
         void InitializeShadowMap();
+        /// @brief Create the GGX-prefiltered specular environment: a mipped
+        ///        RGBA32F equirect image (1x1 dummy until a scene provides an
+        ///        environment), its sampler and a combined-image-sampler
+        ///        descriptor set bound at PREFILTERED_ENVIRONMENT during shading.
+        void InitializePrefilteredEnvironment();
+        /// @brief (Re)build the prefiltered specular image from @p aEnvironmentMap
+        ///        (a nullptr yields the 1x1 dummy), then repoint the persistent
+        ///        descriptor set at the new image. Waits for device idle.
+        void UpdatePrefilteredEnvironmentImage ( const Texture* aEnvironmentMap );
         /// @brief Create the spot shadow map: a sampleable depth texture array
         ///        (one layer per caster), per-layer framebuffers reusing the
         ///        directional shadow render pass, the spot ShadowParams UBO and
@@ -220,6 +229,9 @@ namespace AeonGames
         void FinalizeRenderPass();
         void FinalizeFrameBuffers();
         void FinalizeEnvironmentMap();
+        /// @brief Release the prefiltered specular environment image, view,
+        ///        sampler and descriptor set/pool.
+        void FinalizePrefilteredEnvironment();
         void FinalizeCommandBuffer();
         void FinalizeMatrices();
         void FinalizeLights();
@@ -458,6 +470,16 @@ namespace AeonGames
         VkDescriptorSet mEnvDescriptorSet{VK_NULL_HANDLE};
         Pipeline mSkyboxPipeline{};
         bool mSkyboxLoaded{false};
+        // GGX-prefiltered specular IBL: a mipped RGBA32F equirect image (built on
+        // the CPU from the environment; a 1x1 dummy stands in until a scene sets
+        // one) sampled by the shading pass along the reflection vector at a
+        // roughness-selected LOD, bound at PREFILTERED_ENVIRONMENT.
+        VkImage mVkPrefilteredEnvImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkPrefilteredEnvImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkPrefilteredEnvImageView{VK_NULL_HANDLE};
+        VkSampler mVkPrefilteredEnvSampler{VK_NULL_HANDLE};
+        VkDescriptorPool mPrefilteredEnvDescriptorPool{VK_NULL_HANDLE};
+        VkDescriptorSet mPrefilteredEnvDescriptorSet{VK_NULL_HANDLE};
         ::std::vector<VkSemaphore> mVkSubmitSemaphores{};
     };
 }

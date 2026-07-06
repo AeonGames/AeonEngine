@@ -126,6 +126,22 @@ namespace AeonGames
      */
     DLL bool DecodeImage ( Texture& aTexture, const std::string& aFileName );
     /*@}*/
+    /** @brief GGX-prefilters an equirectangular HDR environment into a specular
+     *  IBL mip chain (split-sum pre-integrated radiance).
+     *
+     *  Mip 0 is a sharp (roughness 0) downsample; each higher mip is convolved
+     *  with the GGX lobe for an increasing roughness via importance sampling, so
+     *  a shader can look up @c textureLod(prefiltered, dir, roughness * maxLod).
+     *  @param aEnvironment Source equirectangular environment (Format::RGB,
+     *                      Type::FLOAT, +Z up).
+     *  @param aBaseWidth Width of mip 0 (height is half); each mip halves both.
+     *  @param aMipCount Number of mip levels to produce.
+     *  @param aMips Receives @p aMipCount levels, each width*height*4 linear RGBA
+     *               floats (alpha 1).
+     *  @return True on success, false if the environment is not a float RGB image.
+     */
+    DLL bool PrefilterEnvironmentEquirect ( const Texture& aEnvironment, uint32_t aBaseWidth,
+                                            uint32_t aMipCount, std::vector<std::vector<float>>& aMips );
     /** @brief Computes the size in bytes of a single pixel for the given format and type.
      * @param aFormat Pixel format.
      * @param aType Pixel component type.

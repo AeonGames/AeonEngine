@@ -768,7 +768,8 @@ namespace AeonGames
                      descriptor_set->bindings[0]->name[0] != '\0' &&
                      ( crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SHADOW_MAP ||
                        crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SPOT_SHADOW_MAP ||
-                       crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::POINT_SHADOW_MAP ) )
+                       crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::POINT_SHADOW_MAP ||
+                       crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::PREFILTERED_ENVIRONMENT ) )
                 {
                     type_name = descriptor_set->bindings[0]->name;
                 }

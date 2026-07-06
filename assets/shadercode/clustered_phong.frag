@@ -230,6 +230,18 @@ uniform Globals
       vec4 sh[9];
 };
 
+// GGX-prefiltered specular radiance of the environment, stored as an
+// equirectangular mip chain: mip 0 is mirror-sharp and each higher mip is a
+// rougher convolution, so textureLod(..., roughness * maxLod) yields the
+// split-sum pre-integrated radiance term. A 1x1 map means "no environment",
+// in which case the shader falls back to the flat ambient specular fill.
+#ifdef VULKAN
+layout(set = 15, binding = 0)
+#else
+layout(binding = 11)
+#endif
+uniform sampler2D PrefilteredEnvironment;
+
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
 layout(location = 2) in vec2 CoordUV;
@@ -560,6 +572,15 @@ vec3 sh_irradiance ( vec3 n )
       return max ( E, vec3 ( 0.0 ) );
 }
 
+// Map a world-space direction (+Z up) to equirectangular UV, matching the CPU
+// prefilter (SampleEquirect) and skybox conventions so reflections line up with
+// the drawn environment.
+vec2 equirect_uv ( vec3 dir )
+{
+      return vec2 ( atan ( dir.y, dir.x ) / ( 2.0 * PI ) + 0.5,
+                    acos ( clamp ( dir.z, -1.0, 1.0 ) ) / PI );
+}
+
 // Fixed per-cluster cap (mirrors MAX_LIGHTS_PER_CLUSTER in GpuClusterParams.hpp).
 // A cluster reaching this count has overflowed and dropped lights.
 const uint HEATMAP_OVERFLOW = 128u;
@@ -689,13 +710,12 @@ void main()
             }
       }
 
-      // Ambient light via the split-sum IBL form. The engine has no environment
-      // map yet, so the scene ambient colour (ambient.rgb * ambient.a) stands in
-      // as a uniform environment radiance for both the diffuse irradiance and
-      // the specular reflection; a future cubemap pass replaces these two
-      // constants with irradiance(N) and prefiltered(R, roughness) lookups.
-      // Splitting it this way gives metals a Fresnel-weighted ambient reflection
-      // (F0-tinted) instead of a flat albedo fill, and keeps energy roughly
+      // Ambient light via the split-sum IBL form. When the scene has an
+      // environment map, its SH gives the diffuse irradiance and its GGX
+      // prefiltered mip chain gives the specular reflection; otherwise the flat
+      // ambient colour (ambient.rgb * ambient.a) stands in for both. Splitting
+      // it this way gives metals a Fresnel-weighted, roughness-blurred ambient
+      // reflection instead of a flat albedo fill, and keeps energy roughly
       // conserved. The result is linear HDR radiance that the fullscreen tonemap
       // pass resolves (exposure + ACES + sRGB) on both backends.
       vec3  env              = ambient.rgb * ambient.a;
@@ -709,7 +729,26 @@ void main()
       // Lambertian response is albedo / pi * E(n).
       vec3  world_normal     = normalize ( mat3 ( inverse ( ViewMatrix ) ) * N );
       vec3  diffuse_ambient  = albedo * sh_irradiance ( world_normal ) / PI;
-      vec3  specular_ambient = env * ( F0 * ambient_brdf.x + ambient_brdf.y );
+      // Specular IBL: sample the prefiltered environment along the world-space
+      // reflection vector at a mip chosen by roughness, then weight by the
+      // pre-integrated environment BRDF (F0 * scale + bias). A 1x1 prefiltered
+      // map means the scene has no environment, so fall back to the flat env
+      // radiance to preserve the ambient-only look.
+      vec3  prefiltered_specular;
+      if ( textureSize ( PrefilteredEnvironment, 0 ).x > 1 )
+      {
+            vec3  world_view = normalize ( mat3 ( inverse ( ViewMatrix ) ) * V );
+            vec3  world_refl = reflect ( -world_view, world_normal );
+            float max_lod    = float ( textureQueryLevels ( PrefilteredEnvironment ) - 1 );
+            prefiltered_specular = textureLod ( PrefilteredEnvironment,
+                                                equirect_uv ( world_refl ),
+                                                roughness * max_lod ).rgb;
+      }
+      else
+      {
+            prefiltered_specular = env;
+      }
+      vec3  specular_ambient = prefiltered_specular * ( F0 * ambient_brdf.x + ambient_brdf.y );
       vec3  ambient_term     = ( kd_ambient * diffuse_ambient + specular_ambient ) * ao;
       vec3 color = ambient_term + Lo + emissive;
       FragColor = vec4 ( color, tex.a * BaseColorFactor.a );

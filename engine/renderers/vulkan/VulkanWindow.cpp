@@ -30,6 +30,7 @@ limitations under the License.
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
+#include <vector>
 #include "aeongames/Frustum.hpp"
 #include "aeongames/Material.hpp"
 #include "aeongames/Pipeline.hpp"
@@ -46,6 +47,7 @@ limitations under the License.
 #include "aeongames/CRC.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/GpuShadowParams.hpp"
+#include "aeongames/Texture.hpp"
 
 #if defined(__APPLE__)
 // Helper function to get CAMetalLayer from NSView (implemented in MacOSMetalHelper.mm)
@@ -54,6 +56,13 @@ extern "C" void* GetMetalLayerFromNSView ( void* nsview_ptr );
 
 namespace AeonGames
 {
+    // Base width of the GGX-prefiltered specular mip chain (height is half);
+    // small because roughness blurs away detail. Mip 0 stays mirror-sharp.
+    static constexpr uint32_t PREFILTERED_ENV_BASE_WIDTH = 256;
+    // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
+    // last mip = fully rough), matched by the shader's textureQueryLevels.
+    static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
+
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
         mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
@@ -128,6 +137,12 @@ namespace AeonGames
         std::swap ( mVkEnvSampler, aVulkanWindow.mVkEnvSampler );
         std::swap ( mEnvDescriptorPool, aVulkanWindow.mEnvDescriptorPool );
         std::swap ( mEnvDescriptorSet, aVulkanWindow.mEnvDescriptorSet );
+        std::swap ( mVkPrefilteredEnvImage, aVulkanWindow.mVkPrefilteredEnvImage );
+        std::swap ( mVkPrefilteredEnvImageMemory, aVulkanWindow.mVkPrefilteredEnvImageMemory );
+        std::swap ( mVkPrefilteredEnvImageView, aVulkanWindow.mVkPrefilteredEnvImageView );
+        std::swap ( mVkPrefilteredEnvSampler, aVulkanWindow.mVkPrefilteredEnvSampler );
+        std::swap ( mPrefilteredEnvDescriptorPool, aVulkanWindow.mPrefilteredEnvDescriptorPool );
+        std::swap ( mPrefilteredEnvDescriptorSet, aVulkanWindow.mPrefilteredEnvDescriptorSet );
         std::swap ( mMatricesDescriptorPool, aVulkanWindow.mMatricesDescriptorPool );
         std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
         std::swap ( mLightsDescriptorPool, aVulkanWindow.mLightsDescriptorPool );
@@ -1033,6 +1048,238 @@ namespace AeonGames
         }
     }
 
+    void VulkanWindow::InitializePrefilteredEnvironment()
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        // Persistent descriptor set (1 combined image sampler, VK_SHADER_STAGE_ALL)
+        // repointed at the prefiltered image whenever the environment changes, so
+        // the shading pass can always bind PREFILTERED_ENVIRONMENT.
+        VkDescriptorSetLayoutCreateInfo layout_create_info{};
+        layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layout_create_info.bindingCount = 1;
+        VkDescriptorSetLayoutBinding layout_binding{};
+        layout_binding.binding = 0;
+        layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        layout_binding.descriptorCount = 1;
+        layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        layout_create_info.pBindings = &layout_binding;
+        mPrefilteredEnvDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
+        mPrefilteredEnvDescriptorSet = CreateDescriptorSet ( device, mPrefilteredEnvDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( layout_create_info ) );
+        // Start with the 1x1 dummy so shading binds a valid set before any env;
+        // the shader's textureSize gate then keeps the flat ambient specular.
+        UpdatePrefilteredEnvironmentImage ( nullptr );
+    }
+
+    void VulkanWindow::UpdatePrefilteredEnvironmentImage ( const Texture* aEnvironmentMap )
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        // CPU mip data: the real GGX-prefiltered chain when an environment is
+        // provided, otherwise a single 1x1 opaque-black texel (the "no env"
+        // sentinel the shader detects via textureSize).
+        std::vector<std::vector<float>> mips;
+        uint32_t base_width = 1;
+        uint32_t base_height = 1;
+        uint32_t mip_count = 1;
+        if ( aEnvironmentMap != nullptr &&
+             PrefilterEnvironmentEquirect ( *aEnvironmentMap, PREFILTERED_ENV_BASE_WIDTH,
+                                            PREFILTERED_ENV_MIP_COUNT, mips ) )
+        {
+            base_width = PREFILTERED_ENV_BASE_WIDTH;
+            base_height = PREFILTERED_ENV_BASE_WIDTH / 2;
+            mip_count = static_cast<uint32_t> ( mips.size() );
+        }
+        else
+        {
+            mips.assign ( 1, std::vector<float> { 0.0f, 0.0f, 0.0f, 1.0f } );
+        }
+
+        // Release the previous image/view/sampler (keep the descriptor set/pool).
+        vkDeviceWaitIdle ( device );
+        if ( mVkPrefilteredEnvSampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( device, mVkPrefilteredEnvSampler, nullptr );
+            mVkPrefilteredEnvSampler = VK_NULL_HANDLE;
+        }
+        if ( mVkPrefilteredEnvImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkPrefilteredEnvImageView, nullptr );
+            mVkPrefilteredEnvImageView = VK_NULL_HANDLE;
+        }
+        if ( mVkPrefilteredEnvImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkPrefilteredEnvImage, nullptr );
+            mVkPrefilteredEnvImage = VK_NULL_HANDLE;
+        }
+        if ( mVkPrefilteredEnvImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkPrefilteredEnvImageMemory, nullptr );
+            mVkPrefilteredEnvImageMemory = VK_NULL_HANDLE;
+        }
+
+        // Device-local mipped RGBA32F equirect image (RGBA because 3-channel 32F
+        // is not a guaranteed sampled format).
+        VkImageCreateInfo image_create_info{};
+        image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        image_create_info.imageType = VK_IMAGE_TYPE_2D;
+        image_create_info.extent = { base_width, base_height, 1 };
+        image_create_info.mipLevels = mip_count;
+        image_create_info.arrayLayers = 1;
+        image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+        image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+        image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        vkCreateImage ( device, &image_create_info, nullptr, &mVkPrefilteredEnvImage );
+        VkMemoryRequirements memory_requirements;
+        vkGetImageMemoryRequirements ( device, mVkPrefilteredEnvImage, &memory_requirements );
+        VkMemoryAllocateInfo memory_allocate_info{};
+        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        memory_allocate_info.allocationSize = memory_requirements.size;
+        memory_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+        vkAllocateMemory ( device, &memory_allocate_info, nullptr, &mVkPrefilteredEnvImageMemory );
+        vkBindImageMemory ( device, mVkPrefilteredEnvImage, mVkPrefilteredEnvImageMemory, 0 );
+
+        VkImageViewCreateInfo view_create_info{};
+        view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+        view_create_info.image = mVkPrefilteredEnvImage;
+        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        view_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        view_create_info.subresourceRange.levelCount = mip_count;
+        view_create_info.subresourceRange.layerCount = 1;
+        vkCreateImageView ( device, &view_create_info, nullptr, &mVkPrefilteredEnvImageView );
+
+        // Trilinear sampler so roughness selects and blends across mips; longitude
+        // wraps (REPEAT U), latitude clamps (CLAMP V).
+        VkSamplerCreateInfo sampler_create_info{};
+        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_create_info.magFilter = VK_FILTER_LINEAR;
+        sampler_create_info.minFilter = VK_FILTER_LINEAR;
+        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.minLod = 0.0f;
+        sampler_create_info.maxLod = static_cast<float> ( mip_count - 1 );
+        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        vkCreateSampler ( device, &sampler_create_info, nullptr, &mVkPrefilteredEnvSampler );
+
+        // Staging buffer holding every mip level back to back.
+        VkDeviceSize staging_size = 0;
+        for ( const std::vector<float>& level : mips )
+        {
+            staging_size += static_cast<VkDeviceSize> ( level.size() ) * sizeof ( float );
+        }
+        VkBuffer staging_buffer{};
+        VkDeviceMemory staging_memory{};
+        VkBufferCreateInfo buffer_create_info{};
+        buffer_create_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        buffer_create_info.size = staging_size;
+        buffer_create_info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
+        buffer_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        vkCreateBuffer ( device, &buffer_create_info, nullptr, &staging_buffer );
+        VkMemoryRequirements buffer_requirements;
+        vkGetBufferMemoryRequirements ( device, staging_buffer, &buffer_requirements );
+        VkMemoryAllocateInfo buffer_allocate_info{};
+        buffer_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        buffer_allocate_info.allocationSize = buffer_requirements.size;
+        buffer_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( buffer_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+        vkAllocateMemory ( device, &buffer_allocate_info, nullptr, &staging_memory );
+        vkBindBufferMemory ( device, staging_buffer, staging_memory, 0 );
+
+        void* mapped = nullptr;
+        vkMapMemory ( device, staging_memory, 0, staging_size, 0, &mapped );
+        std::vector<VkBufferImageCopy> copies ( mips.size() );
+        VkDeviceSize offset = 0;
+        char* dst = static_cast<char*> ( mapped );
+        for ( uint32_t level = 0; level < mips.size(); ++level )
+        {
+            const VkDeviceSize bytes = static_cast<VkDeviceSize> ( mips[level].size() ) * sizeof ( float );
+            std::memcpy ( dst + offset, mips[level].data(), static_cast<size_t> ( bytes ) );
+            VkBufferImageCopy& copy = copies[level];
+            copy = {};
+            copy.bufferOffset = offset;
+            copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            copy.imageSubresource.mipLevel = level;
+            copy.imageSubresource.layerCount = 1;
+            copy.imageExtent = { std::max<uint32_t> ( 1, base_width >> level ),
+                                 std::max<uint32_t> ( 1, base_height >> level ), 1
+                               };
+            offset += bytes;
+        }
+        vkUnmapMemory ( device, staging_memory );
+
+        VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = mVkPrefilteredEnvImage;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.levelCount = mip_count;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        vkCmdPipelineBarrier ( command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier );
+        vkCmdCopyBufferToImage ( command_buffer, staging_buffer, mVkPrefilteredEnvImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, static_cast<uint32_t> ( copies.size() ), copies.data() );
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier );
+        mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
+        vkDestroyBuffer ( device, staging_buffer, nullptr );
+        vkFreeMemory ( device, staging_memory, nullptr );
+
+        // Repoint the persistent descriptor set at the new image/sampler.
+        VkDescriptorImageInfo image_info{};
+        image_info.sampler = mVkPrefilteredEnvSampler;
+        image_info.imageView = mVkPrefilteredEnvImageView;
+        image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet = mPrefilteredEnvDescriptorSet;
+        write.dstBinding = 0;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.descriptorCount = 1;
+        write.pImageInfo = &image_info;
+        vkUpdateDescriptorSets ( device, 1, &write, 0, nullptr );
+    }
+
+    void VulkanWindow::FinalizePrefilteredEnvironment()
+    {
+        const VkDevice device = mVulkanRenderer.GetDevice();
+        if ( mPrefilteredEnvDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( device, mPrefilteredEnvDescriptorPool, nullptr );
+            mPrefilteredEnvDescriptorPool = VK_NULL_HANDLE;
+            mPrefilteredEnvDescriptorSet = VK_NULL_HANDLE;
+        }
+        if ( mVkPrefilteredEnvSampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( device, mVkPrefilteredEnvSampler, nullptr );
+            mVkPrefilteredEnvSampler = VK_NULL_HANDLE;
+        }
+        if ( mVkPrefilteredEnvImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( device, mVkPrefilteredEnvImageView, nullptr );
+            mVkPrefilteredEnvImageView = VK_NULL_HANDLE;
+        }
+        if ( mVkPrefilteredEnvImage != VK_NULL_HANDLE )
+        {
+            vkDestroyImage ( device, mVkPrefilteredEnvImage, nullptr );
+            mVkPrefilteredEnvImage = VK_NULL_HANDLE;
+        }
+        if ( mVkPrefilteredEnvImageMemory != VK_NULL_HANDLE )
+        {
+            vkFreeMemory ( device, mVkPrefilteredEnvImageMemory, nullptr );
+            mVkPrefilteredEnvImageMemory = VK_NULL_HANDLE;
+        }
+    }
+
     void VulkanWindow::SetEnvironmentMap ( const Texture* aEnvironmentMap )
     {
         // Upload only when the source changes (it is handed in every frame). A 4K
@@ -1199,6 +1446,10 @@ namespace AeonGames
         write.descriptorCount = 1;
         write.pImageInfo = &image_info;
         vkUpdateDescriptorSets ( device, 1, &write, 0, nullptr );
+
+        // Rebuild the GGX-prefiltered specular mip chain from the new environment
+        // and repoint its descriptor set (used by the shading pass).
+        UpdatePrefilteredEnvironmentImage ( aEnvironmentMap );
     }
 
     void VulkanWindow::InitializeShadowMap()
@@ -2403,6 +2654,7 @@ namespace AeonGames
         InitializeShadowMap();
         InitializeSpotShadowMap();
         InitializePointShadowMap();
+        InitializePrefilteredEnvironment();
         InitializeCommandBuffer();
     }
 
@@ -2419,6 +2671,7 @@ namespace AeonGames
         FinalizeCommandBuffer();
         FinalizeFrameBuffers();
         FinalizeEnvironmentMap();
+        FinalizePrefilteredEnvironment();
         FinalizeDepthStencil();
         FinalizeImageViews();
         FinalizeSwapchain();
@@ -2922,6 +3175,7 @@ namespace AeonGames
             Mesh::BindingLocations::SHADOW_PARAMS, Mesh::BindingLocations::SHADOW_MAP,
             Mesh::BindingLocations::SPOT_SHADOW_PARAMS, Mesh::BindingLocations::SPOT_SHADOW_MAP,
             Mesh::BindingLocations::POINT_SHADOW_PARAMS, Mesh::BindingLocations::POINT_SHADOW_MAP,
+            Mesh::BindingLocations::PREFILTERED_ENVIRONMENT,
             Mesh::BindingLocations::MATERIAL, Mesh::BindingLocations::SAMPLERS,
             Mesh::BindingLocations::INSTANCE_MATRICES,
         } );
@@ -2966,6 +3220,7 @@ namespace AeonGames
         bind ( Mesh::BindingLocations::SPOT_SHADOW_MAP, mSpotShadowMapDescriptorSet );
         bind ( Mesh::BindingLocations::POINT_SHADOW_PARAMS, mPointShadowParamsDescriptorSet );
         bind ( Mesh::BindingLocations::POINT_SHADOW_MAP, mPointShadowMapDescriptorSet );
+        bind ( Mesh::BindingLocations::PREFILTERED_ENVIRONMENT, mPrefilteredEnvDescriptorSet );
     }
 
     void VulkanWindow::BindDepthPrePassSets ( const VulkanPipeline* aPipeline ) const

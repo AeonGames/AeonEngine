@@ -89,6 +89,7 @@ namespace AeonGames
             POINT_SHADOW_PARAMS = "PointShadowParams"_crc32, ///< Point shadow mapping: per-caster six-face light view-projections, caster positions/radii and filtering params (UBO).
             POINT_SHADOW_MAP  = "PointShadowMap"_crc32,  ///< Point shadow mapping: six-faces-per-caster depth array sampled with comparison (sampler2DArrayShadow).
             GLOBALS           = "Globals"_crc32,         ///< Per-frame scene-wide shading globals (ambient fill, future frame-wide values) (UBO).
+            PREFILTERED_ENVIRONMENT = "PrefilteredEnvironment"_crc32, ///< Specular IBL: GGX-prefiltered environment equirect mip chain, window-owned global sampler (sampler2D).
         };
 
         /** @brief Type alias for the number of components in a vertex attribute. */

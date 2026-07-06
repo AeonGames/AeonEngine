@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
 #include "aeongames/Material.hpp"
+#include "aeongames/Texture.hpp"
 #include "aeongames/GpuLight.hpp"
 #include "aeongames/GpuShadowParams.hpp"
 #include "aeongames/MemoryPool.hpp" ///<- This is here just for the literals
@@ -37,6 +38,7 @@ limitations under the License.
 #include <utility>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
 
 namespace AeonGames
 {
@@ -52,6 +54,16 @@ namespace AeonGames
     // match `layout(binding = N) uniform sampler2DArrayShadow PointShadowMap;`
     // in the GL path of the shading fragment shaders.
     static constexpr GLuint POINT_SHADOW_MAP_TEXTURE_UNIT = 10;
+    // Texture unit the GGX-prefiltered specular environment is bound to during
+    // shading. Must match `layout(binding = N) uniform sampler2D
+    // PrefilteredEnvironment;` in the GL path of the shading fragment shaders.
+    static constexpr GLuint PREFILTERED_ENV_TEXTURE_UNIT = 11;
+    // Base width of the prefiltered specular mip chain (height is half). Small
+    // because roughness blurs away detail; mip 0 stays mirror-sharp.
+    static constexpr uint32_t PREFILTERED_ENV_BASE_WIDTH = 256;
+    // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
+    // last mip = fully rough), matched by the shader's textureQueryLevels.
+    static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
 
     void OpenGLWindow::Initialize()
     {
@@ -216,6 +228,11 @@ namespace AeonGames
                 glDeleteTextures ( 1, &mEquirectTexture );
                 mEquirectTexture = 0;
             }
+            if ( glIsTexture ( mPrefilteredEnvTexture ) )
+            {
+                glDeleteTextures ( 1, &mPrefilteredEnvTexture );
+                mPrefilteredEnvTexture = 0;
+            }
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -308,6 +325,11 @@ namespace AeonGames
             {
                 glDeleteTextures ( 1, &mEquirectTexture );
                 mEquirectTexture = 0;
+            }
+            if ( glIsTexture ( mPrefilteredEnvTexture ) )
+            {
+                glDeleteTextures ( 1, &mPrefilteredEnvTexture );
+                mPrefilteredEnvTexture = 0;
             }
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
@@ -458,6 +480,10 @@ namespace AeonGames
         glBindTextureUnit ( SPOT_SHADOW_MAP_TEXTURE_UNIT, mSpotShadowDepthTexture );
         mOpenGLRenderer.SetPointShadowParams ( mPointShadowParams );
         glBindTextureUnit ( POINT_SHADOW_MAP_TEXTURE_UNIT, mPointShadowDepthTexture );
+        // GGX-prefiltered specular environment (or the 1x1 fallback when the
+        // scene has no environment). Pipelines that don't sample it ignore the
+        // unit; the shading shader gates on its size.
+        glBindTextureUnit ( PREFILTERED_ENV_TEXTURE_UNIT, mPrefilteredEnvTexture );
     }
 
     void OpenGLWindow::BindDepthPrePassState() const
@@ -724,6 +750,30 @@ namespace AeonGames
 
     void OpenGLWindow::SetEnvironmentMap ( const Texture* aEnvironmentMap )
     {
+        // Lazily create the 1x1 fallback prefiltered texture on the first call so
+        // the shading pass can always bind PREFILTERED_ENV_TEXTURE_UNIT; the
+        // fragment shader treats a 1x1 map as "no environment" and falls back to
+        // the flat ambient specular. After this first call the common per-frame
+        // path below returns early without touching the GL context.
+        if ( mPrefilteredEnvTexture == 0 )
+        {
+#if defined(_WIN32)
+            mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+#elif defined(__unix__)
+            mOpenGLRenderer.MakeCurrent ( mWindowId );
+#endif
+            const float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
+            glGenTextures ( 1, &mPrefilteredEnvTexture );
+            glBindTexture ( GL_TEXTURE_2D, mPrefilteredEnvTexture );
+            glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, 1, 1, 0, GL_RGBA, GL_FLOAT, black );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0 );
+            glBindTexture ( GL_TEXTURE_2D, 0 );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
         // Upload only when the source texture changes (it is handed in every
         // frame). Same pointer -> nothing to do; a full re-upload of a 4K HDR is
         // far too expensive to repeat per frame.
@@ -766,6 +816,33 @@ namespace AeonGames
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
         glBindTexture ( GL_TEXTURE_2D, 0 );
         OPENGL_CHECK_ERROR_NO_THROW;
+
+        // Build the GGX-prefiltered specular mip chain on the CPU and upload it
+        // into the (mutable, mipmapped) RGBA16F equirect texture the shading
+        // pass samples along the reflection vector at a roughness-selected LOD.
+        std::vector<std::vector<float>> prefiltered;
+        if ( PrefilterEnvironmentEquirect ( *aEnvironmentMap, PREFILTERED_ENV_BASE_WIDTH,
+                                            PREFILTERED_ENV_MIP_COUNT, prefiltered ) )
+        {
+            glBindTexture ( GL_TEXTURE_2D, mPrefilteredEnvTexture );
+            for ( uint32_t level = 0; level < prefiltered.size(); ++level )
+            {
+                const GLsizei level_width = std::max<GLsizei> ( 1, PREFILTERED_ENV_BASE_WIDTH >> level );
+                const GLsizei level_height = std::max<GLsizei> ( 1, ( PREFILTERED_ENV_BASE_WIDTH / 2 ) >> level );
+                glTexImage2D ( GL_TEXTURE_2D, static_cast<GLint> ( level ), GL_RGBA16F,
+                               level_width, level_height, 0, GL_RGBA, GL_FLOAT,
+                               prefiltered[level].data() );
+            }
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0 );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL,
+                              static_cast<GLint> ( prefiltered.size() - 1 ) );
+            glBindTexture ( GL_TEXTURE_2D, 0 );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
     }
 
     void OpenGLWindow::SetSpotShadowParams ( const GpuSpotShadowParams& aSpotShadowParams )
