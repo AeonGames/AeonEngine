@@ -227,6 +227,7 @@ layout(binding = 3, std140)
 uniform Globals
 {
       vec4 ambient;
+      vec4 sh[9];
 };
 
 layout(location = 0) in vec3 tnorm;
@@ -540,6 +541,25 @@ vec3 srgb_to_linear ( vec3 c )
       return pow ( c, vec3 ( 2.2 ) );
 }
 
+// Diffuse irradiance E(n) from the environment's order-2 SH coefficients
+// (Globals.sh, world space, +Z up). Ramamoorthi's cosine-lobe convolution folds
+// the three SH bands by A0 = pi, A1 = 2pi/3, A2 = pi/4. The Lambertian diffuse
+// response is albedo / pi * E(n).
+vec3 sh_irradiance ( vec3 n )
+{
+      const float A0 = 3.14159265;   // pi
+      const float A1 = 2.09439510;   // 2pi/3
+      const float A2 = 0.78539816;   // pi/4
+      vec3 E = A0 * 0.282095 * sh[0].rgb;
+      E += A1 * 0.488603 * ( sh[1].rgb * n.y + sh[2].rgb * n.z + sh[3].rgb * n.x );
+      E += A2 * ( sh[4].rgb * 1.092548 * n.x * n.y
+                + sh[5].rgb * 1.092548 * n.y * n.z
+                + sh[6].rgb * 0.315392 * ( 3.0 * n.z * n.z - 1.0 )
+                + sh[7].rgb * 1.092548 * n.x * n.z
+                + sh[8].rgb * 0.546274 * ( n.x * n.x - n.y * n.y ) );
+      return max ( E, vec3 ( 0.0 ) );
+}
+
 // Fixed per-cluster cap (mirrors MAX_LIGHTS_PER_CLUSTER in GpuClusterParams.hpp).
 // A cluster reaching this count has overflowed and dropped lights.
 const uint HEATMAP_OVERFLOW = 128u;
@@ -683,7 +703,12 @@ void main()
       vec3  F_ambient        = fresnel_schlick_roughness ( NdotV_ambient, F0, roughness );
       vec3  kd_ambient       = ( vec3 ( 1.0 ) - F_ambient ) * ( 1.0 - metallic );
       vec2  ambient_brdf     = env_brdf_approx ( NdotV_ambient, roughness );
-      vec3  diffuse_ambient  = env * albedo;
+      // Diffuse IBL from the environment's SH irradiance, evaluated with the
+      // world-space normal. The SH encodes the real environment, or the flat
+      // ambient when a scene has none, so this stays correct either way. The
+      // Lambertian response is albedo / pi * E(n).
+      vec3  world_normal     = normalize ( mat3 ( inverse ( ViewMatrix ) ) * N );
+      vec3  diffuse_ambient  = albedo * sh_irradiance ( world_normal ) / PI;
       vec3  specular_ambient = env * ( F0 * ambient_brdf.x + ambient_brdf.y );
       vec3  ambient_term     = ( kd_ambient * diffuse_ambient + specular_ambient ) * ao;
       vec3 color = ambient_term + Lo + emissive;

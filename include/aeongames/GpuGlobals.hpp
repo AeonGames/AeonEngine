@@ -44,10 +44,15 @@ namespace AeonGames
     struct GpuGlobals
     {
         Vector4 ambient { 1.0f, 1.0f, 1.0f, 0.25f };
+        /// Order-2 spherical-harmonic coefficients (9) of the environment's
+        /// radiance, RGB packed in xyz. The fragment shader evaluates the diffuse
+        /// irradiance from these. With no environment map they encode the flat
+        /// @c ambient term (DC only), so the diffuse ambient is unchanged.
+        Vector4 sh[9] {};
     };
     static_assert ( sizeof ( Vector4 ) == 16,
                     "Vector4 must be a tight 4xfloat for GPU layout compatibility." );
-    static_assert ( sizeof ( GpuGlobals ) == 16,
+    static_assert ( sizeof ( GpuGlobals ) == 16 * 10,
                     "GpuGlobals layout must match the shader-side std140 Globals block." );
 }
 #endif

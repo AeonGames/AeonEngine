@@ -417,6 +417,10 @@ namespace AeonGames
         InputSystem* mInputSystem {};
         /// @brief Rebuild the octree from the current node set. Lazy cache helper.
         void BuildSpatialIndex() const;
+        /// @brief Project the environment map's radiance into the 9 order-2 SH
+        /// coefficients (mEnvironmentSH) for diffuse image-based lighting. Called
+        /// lazily by GetGlobals when the environment texture changes.
+        void ComputeEnvironmentSH ( const Texture& aEnvironment ) const;
         /// @brief Octree over node world-space AABBs, used by CullVisible.
         mutable Octree mSpatialIndex{};
         /// @brief True when mSpatialIndex must be rebuilt before the next query.
@@ -432,6 +436,12 @@ namespace AeonGames
         FrameLightContainer mFrameLights{};
         ResourceId mLightingPipeline{};
         ResourceId mEnvironmentMap{};
+        /// @brief Cached order-2 spherical-harmonic coefficients (9) of the
+        /// environment radiance, projected once and keyed by the Texture they
+        /// were computed from. GetGlobals() feeds them to the shader for diffuse
+        /// image-based lighting.
+        mutable Vector4 mEnvironmentSH[9] {};
+        mutable const Texture* mEnvironmentSHSource{nullptr};
         /// @brief Hash of all shadow-casting geometry's world poses, recomputed
         /// each frame during Update (folded into its existing traversal). Read
         /// by GetShadowGeometrySignature so the renderer can skip re-rendering

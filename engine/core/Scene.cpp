@@ -1072,9 +1072,95 @@ namespace AeonGames
         return mAmbient;
     }
 
+    void Scene::ComputeEnvironmentSH ( const Texture& aEnvironment ) const
+    {
+        constexpr float kPi = 3.14159265358979323846f;
+        for ( auto& coefficient : mEnvironmentSH )
+        {
+            coefficient = Vector4{ 0.0f, 0.0f, 0.0f, 0.0f };
+        }
+        if ( aEnvironment.GetType() != Texture::Type::FLOAT ||
+             aEnvironment.GetFormat() != Texture::Format::RGB ||
+             aEnvironment.GetPixels().empty() )
+        {
+            return;
+        }
+        const uint32_t width = aEnvironment.GetWidth();
+        const uint32_t height = aEnvironment.GetHeight();
+        const float* pixels = reinterpret_cast<const float*> ( aEnvironment.GetPixels().data() );
+        // Project the equirectangular radiance onto the 9 order-2 SH basis
+        // functions. Each texel is a world-space direction (+Z up, matching
+        // skybox.frag) weighted by its solid angle sin(theta) * dtheta * dphi.
+        float coefficients[9][3] = {};
+        const float solid_angle = ( kPi / height ) * ( 2.0f * kPi / width );
+        for ( uint32_t y = 0; y < height; ++y )
+        {
+            const float theta = ( ( y + 0.5f ) / height ) * kPi;
+            const float sin_theta = std::sin ( theta );
+            const float cos_theta = std::cos ( theta );
+            const float weight = sin_theta * solid_angle;
+            for ( uint32_t x = 0; x < width; ++x )
+            {
+                const float phi = ( ( ( x + 0.5f ) / width ) - 0.5f ) * 2.0f * kPi;
+                const float dx = sin_theta * std::cos ( phi );
+                const float dy = sin_theta * std::sin ( phi );
+                const float dz = cos_theta;
+                const float* texel = pixels + ( static_cast<size_t> ( y ) * width + x ) * 3;
+                const float basis[9] =
+                {
+                    0.282095f,
+                    0.488603f * dy,
+                    0.488603f * dz,
+                    0.488603f * dx,
+                    1.092548f * dx * dy,
+                    1.092548f * dy * dz,
+                    0.315392f * ( 3.0f * dz * dz - 1.0f ),
+                    1.092548f * dx * dz,
+                    0.546274f * ( dx * dx - dy * dy )
+                };
+                for ( int i = 0; i < 9; ++i )
+                {
+                    coefficients[i][0] += texel[0] * basis[i] * weight;
+                    coefficients[i][1] += texel[1] * basis[i] * weight;
+                    coefficients[i][2] += texel[2] * basis[i] * weight;
+                }
+            }
+        }
+        for ( int i = 0; i < 9; ++i )
+        {
+            mEnvironmentSH[i] = Vector4{ coefficients[i][0], coefficients[i][1], coefficients[i][2], 0.0f };
+        }
+    }
+
     GpuGlobals Scene::GetGlobals() const
     {
-        return GpuGlobals{ mAmbient };
+        constexpr float kPi = 3.14159265358979323846f;
+        GpuGlobals globals{ mAmbient };
+        const Texture* environment = GetEnvironmentMap();
+        if ( environment != nullptr )
+        {
+            // The SH projection is a full pass over the environment, so cache it
+            // and recompute only when the environment texture changes.
+            if ( environment != mEnvironmentSHSource )
+            {
+                ComputeEnvironmentSH ( *environment );
+                mEnvironmentSHSource = environment;
+            }
+            for ( int i = 0; i < 9; ++i )
+            {
+                globals.sh[i] = mEnvironmentSH[i];
+            }
+        }
+        else
+        {
+            // No environment: encode the flat ambient as the DC (constant) term
+            // so the diffuse ambient reproduces ambient.rgb * ambient.a.
+            const float dc = 0.282095f * 4.0f * kPi;
+            globals.sh[0] = Vector4{ mAmbient.GetX() * mAmbient.GetW() * dc,
+                                     mAmbient.GetY() * mAmbient.GetW() * dc,
+                                     mAmbient.GetZ() * mAmbient.GetW() * dc, 0.0f };
+        }
+        return globals;
     }
 
     std::string Scene::Serialize ( bool aAsBinary ) const
