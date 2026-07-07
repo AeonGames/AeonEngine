@@ -142,6 +142,38 @@ namespace AeonGames
      */
     DLL bool PrefilterEnvironmentEquirect ( const Texture& aEnvironment, uint32_t aBaseWidth,
                                             uint32_t aMipCount, std::vector<std::vector<float>>& aMips );
+    /** @brief GGX-prefilters an equirectangular HDR environment into a specular
+     *  IBL cube-map mip chain (split-sum pre-integrated radiance).
+     *
+     *  Same convolution as PrefilterEnvironmentEquirect, but the output is a cube
+     *  map: uniform angular resolution and hardware-seamless edge filtering, so a
+     *  shader looks it up with a direction via @c textureLod(cube, dir, rough*max).
+     *  Each mip holds the six faces in the standard Vulkan/OpenGL order
+     *  (+X, -X, +Y, -Y, +Z, -Z), face-major, each face row-major.
+     *  @param aEnvironment Source equirectangular environment (Format::RGB,
+     *                      Type::FLOAT, +Z up).
+     *  @param aFaceSize Edge length of mip 0's faces; each mip halves it.
+     *  @param aMipCount Number of mip levels to produce.
+     *  @param aMips Receives @p aMipCount levels, each 6*face*face*4 linear RGBA
+     *               floats (alpha 1), faces concatenated in the order above.
+     *  @return True on success, false if the environment is not a float RGB image.
+     */
+    DLL bool PrefilterEnvironmentCube ( const Texture& aEnvironment, uint32_t aFaceSize,
+                                        uint32_t aMipCount, std::vector<std::vector<float>>& aMips );
+    /** @brief Texture-free core of PrefilterEnvironmentCube, operating directly on
+     *  a packed equirectangular float-RGB buffer (three floats per pixel, +Z up).
+     *  Exposed for unit testing without constructing a Texture.
+     *  @param aEquirectRgb Row-major equirect radiance, aWidth*aHeight*3 floats.
+     *  @param aWidth Equirect width in pixels.
+     *  @param aHeight Equirect height in pixels.
+     *  @param aFaceSize Edge length of mip 0's faces; each mip halves it.
+     *  @param aMipCount Number of mip levels to produce.
+     *  @param aMips Receives the six-faces-per-mip RGBA float data (see above).
+     *  @return True on success, false on null/empty input or zero sizes.
+     */
+    DLL bool PrefilterEnvironmentCube ( const float* aEquirectRgb, uint32_t aWidth, uint32_t aHeight,
+                                        uint32_t aFaceSize, uint32_t aMipCount,
+                                        std::vector<std::vector<float>>& aMips );
     /** @brief Computes the size in bytes of a single pixel for the given format and type.
      * @param aFormat Pixel format.
      * @param aType Pixel component type.

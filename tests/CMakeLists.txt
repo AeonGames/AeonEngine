@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2018,2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2018,2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -53,6 +53,7 @@ set(TEST_SRCS
     ComputeTests.cpp
     OctreeTests.cpp
     HdrDecoderTests.cpp
+    CubePrefilterTests.cpp
     ${CMAKE_SOURCE_DIR}/engine/images/hdr/RadianceImage.cpp)
 
 source_group("Tested" FILES ${TESTED_SRCS})

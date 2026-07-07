@@ -152,6 +152,120 @@ namespace AeonGames
                 aOut[c] = a * ( 1.0f - ty ) + b * ty;
             }
         }
+
+        // GGX importance-sampled prefilter of the equirect environment for a
+        // single world-space direction N (which also serves as view and
+        // reflection). alpha is roughness^2; on a degenerate lobe it falls back
+        // to a direct sample so the texel is never left black.
+        void PrefilterDirectionGGX ( const float* aPixels, int aWidth, int aHeight,
+                                     float nx, float ny, float nz, float aAlpha,
+                                     uint32_t aSamples, float aOut[3] )
+        {
+            // Orthonormal tangent frame around N.
+            const float ux = ( std::fabs ( nz ) < 0.999f ) ? 0.0f : 1.0f;
+            const float uy = 0.0f;
+            const float uz = ( std::fabs ( nz ) < 0.999f ) ? 1.0f : 0.0f;
+            float tx = uy * nz - uz * ny;
+            float ty = uz * nx - ux * nz;
+            float tz = ux * ny - uy * nx;
+            const float tl = std::sqrt ( tx * tx + ty * ty + tz * tz );
+            tx /= tl;
+            ty /= tl;
+            tz /= tl;
+            const float bx = ny * tz - nz * ty;
+            const float by = nz * tx - nx * tz;
+            const float bz = nx * ty - ny * tx;
+            float color[3] = { 0.0f, 0.0f, 0.0f };
+            float total_weight = 0.0f;
+            for ( uint32_t i = 0; i < aSamples; ++i )
+            {
+                const float xi_x = static_cast<float> ( i ) / static_cast<float> ( aSamples );
+                const float xi_y = RadicalInverseVdC ( i );
+                const float sample_phi = 2.0f * kPrefilterPi * xi_x;
+                const float cos_h = std::sqrt ( ( 1.0f - xi_y ) / ( 1.0f + ( aAlpha * aAlpha - 1.0f ) * xi_y ) );
+                const float sin_h = std::sqrt ( std::max ( 0.0f, 1.0f - cos_h * cos_h ) );
+                const float hxt = sin_h * std::cos ( sample_phi );
+                const float hyt = sin_h * std::sin ( sample_phi );
+                const float hzt = cos_h;
+                const float hx = tx * hxt + bx * hyt + nx * hzt;
+                const float hy = ty * hxt + by * hyt + ny * hzt;
+                const float hz = tz * hxt + bz * hyt + nz * hzt;
+                const float vdoth = nx * hx + ny * hy + nz * hz;
+                const float lx = 2.0f * vdoth * hx - nx;
+                const float ly = 2.0f * vdoth * hy - ny;
+                const float lz = 2.0f * vdoth * hz - nz;
+                const float ndotl = nx * lx + ny * ly + nz * lz;
+                if ( ndotl > 0.0f )
+                {
+                    float s[3];
+                    SampleEquirect ( aPixels, aWidth, aHeight, lx, ly, lz, s );
+                    color[0] += s[0] * ndotl;
+                    color[1] += s[1] * ndotl;
+                    color[2] += s[2] * ndotl;
+                    total_weight += ndotl;
+                }
+            }
+            if ( total_weight > 0.0f )
+            {
+                aOut[0] = color[0] / total_weight;
+                aOut[1] = color[1] / total_weight;
+                aOut[2] = color[2] / total_weight;
+            }
+            else
+            {
+                SampleEquirect ( aPixels, aWidth, aHeight, nx, ny, nz, aOut );
+            }
+        }
+
+        // Map a cube face (0..5 = +X,-X,+Y,-Y,+Z,-Z) and in-face coordinates
+        // s,t in [0,1] to a normalized direction, using the standard cube-map
+        // face convention shared by Vulkan and OpenGL (so the same routine
+        // builds a cube that both backends sample correctly, +Z world up).
+        void CubeFaceDirection ( int aFace, float s, float t, float aOut[3] )
+        {
+            const float sc = 2.0f * s - 1.0f;
+            const float tc = 2.0f * t - 1.0f;
+            float dx = 0.0f;
+            float dy = 0.0f;
+            float dz = 0.0f;
+            switch ( aFace )
+            {
+            case 0:
+                dx =  1.0f;
+                dy = -tc;
+                dz = -sc;
+                break; // +X
+            case 1:
+                dx = -1.0f;
+                dy = -tc;
+                dz =  sc;
+                break; // -X
+            case 2:
+                dx =  sc;
+                dy =  1.0f;
+                dz =  tc;
+                break; // +Y
+            case 3:
+                dx =  sc;
+                dy = -1.0f;
+                dz = -tc;
+                break; // -Y
+            case 4:
+                dx =  sc;
+                dy = -tc;
+                dz =  1.0f;
+                break; // +Z
+            default:
+                dx = -sc;
+                dy = -tc;
+                dz = -1.0f;
+                break; // -Z
+            }
+            const float inv_len = 1.0f / std::sqrt ( dx * dx + dy * dy + dz * dz );
+            aOut[0] = dx * inv_len;
+            aOut[1] = dy * inv_len;
+            aOut[2] = dz * inv_len;
+        }
     }
 
     bool PrefilterEnvironmentEquirect ( const Texture& aEnvironment, uint32_t aBaseWidth,
@@ -258,5 +372,74 @@ namespace AeonGames
             }
         }
         return true;
+    }
+
+    bool PrefilterEnvironmentCube ( const float* aEquirectRgb, uint32_t aWidth, uint32_t aHeight,
+                                    uint32_t aFaceSize, uint32_t aMipCount,
+                                    std::vector<std::vector<float>>& aMips )
+    {
+        if ( aEquirectRgb == nullptr || aWidth == 0 || aHeight == 0 ||
+             aFaceSize == 0 || aMipCount == 0 )
+        {
+            return false;
+        }
+        const int env_width = static_cast<int> ( aWidth );
+        const int env_height = static_cast<int> ( aHeight );
+        constexpr uint32_t kSamples = 64u;
+        aMips.assign ( aMipCount, {} );
+        for ( uint32_t mip = 0; mip < aMipCount; ++mip )
+        {
+            const int face_size = std::max<int> ( 1, static_cast<int> ( aFaceSize >> mip ) );
+            const float roughness = ( aMipCount > 1 ) ? static_cast<float> ( mip ) / static_cast<float> ( aMipCount - 1 ) : 0.0f;
+            const float alpha = roughness * roughness;
+            std::vector<float>& out = aMips[mip];
+            // Six faces (+X,-X,+Y,-Y,+Z,-Z), face-major, each face row-major RGBA.
+            out.resize ( static_cast<size_t> ( 6 ) * face_size * face_size * 4 );
+            for ( int face = 0; face < 6; ++face )
+            {
+                float* face_pixels = out.data() + static_cast<size_t> ( face ) * face_size * face_size * 4;
+                for ( int y = 0; y < face_size; ++y )
+                {
+                    const float t = ( y + 0.5f ) / face_size;
+                    for ( int x = 0; x < face_size; ++x )
+                    {
+                        const float s = ( x + 0.5f ) / face_size;
+                        float dir[3];
+                        CubeFaceDirection ( face, s, t, dir );
+                        float color[3] = { 0.0f, 0.0f, 0.0f };
+                        if ( mip == 0 || roughness <= 0.0f )
+                        {
+                            SampleEquirect ( aEquirectRgb, env_width, env_height, dir[0], dir[1], dir[2], color );
+                        }
+                        else
+                        {
+                            PrefilterDirectionGGX ( aEquirectRgb, env_width, env_height,
+                                                    dir[0], dir[1], dir[2], alpha, kSamples, color );
+                        }
+                        float* texel = face_pixels + ( static_cast<size_t> ( y ) * face_size + x ) * 4;
+                        texel[0] = color[0];
+                        texel[1] = color[1];
+                        texel[2] = color[2];
+                        texel[3] = 1.0f;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
+    bool PrefilterEnvironmentCube ( const Texture& aEnvironment, uint32_t aFaceSize,
+                                    uint32_t aMipCount, std::vector<std::vector<float>>& aMips )
+    {
+        if ( aEnvironment.GetType() != Texture::Type::FLOAT ||
+             aEnvironment.GetFormat() != Texture::Format::RGB ||
+             aEnvironment.GetPixels().empty() )
+        {
+            return false;
+        }
+        return PrefilterEnvironmentCube (
+                   reinterpret_cast<const float*> ( aEnvironment.GetPixels().data() ),
+                   aEnvironment.GetWidth(), aEnvironment.GetHeight(),
+                   aFaceSize, aMipCount, aMips );
     }
 }
