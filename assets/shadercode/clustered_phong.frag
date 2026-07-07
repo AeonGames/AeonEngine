@@ -230,17 +230,18 @@ uniform Globals
       vec4 sh[9];
 };
 
-// GGX-prefiltered specular radiance of the environment, stored as an
-// equirectangular mip chain: mip 0 is mirror-sharp and each higher mip is a
-// rougher convolution, so textureLod(..., roughness * maxLod) yields the
-// split-sum pre-integrated radiance term. A 1x1 map means "no environment",
-// in which case the shader falls back to the flat ambient specular fill.
+// GGX-prefiltered specular radiance of the environment, stored as a cube-map
+// mip chain: mip 0 is mirror-sharp and each higher mip is a rougher
+// convolution, so textureLod(..., roughness * maxLod) yields the split-sum
+// pre-integrated radiance term. Sampled with a world-space direction (uniform
+// angular resolution, hardware-seamless edges). A 1x1 map means "no
+// environment", in which case the shader falls back to the flat ambient fill.
 #ifdef VULKAN
 layout(set = 15, binding = 0)
 #else
 layout(binding = 11)
 #endif
-uniform sampler2D PrefilteredEnvironment;
+uniform samplerCube PrefilteredEnvironment;
 
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
@@ -572,15 +573,6 @@ vec3 sh_irradiance ( vec3 n )
       return max ( E, vec3 ( 0.0 ) );
 }
 
-// Map a world-space direction (+Z up) to equirectangular UV, matching the CPU
-// prefilter (SampleEquirect) and skybox conventions so reflections line up with
-// the drawn environment.
-vec2 equirect_uv ( vec3 dir )
-{
-      return vec2 ( atan ( dir.y, dir.x ) / ( 2.0 * PI ) + 0.5,
-                    acos ( clamp ( dir.z, -1.0, 1.0 ) ) / PI );
-}
-
 // Fixed per-cluster cap (mirrors MAX_LIGHTS_PER_CLUSTER in GpuClusterParams.hpp).
 // A cluster reaching this count has overflowed and dropped lights.
 const uint HEATMAP_OVERFLOW = 128u;
@@ -729,11 +721,11 @@ void main()
       // Lambertian response is albedo / pi * E(n).
       vec3  world_normal     = normalize ( mat3 ( inverse ( ViewMatrix ) ) * N );
       vec3  diffuse_ambient  = albedo * sh_irradiance ( world_normal ) / PI;
-      // Specular IBL: sample the prefiltered environment along the world-space
-      // reflection vector at a mip chosen by roughness, then weight by the
-      // pre-integrated environment BRDF (F0 * scale + bias). A 1x1 prefiltered
-      // map means the scene has no environment, so fall back to the flat env
-      // radiance to preserve the ambient-only look.
+      // Specular IBL: sample the prefiltered environment cube along the
+      // world-space reflection vector at a mip chosen by roughness, then weight
+      // by the pre-integrated environment BRDF (F0 * scale + bias). A 1x1
+      // prefiltered map means the scene has no environment, so fall back to the
+      // flat env radiance to preserve the ambient-only look.
       vec3  prefiltered_specular;
       if ( textureSize ( PrefilteredEnvironment, 0 ).x > 1 )
       {
@@ -741,7 +733,7 @@ void main()
             vec3  world_refl = reflect ( -world_view, world_normal );
             float max_lod    = float ( textureQueryLevels ( PrefilteredEnvironment ) - 1 );
             prefiltered_specular = textureLod ( PrefilteredEnvironment,
-                                                equirect_uv ( world_refl ),
+                                                world_refl,
                                                 roughness * max_lod ).rgb;
       }
       else

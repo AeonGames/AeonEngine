@@ -56,9 +56,9 @@ extern "C" void* GetMetalLayerFromNSView ( void* nsview_ptr );
 
 namespace AeonGames
 {
-    // Base width of the GGX-prefiltered specular mip chain (height is half);
-    // small because roughness blurs away detail. Mip 0 stays mirror-sharp.
-    static constexpr uint32_t PREFILTERED_ENV_BASE_WIDTH = 256;
+    // Edge length of the GGX-prefiltered specular cube map's mip 0 faces; small
+    // because roughness blurs away detail. Mip 0 stays mirror-sharp.
+    static constexpr uint32_t PREFILTERED_ENV_FACE_SIZE = 128;
     // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
     // last mip = fully rough), matched by the shader's textureQueryLevels.
     static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
@@ -1077,20 +1077,25 @@ namespace AeonGames
         // provided, otherwise a single 1x1 opaque-black texel (the "no env"
         // sentinel the shader detects via textureSize).
         std::vector<std::vector<float>> mips;
-        uint32_t base_width = 1;
-        uint32_t base_height = 1;
+        uint32_t face_size = 1;
         uint32_t mip_count = 1;
         if ( aEnvironmentMap != nullptr &&
-             PrefilterEnvironmentEquirect ( *aEnvironmentMap, PREFILTERED_ENV_BASE_WIDTH,
-                                            PREFILTERED_ENV_MIP_COUNT, mips ) )
+             PrefilterEnvironmentCube ( *aEnvironmentMap, PREFILTERED_ENV_FACE_SIZE,
+                                        PREFILTERED_ENV_MIP_COUNT, mips ) )
         {
-            base_width = PREFILTERED_ENV_BASE_WIDTH;
-            base_height = PREFILTERED_ENV_BASE_WIDTH / 2;
+            face_size = PREFILTERED_ENV_FACE_SIZE;
             mip_count = static_cast<uint32_t> ( mips.size() );
         }
         else
         {
-            mips.assign ( 1, std::vector<float> { 0.0f, 0.0f, 0.0f, 1.0f } );
+            // 1x1x6 opaque-black cube: the "no environment" sentinel the shader
+            // detects via textureSize.
+            std::vector<float> dummy ( static_cast<size_t> ( 6 ) * 4, 0.0f );
+            for ( int face = 0; face < 6; ++face )
+            {
+                dummy[static_cast<size_t> ( face ) * 4 + 3] = 1.0f;
+            }
+            mips.assign ( 1, dummy );
         }
 
         // Release the previous image/view/sampler (keep the descriptor set/pool).
@@ -1116,15 +1121,16 @@ namespace AeonGames
             mVkPrefilteredEnvImageMemory = VK_NULL_HANDLE;
         }
 
-        // Device-local mipped RGBA32F equirect image (RGBA because 3-channel 32F
-        // is not a guaranteed sampled format).
+        // Device-local mipped RGBA32F cube image (RGBA because 3-channel 32F is
+        // not a guaranteed sampled format); six array layers, cube-compatible.
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_create_info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
         image_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
-        image_create_info.extent = { base_width, base_height, 1 };
+        image_create_info.extent = { face_size, face_size, 1 };
         image_create_info.mipLevels = mip_count;
-        image_create_info.arrayLayers = 1;
+        image_create_info.arrayLayers = 6;
         image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
         image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
         image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -1143,21 +1149,21 @@ namespace AeonGames
         VkImageViewCreateInfo view_create_info{};
         view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         view_create_info.image = mVkPrefilteredEnvImage;
-        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
         view_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
         view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         view_create_info.subresourceRange.levelCount = mip_count;
-        view_create_info.subresourceRange.layerCount = 1;
+        view_create_info.subresourceRange.layerCount = 6;
         vkCreateImageView ( device, &view_create_info, nullptr, &mVkPrefilteredEnvImageView );
 
-        // Trilinear sampler so roughness selects and blends across mips; longitude
-        // wraps (REPEAT U), latitude clamps (CLAMP V).
+        // Trilinear sampler so roughness selects and blends across mips. Cube
+        // sampling is seamless across faces; all address modes clamp.
         VkSamplerCreateInfo sampler_create_info{};
         sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         sampler_create_info.magFilter = VK_FILTER_LINEAR;
         sampler_create_info.minFilter = VK_FILTER_LINEAR;
         sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_create_info.minLod = 0.0f;
@@ -1202,9 +1208,9 @@ namespace AeonGames
             copy.bufferOffset = offset;
             copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
             copy.imageSubresource.mipLevel = level;
-            copy.imageSubresource.layerCount = 1;
-            copy.imageExtent = { std::max<uint32_t> ( 1, base_width >> level ),
-                                 std::max<uint32_t> ( 1, base_height >> level ), 1
+            copy.imageSubresource.layerCount = 6;
+            copy.imageExtent = { std::max<uint32_t> ( 1, face_size >> level ),
+                                 std::max<uint32_t> ( 1, face_size >> level ), 1
                                };
             offset += bytes;
         }
@@ -1218,7 +1224,7 @@ namespace AeonGames
         barrier.image = mVkPrefilteredEnvImage;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.levelCount = mip_count;
-        barrier.subresourceRange.layerCount = 1;
+        barrier.subresourceRange.layerCount = 6;
         barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.srcAccessMask = 0;

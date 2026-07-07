@@ -55,12 +55,12 @@ namespace AeonGames
     // in the GL path of the shading fragment shaders.
     static constexpr GLuint POINT_SHADOW_MAP_TEXTURE_UNIT = 10;
     // Texture unit the GGX-prefiltered specular environment is bound to during
-    // shading. Must match `layout(binding = N) uniform sampler2D
+    // shading. Must match `layout(binding = N) uniform samplerCube
     // PrefilteredEnvironment;` in the GL path of the shading fragment shaders.
     static constexpr GLuint PREFILTERED_ENV_TEXTURE_UNIT = 11;
-    // Base width of the prefiltered specular mip chain (height is half). Small
+    // Edge length of the prefiltered specular cube map's mip 0 faces. Small
     // because roughness blurs away detail; mip 0 stays mirror-sharp.
-    static constexpr uint32_t PREFILTERED_ENV_BASE_WIDTH = 256;
+    static constexpr uint32_t PREFILTERED_ENV_FACE_SIZE = 128;
     // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
     // last mip = fully rough), matched by the shader's textureQueryLevels.
     static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
@@ -750,8 +750,8 @@ namespace AeonGames
 
     void OpenGLWindow::SetEnvironmentMap ( const Texture* aEnvironmentMap )
     {
-        // Lazily create the 1x1 fallback prefiltered texture on the first call so
-        // the shading pass can always bind PREFILTERED_ENV_TEXTURE_UNIT; the
+        // Lazily create the 1x1 fallback prefiltered cube map on the first call
+        // so the shading pass can always bind PREFILTERED_ENV_TEXTURE_UNIT; the
         // fragment shader treats a 1x1 map as "no environment" and falls back to
         // the flat ambient specular. After this first call the common per-frame
         // path below returns early without touching the GL context.
@@ -762,16 +762,23 @@ namespace AeonGames
 #elif defined(__unix__)
             mOpenGLRenderer.MakeCurrent ( mWindowId );
 #endif
+            // Seamless cube filtering so trilinear lookups across face edges do
+            // not seam; global state, enabled once here.
+            glEnable ( GL_TEXTURE_CUBE_MAP_SEAMLESS );
             const float black[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
             glGenTextures ( 1, &mPrefilteredEnvTexture );
-            glBindTexture ( GL_TEXTURE_2D, mPrefilteredEnvTexture );
-            glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, 1, 1, 0, GL_RGBA, GL_FLOAT, black );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0 );
-            glBindTexture ( GL_TEXTURE_2D, 0 );
+            glBindTexture ( GL_TEXTURE_CUBE_MAP, mPrefilteredEnvTexture );
+            for ( GLenum face = 0; face < 6; ++face )
+            {
+                glTexImage2D ( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGBA16F, 1, 1, 0, GL_RGBA, GL_FLOAT, black );
+            }
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0 );
+            glBindTexture ( GL_TEXTURE_CUBE_MAP, 0 );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         // Upload only when the source texture changes (it is handed in every
@@ -817,30 +824,34 @@ namespace AeonGames
         glBindTexture ( GL_TEXTURE_2D, 0 );
         OPENGL_CHECK_ERROR_NO_THROW;
 
-        // Build the GGX-prefiltered specular mip chain on the CPU and upload it
-        // into the (mutable, mipmapped) RGBA16F equirect texture the shading
-        // pass samples along the reflection vector at a roughness-selected LOD.
+        // Build the GGX-prefiltered specular cube map on the CPU and upload it
+        // into the (mutable, mipmapped) RGBA16F cube the shading pass samples
+        // along the reflection vector at a roughness-selected LOD.
         std::vector<std::vector<float>> prefiltered;
-        if ( PrefilterEnvironmentEquirect ( *aEnvironmentMap, PREFILTERED_ENV_BASE_WIDTH,
-                                            PREFILTERED_ENV_MIP_COUNT, prefiltered ) )
+        if ( PrefilterEnvironmentCube ( *aEnvironmentMap, PREFILTERED_ENV_FACE_SIZE,
+                                        PREFILTERED_ENV_MIP_COUNT, prefiltered ) )
         {
-            glBindTexture ( GL_TEXTURE_2D, mPrefilteredEnvTexture );
+            glBindTexture ( GL_TEXTURE_CUBE_MAP, mPrefilteredEnvTexture );
             for ( uint32_t level = 0; level < prefiltered.size(); ++level )
             {
-                const GLsizei level_width = std::max<GLsizei> ( 1, PREFILTERED_ENV_BASE_WIDTH >> level );
-                const GLsizei level_height = std::max<GLsizei> ( 1, ( PREFILTERED_ENV_BASE_WIDTH / 2 ) >> level );
-                glTexImage2D ( GL_TEXTURE_2D, static_cast<GLint> ( level ), GL_RGBA16F,
-                               level_width, level_height, 0, GL_RGBA, GL_FLOAT,
-                               prefiltered[level].data() );
+                const GLsizei face_size = std::max<GLsizei> ( 1, PREFILTERED_ENV_FACE_SIZE >> level );
+                const size_t face_floats = static_cast<size_t> ( face_size ) * face_size * 4;
+                for ( GLenum face = 0; face < 6; ++face )
+                {
+                    glTexImage2D ( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, static_cast<GLint> ( level ),
+                                   GL_RGBA16F, face_size, face_size, 0, GL_RGBA, GL_FLOAT,
+                                   prefiltered[level].data() + face * face_floats );
+                }
             }
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0 );
-            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL,
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BASE_LEVEL, 0 );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL,
                               static_cast<GLint> ( prefiltered.size() - 1 ) );
-            glBindTexture ( GL_TEXTURE_2D, 0 );
+            glBindTexture ( GL_TEXTURE_CUBE_MAP, 0 );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }

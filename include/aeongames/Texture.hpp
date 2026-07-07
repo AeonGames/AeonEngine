@@ -127,29 +127,15 @@ namespace AeonGames
     DLL bool DecodeImage ( Texture& aTexture, const std::string& aFileName );
     /*@}*/
     /** @brief GGX-prefilters an equirectangular HDR environment into a specular
-     *  IBL mip chain (split-sum pre-integrated radiance).
-     *
-     *  Mip 0 is a sharp (roughness 0) downsample; each higher mip is convolved
-     *  with the GGX lobe for an increasing roughness via importance sampling, so
-     *  a shader can look up @c textureLod(prefiltered, dir, roughness * maxLod).
-     *  @param aEnvironment Source equirectangular environment (Format::RGB,
-     *                      Type::FLOAT, +Z up).
-     *  @param aBaseWidth Width of mip 0 (height is half); each mip halves both.
-     *  @param aMipCount Number of mip levels to produce.
-     *  @param aMips Receives @p aMipCount levels, each width*height*4 linear RGBA
-     *               floats (alpha 1).
-     *  @return True on success, false if the environment is not a float RGB image.
-     */
-    DLL bool PrefilterEnvironmentEquirect ( const Texture& aEnvironment, uint32_t aBaseWidth,
-                                            uint32_t aMipCount, std::vector<std::vector<float>>& aMips );
-    /** @brief GGX-prefilters an equirectangular HDR environment into a specular
      *  IBL cube-map mip chain (split-sum pre-integrated radiance).
      *
-     *  Same convolution as PrefilterEnvironmentEquirect, but the output is a cube
-     *  map: uniform angular resolution and hardware-seamless edge filtering, so a
-     *  shader looks it up with a direction via @c textureLod(cube, dir, rough*max).
-     *  Each mip holds the six faces in the standard Vulkan/OpenGL order
-     *  (+X, -X, +Y, -Y, +Z, -Z), face-major, each face row-major.
+     *  Mip 0 is a sharp (roughness 0) resample; each higher mip is convolved
+     *  with the GGX lobe for an increasing roughness via importance sampling. The
+     *  cube gives uniform angular resolution and hardware-seamless edge
+     *  filtering, so a shader looks it up with a direction via
+     *  @c textureLod(cube, dir, roughness * maxLod). Each mip holds the six faces
+     *  in the standard Vulkan/OpenGL order (+X, -X, +Y, -Y, +Z, -Z), face-major,
+     *  each face row-major.
      *  @param aEnvironment Source equirectangular environment (Format::RGB,
      *                      Type::FLOAT, +Z up).
      *  @param aFaceSize Edge length of mip 0's faces; each mip halves it.
