@@ -64,6 +64,10 @@ namespace AeonGames
     // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
     // last mip = fully rough), matched by the shader's textureQueryLevels.
     static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
+    // Edge length of the skybox environment cube map's faces. Larger than the
+    // prefiltered cube because the skybox is viewed directly (sharp), not blurred
+    // by roughness; a single mip (no prefilter) resampled from the equirect HDR.
+    static constexpr uint32_t SKYBOX_ENV_FACE_SIZE = 512;
 
     void OpenGLWindow::Initialize()
     {
@@ -223,10 +227,10 @@ namespace AeonGames
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
             FinalizePointShadowMap();
-            if ( glIsTexture ( mEquirectTexture ) )
+            if ( glIsTexture ( mEnvironmentCubeTexture ) )
             {
-                glDeleteTextures ( 1, &mEquirectTexture );
-                mEquirectTexture = 0;
+                glDeleteTextures ( 1, &mEnvironmentCubeTexture );
+                mEnvironmentCubeTexture = 0;
             }
             if ( glIsTexture ( mPrefilteredEnvTexture ) )
             {
@@ -321,10 +325,10 @@ namespace AeonGames
             FinalizeShadowMap();
             FinalizeSpotShadowMap();
             FinalizePointShadowMap();
-            if ( glIsTexture ( mEquirectTexture ) )
+            if ( glIsTexture ( mEnvironmentCubeTexture ) )
             {
-                glDeleteTextures ( 1, &mEquirectTexture );
-                mEquirectTexture = 0;
+                glDeleteTextures ( 1, &mEnvironmentCubeTexture );
+                mEnvironmentCubeTexture = 0;
             }
             if ( glIsTexture ( mPrefilteredEnvTexture ) )
             {
@@ -804,25 +808,33 @@ namespace AeonGames
             mSkyboxPipeline.LoadFromFile ( "shaders/skybox" );
             mSkyboxLoaded = true;
         }
-        if ( mEquirectTexture == 0 )
+        // Resample the equirect HDR into a cube map (uniform angular resolution,
+        // seamless edges, no pole distortion) for the skybox. A single sharp mip
+        // (PrefilterEnvironmentCube with mip count 1 is a plain resample).
+        std::vector<std::vector<float>> env_faces;
+        if ( PrefilterEnvironmentCube ( *aEnvironmentMap, SKYBOX_ENV_FACE_SIZE, 1, env_faces ) )
         {
-            glGenTextures ( 1, &mEquirectTexture );
+            if ( mEnvironmentCubeTexture == 0 )
+            {
+                glGenTextures ( 1, &mEnvironmentCubeTexture );
+            }
+            glBindTexture ( GL_TEXTURE_CUBE_MAP, mEnvironmentCubeTexture );
+            const size_t face_floats = static_cast<size_t> ( SKYBOX_ENV_FACE_SIZE ) * SKYBOX_ENV_FACE_SIZE * 4;
+            for ( GLenum face = 0; face < 6; ++face )
+            {
+                glTexImage2D ( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGBA16F,
+                               SKYBOX_ENV_FACE_SIZE, SKYBOX_ENV_FACE_SIZE, 0, GL_RGBA, GL_FLOAT,
+                               env_faces[0].data() + face * face_floats );
+            }
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAX_LEVEL, 0 );
+            glBindTexture ( GL_TEXTURE_CUBE_MAP, 0 );
+            OPENGL_CHECK_ERROR_NO_THROW;
         }
-        glBindTexture ( GL_TEXTURE_2D, mEquirectTexture );
-        // The decoder hands back linear float pixels; store as *16F. Longitude
-        // wraps (REPEAT), latitude clamps at the poles (CLAMP_TO_EDGE).
-        const bool has_alpha = aEnvironmentMap->GetFormat() == Texture::Format::RGBA;
-        glTexImage2D ( GL_TEXTURE_2D, 0, has_alpha ? GL_RGBA16F : GL_RGB16F,
-                       static_cast<GLsizei> ( aEnvironmentMap->GetWidth() ),
-                       static_cast<GLsizei> ( aEnvironmentMap->GetHeight() ),
-                       0, has_alpha ? GL_RGBA : GL_RGB, GL_FLOAT,
-                       aEnvironmentMap->GetPixels().data() );
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT );
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
-        glBindTexture ( GL_TEXTURE_2D, 0 );
-        OPENGL_CHECK_ERROR_NO_THROW;
 
         // Build the GGX-prefiltered specular cube map on the CPU and upload it
         // into the (mutable, mipmapped) RGBA16F cube the shading pass samples
@@ -1156,7 +1168,7 @@ namespace AeonGames
         // depth-tested at (just inside) the far plane so geometry occludes it,
         // shaded in linear space so the tonemap pass exposes it with everything
         // else. Only when the scene provided an environment map.
-        if ( mSkyboxLoaded && mEquirectTexture != 0 )
+        if ( mSkyboxLoaded && mEnvironmentCubeTexture != 0 )
         {
             if ( mFullscreenVAO == 0 )
             {
@@ -1166,7 +1178,7 @@ namespace AeonGames
             glDisable ( GL_BLEND );
             mOpenGLRenderer.BindPipeline ( mSkyboxPipeline );
             mOpenGLRenderer.SetMatrices ( mMatrices );
-            glBindTextureUnit ( 0, mEquirectTexture );
+            glBindTextureUnit ( 0, mEnvironmentCubeTexture );
             glBindVertexArray ( mFullscreenVAO );
             glDrawArrays ( GL_TRIANGLES, 0, 3 );
             OPENGL_CHECK_ERROR_NO_THROW;

@@ -62,6 +62,10 @@ namespace AeonGames
     // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
     // last mip = fully rough), matched by the shader's textureQueryLevels.
     static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
+    // Edge length of the skybox environment cube map's faces. Larger than the
+    // prefiltered cube because the skybox is viewed directly (sharp), not blurred
+    // by roughness; a single mip (no prefilter) resampled from the equirect HDR.
+    static constexpr uint32_t SKYBOX_ENV_FACE_SIZE = 512;
 
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
@@ -1316,15 +1320,26 @@ namespace AeonGames
         vkDeviceWaitIdle ( device );
         FinalizeEnvironmentMap();
 
-        // Device-local RGBA32F equirect image. RGBA (not RGB) because 3-channel
-        // 32F images are not a guaranteed sampled format.
+        // Resample the equirect HDR into a cube map for the skybox (uniform
+        // angular resolution, seamless edges, no pole distortion). One sharp mip;
+        // PrefilterEnvironmentCube with mip count 1 is a plain resample.
+        std::vector<std::vector<float>> env_faces;
+        if ( !PrefilterEnvironmentCube ( *aEnvironmentMap, SKYBOX_ENV_FACE_SIZE, 1, env_faces ) )
+        {
+            return;
+        }
+        const uint32_t face_size = SKYBOX_ENV_FACE_SIZE;
+
+        // Device-local RGBA32F cube image (RGBA because 3-channel 32F is not a
+        // guaranteed sampled format); six array layers, cube-compatible.
         VkImageCreateInfo image_create_info{};
         image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        image_create_info.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
         image_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
         image_create_info.imageType = VK_IMAGE_TYPE_2D;
-        image_create_info.extent = { width, height, 1 };
+        image_create_info.extent = { face_size, face_size, 1 };
         image_create_info.mipLevels = 1;
-        image_create_info.arrayLayers = 1;
+        image_create_info.arrayLayers = 6;
         image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
         image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
         image_create_info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
@@ -1343,29 +1358,28 @@ namespace AeonGames
         VkImageViewCreateInfo view_create_info{};
         view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
         view_create_info.image = mVkEnvImage;
-        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        view_create_info.viewType = VK_IMAGE_VIEW_TYPE_CUBE;
         view_create_info.format = VK_FORMAT_R32G32B32A32_SFLOAT;
         view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         view_create_info.subresourceRange.levelCount = 1;
-        view_create_info.subresourceRange.layerCount = 1;
+        view_create_info.subresourceRange.layerCount = 6;
         vkCreateImageView ( device, &view_create_info, nullptr, &mVkEnvImageView );
 
-        // Linear sampler; longitude wraps (REPEAT U), latitude clamps (CLAMP V).
+        // Linear sampler; cube sampling is seamless across faces, all clamp.
         VkSamplerCreateInfo sampler_create_info{};
         sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         sampler_create_info.magFilter = VK_FILTER_LINEAR;
         sampler_create_info.minFilter = VK_FILTER_LINEAR;
         sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
         sampler_create_info.maxLod = 1.0f;
         sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
         vkCreateSampler ( device, &sampler_create_info, nullptr, &mVkEnvSampler );
 
-        // Staging buffer with RGB -> RGBA float expansion (alpha unused).
-        const VkDeviceSize pixel_count = static_cast<VkDeviceSize> ( width ) * height;
-        const VkDeviceSize staging_size = pixel_count * 4 * sizeof ( float );
+        // Staging buffer holding the six cube faces back to back (already RGBA).
+        const VkDeviceSize staging_size = static_cast<VkDeviceSize> ( env_faces[0].size() ) * sizeof ( float );
         VkBuffer staging_buffer{};
         VkDeviceMemory staging_memory{};
         VkBufferCreateInfo buffer_create_info{};
@@ -1385,17 +1399,7 @@ namespace AeonGames
 
         void* mapped = nullptr;
         vkMapMemory ( device, staging_memory, 0, staging_size, 0, &mapped );
-        const float* src = reinterpret_cast<const float*> ( aEnvironmentMap->GetPixels().data() );
-        float* dst = static_cast<float*> ( mapped );
-        const bool src_has_alpha = aEnvironmentMap->GetFormat() == Texture::Format::RGBA;
-        const uint32_t src_channels = src_has_alpha ? 4u : 3u;
-        for ( VkDeviceSize i = 0; i < pixel_count; ++i )
-        {
-            dst[i * 4 + 0] = src[i * src_channels + 0];
-            dst[i * 4 + 1] = src[i * src_channels + 1];
-            dst[i * 4 + 2] = src[i * src_channels + 2];
-            dst[i * 4 + 3] = src_has_alpha ? src[i * src_channels + 3] : 1.0f;
-        }
+        std::memcpy ( mapped, env_faces[0].data(), static_cast<size_t> ( staging_size ) );
         vkUnmapMemory ( device, staging_memory );
 
         // Upload + layout transitions (UNDEFINED -> TRANSFER_DST -> SHADER_READ).
@@ -1407,7 +1411,7 @@ namespace AeonGames
         barrier.image = mVkEnvImage;
         barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
         barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.layerCount = 1;
+        barrier.subresourceRange.layerCount = 6;
         barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
         barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.srcAccessMask = 0;
@@ -1415,8 +1419,8 @@ namespace AeonGames
         vkCmdPipelineBarrier ( command_buffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier );
         VkBufferImageCopy copy{};
         copy.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        copy.imageSubresource.layerCount = 1;
-        copy.imageExtent = { width, height, 1 };
+        copy.imageSubresource.layerCount = 6;
+        copy.imageExtent = { face_size, face_size, 1 };
         vkCmdCopyBufferToImage ( command_buffer, staging_buffer, mVkEnvImage, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copy );
         barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
         barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
@@ -1427,8 +1431,8 @@ namespace AeonGames
         vkDestroyBuffer ( device, staging_buffer, nullptr );
         vkFreeMemory ( device, staging_memory, nullptr );
 
-        // Descriptor set: the equirect image sampled by skybox.frag. Mirrors the
-        // tonemap set (1 combined image sampler, VK_SHADER_STAGE_ALL).
+        // Descriptor set: the environment cube sampled by skybox.frag. Mirrors
+        // the tonemap set (1 combined image sampler, VK_SHADER_STAGE_ALL).
         VkDescriptorSetLayoutCreateInfo layout_create_info{};
         layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layout_create_info.bindingCount = 1;
