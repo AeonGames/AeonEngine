@@ -162,13 +162,35 @@ float ssr_trace ( vec3 view_pos, vec3 reflect_dir, mat4 inv_proj, out vec2 hit_u
                               lo = mid;
                         }
                   }
-                  // Fade out near the screen edges to hide the march running off.
+                  // Fade near the screen edges (hide the march running off the
+                  // side) and toward the end of the ray (increasingly uncertain).
                   vec2 edge = smoothstep ( vec2 ( 0.0 ), vec2 ( 0.1 ), hit_uv ) *
                               ( 1.0 - smoothstep ( vec2 ( 0.9 ), vec2 ( 1.0 ), hit_uv ) );
-                  return edge.x * edge.y;
+                  float dist_fade = 1.0 - smoothstep ( 0.6, 1.0, float ( i ) / float ( STEPS ) );
+                  return edge.x * edge.y * dist_fade;
             }
       }
       return 0.0;
+}
+
+// Blur the reflected colour to approximate a rougher surface's wider specular
+// lobe: a small hexagonal disk of taps whose radius grows with roughness. A
+// cheap stand-in for a proper cone trace; only runs on SSR-hit pixels.
+vec3 sample_reflection_blur ( vec2 uv, float radius )
+{
+      vec3 sum = texture ( HdrColor, uv ).rgb;
+      if ( radius <= 0.001 )
+      {
+            return sum;
+      }
+      vec2 taps[6] = vec2[6] (
+                         vec2 (  1.0,  0.0 ),   vec2 (  0.5,  0.866 ), vec2 ( -0.5,  0.866 ),
+                         vec2 ( -1.0,  0.0 ),   vec2 ( -0.5, -0.866 ), vec2 (  0.5, -0.866 ) );
+      for ( int i = 0; i < 6; ++i )
+      {
+            sum += texture ( HdrColor, uv + taps[i] * radius ).rgb;
+      }
+      return sum / 7.0;
 }
 
 void main()
@@ -202,11 +224,12 @@ void main()
             }
             reflection = env_reflection;
 
-            // Screen-space reflections for surfaces sharp enough to benefit (the
-            // prefiltered cube handles rough ones) and only where this pixel has
-            // real geometry (depth < 1, i.e. not the cleared far plane).
+            // Screen-space reflections for surfaces glossy enough to benefit
+            // (the prefiltered cube handles rough ones, so matte surfaces do not
+            // pick up a wet-looking sheen), blurred by roughness to match the
+            // surface, and only where this pixel has real geometry (depth < 1).
             float depth = texture ( SceneDepth, CoordUV ).r;
-            float ssr_fade = 1.0 - smoothstep ( 0.3, 0.55, roughness );
+            float ssr_fade = 1.0 - smoothstep ( 0.3, 0.5, roughness );
             if ( depth < 1.0 && ssr_fade > 0.0 )
             {
                   mat4 inv_proj  = inverse ( ProjectionMatrix );
@@ -216,7 +239,8 @@ void main()
                   float conf = ssr_trace ( view_pos, view_refl, inv_proj, hit_uv ) * ssr_fade;
                   if ( conf > 0.0 )
                   {
-                        reflection = mix ( env_reflection, texture ( HdrColor, hit_uv ).rgb, conf );
+                        vec3 ssr_color = sample_reflection_blur ( hit_uv, roughness * 0.025 );
+                        reflection = mix ( env_reflection, ssr_color, conf );
                   }
             }
       }
