@@ -714,7 +714,16 @@ void main()
       FragColor = vec4 ( color, tex.a * BaseColorFactor.a );
       // G-buffer for the deferred specular composite: the view-space normal and
       // roughness select the reflection, and the pre-integrated specular weight
-      // (with AO) scales it.
+      // scales it. The weight is attenuated by a specular-occlusion term
+      // (Lagarde) rather than raw AO: rough, occluded surfaces should barely
+      // reflect the environment, which stops matte interiors looking wet under a
+      // bright sky while leaving smooth / open surfaces reflective.
+      float spec_occlusion = clamp ( pow ( NdotV_ambient + ao, exp2 ( -16.0 * roughness - 1.0 ) )
+                                     - 1.0 + ao, 0.0, 1.0 );
+      // Overall strength of the environment specular reflection. Physically 1.0,
+      // but a bright HDR sky makes a full-strength reflection read as a wet sheen
+      // on floors and other flat surfaces, so it is dialled back a little.
+      const float AMBIENT_SPECULAR_INTENSITY = 0.5;
       GNormalRough = vec4 ( N, roughness );
-      GSpecWeight  = vec4 ( ( F0 * ambient_brdf.x + ambient_brdf.y ) * ao, 1.0 );
+      GSpecWeight  = vec4 ( ( F0 * ambient_brdf.x + ambient_brdf.y ) * spec_occlusion * AMBIENT_SPECULAR_INTENSITY, 1.0 );
 }
