@@ -149,6 +149,11 @@ namespace AeonGames
         return mVkPhysicalDeviceMemoryProperties;
     }
 
+    const VkPhysicalDeviceDescriptorIndexingProperties & VulkanRenderer::GetDescriptorIndexingProperties() const
+    {
+        return mVkDescriptorIndexingProperties;
+    }
+
     VkRenderPass VulkanRenderer::GetRenderPass() const
     {
         auto it = mWindowStore.begin();
@@ -521,6 +526,71 @@ namespace AeonGames
             ( supported_restart_features.primitiveTopologyPatchListRestart == VK_TRUE );
         mHasPrimitiveTopologyListRestart = ( supported_restart_features.primitiveTopologyListRestart == VK_TRUE );
 #endif
+        // Query and require the descriptor-indexing (bindless), buffer device
+        // address, indirect-draw-count and draw-parameter features the bindless
+        // / GPU-driven renderer path depends on. All are core in the requested
+        // Vulkan 1.2+, so no extension is needed; we still verify the physical
+        // device actually supports them and fail fast with a precise message.
+        VkPhysicalDeviceVulkan11Features supported_vulkan11_features{};
+        supported_vulkan11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
+        VkPhysicalDeviceVulkan12Features supported_vulkan12_features{};
+        supported_vulkan12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        supported_vulkan11_features.pNext = &supported_vulkan12_features;
+        VkPhysicalDeviceFeatures2 supported_features2{};
+        supported_features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+        supported_features2.pNext = &supported_vulkan11_features;
+        vkGetPhysicalDeviceFeatures2 ( mVkPhysicalDevice, &supported_features2 );
+
+        struct RequiredFeature
+        {
+            VkBool32 supported;
+            const char* name;
+        };
+        const RequiredFeature required_features[]
+        {
+            { supported_features2.features.multiDrawIndirect, "multiDrawIndirect" },
+            { supported_vulkan11_features.shaderDrawParameters, "shaderDrawParameters" },
+            { supported_vulkan12_features.descriptorIndexing, "descriptorIndexing" },
+            { supported_vulkan12_features.shaderSampledImageArrayNonUniformIndexing, "shaderSampledImageArrayNonUniformIndexing" },
+            { supported_vulkan12_features.runtimeDescriptorArray, "runtimeDescriptorArray" },
+            { supported_vulkan12_features.descriptorBindingPartiallyBound, "descriptorBindingPartiallyBound" },
+            { supported_vulkan12_features.descriptorBindingVariableDescriptorCount, "descriptorBindingVariableDescriptorCount" },
+            { supported_vulkan12_features.descriptorBindingSampledImageUpdateAfterBind, "descriptorBindingSampledImageUpdateAfterBind" },
+            { supported_vulkan12_features.bufferDeviceAddress, "bufferDeviceAddress" },
+            { supported_vulkan12_features.drawIndirectCount, "drawIndirectCount" },
+        };
+        {
+            std::ostringstream missing;
+            for ( const RequiredFeature& feature : required_features )
+            {
+                if ( feature.supported != VK_TRUE )
+                {
+                    missing << ( missing.tellp() > 0 ? ", " : "" ) << feature.name;
+                }
+            }
+            if ( missing.tellp() > 0 )
+            {
+                std::ostringstream stream;
+                stream << "VulkanRenderer physical device is missing required features: " << missing.str();
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+        }
+
+        // Descriptor-indexing limits (max bindless array sizes) stored for the
+        // global bindless resource arrays created in a later phase.
+        mVkDescriptorIndexingProperties.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_DESCRIPTOR_INDEXING_PROPERTIES;
+        VkPhysicalDeviceProperties2 physical_device_properties2{};
+        physical_device_properties2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2;
+        physical_device_properties2.pNext = &mVkDescriptorIndexingProperties;
+        vkGetPhysicalDeviceProperties2 ( mVkPhysicalDevice, &physical_device_properties2 );
+        std::cout << LogLevel::Info << "VulkanRenderer bindless/GPU-driven features supported: descriptorIndexing, "
+                                       "bufferDeviceAddress, drawIndirectCount, multiDrawIndirect, shaderDrawParameters." << std::endl;
+        std::cout << LogLevel::Debug << "maxDescriptorSetUpdateAfterBindSampledImages: "
+                  << mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSampledImages << std::endl;
+        std::cout << LogLevel::Debug << "maxPerStageDescriptorUpdateAfterBindSampledImages: "
+                  << mVkDescriptorIndexingProperties.maxPerStageDescriptorUpdateAfterBindSampledImages << std::endl;
+
         VkDeviceCreateInfo device_create_info {};
         device_create_info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         // Multiview renders all six point-shadow cube faces in a single pass
@@ -529,9 +599,26 @@ namespace AeonGames
         VkPhysicalDeviceVulkan11Features vulkan11_features {};
         vulkan11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
         vulkan11_features.multiview = VK_TRUE;
+        // shaderDrawParameters exposes gl_DrawID / gl_BaseInstance for the
+        // GPU-driven indirect path.
+        vulkan11_features.shaderDrawParameters = VK_TRUE;
+        // Descriptor indexing (bindless), buffer device address and indirect
+        // draw count drive the bindless / GPU-driven renderer path; all verified
+        // supported above before this point.
+        VkPhysicalDeviceVulkan12Features vulkan12_features {};
+        vulkan12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+        vulkan12_features.descriptorIndexing = VK_TRUE;
+        vulkan12_features.shaderSampledImageArrayNonUniformIndexing = VK_TRUE;
+        vulkan12_features.runtimeDescriptorArray = VK_TRUE;
+        vulkan12_features.descriptorBindingPartiallyBound = VK_TRUE;
+        vulkan12_features.descriptorBindingVariableDescriptorCount = VK_TRUE;
+        vulkan12_features.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
+        vulkan12_features.bufferDeviceAddress = VK_TRUE;
+        vulkan12_features.drawIndirectCount = VK_TRUE;
 #ifdef VK_USE_PLATFORM_METAL_EXT
-        vulkan11_features.pNext = use_primitive_topology_list_restart ? &physical_device_primitive_topology_list_restart_features : nullptr;
+        vulkan12_features.pNext = use_primitive_topology_list_restart ? &physical_device_primitive_topology_list_restart_features : nullptr;
 #endif
+        vulkan11_features.pNext = &vulkan12_features;
         device_create_info.pNext = &vulkan11_features;
         device_create_info.queueCreateInfoCount = 1;
         device_create_info.pQueueCreateInfos = &device_queue_create_info;
@@ -549,6 +636,8 @@ namespace AeonGames
         enabled_features.fragmentStoresAndAtomics = VK_TRUE;
         enabled_features.imageCubeArray = VK_TRUE;
         enabled_features.independentBlend = VK_TRUE;
+        // multiDrawIndirect backs the GPU-driven multi-draw path.
+        enabled_features.multiDrawIndirect = VK_TRUE;
         device_create_info.pEnabledFeatures = &enabled_features;
 
         /// @todo Grab best device rather than first one

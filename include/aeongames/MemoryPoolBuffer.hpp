@@ -23,6 +23,16 @@ limitations under the License.
 namespace AeonGames
 {
     class Buffer;
+    /** @brief Number of frames the CPU may record ahead of the GPU.
+     *
+     * Shared by both backends so per-frame resources (uniform/storage pools,
+     * per-window buffers, sync objects) are ring-buffered a consistent number
+     * of ways. Reusing a single physical buffer every frame lets the next
+     * frame's CPU writes race the previous frame's still-in-flight GPU reads;
+     * advancing through @ref kFramesInFlight distinct copies removes the hazard
+     * without relying on driver buffer-renaming. Three keeps the GPU fed while
+     * bounding latency and per-window memory. */
+    constexpr uint32_t kFramesInFlight = 3;
     /** @brief Abstract interface for a pool-based buffer allocator. */
     class MemoryPoolBuffer
     {

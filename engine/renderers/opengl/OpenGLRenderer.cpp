@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <atomic>
 #include <cassert>
+#include <cstring>
 #include "OpenGLRenderer.hpp"
 #include "OpenGLBuffer.hpp"
 #include "OpenGLWindow.hpp"
@@ -220,6 +221,7 @@ void main()
             std::cout << LogLevel::Error << "Unable to Load OpenGL functions." << std::endl;
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
+        LogCapabilities();
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
         InitializeOverlay();
@@ -377,6 +379,7 @@ void main()
             throw std::runtime_error ( "Unable to Load OpenGL functions." );
         }
 
+        LogCapabilities();
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
         InitializeOverlay();
@@ -412,6 +415,47 @@ void main()
         }
     }
 #endif
+
+    void OpenGLRenderer::LogCapabilities()
+    {
+        GLint major = 0;
+        GLint minor = 0;
+        glGetIntegerv ( GL_MAJOR_VERSION, &major );
+        glGetIntegerv ( GL_MINOR_VERSION, &minor );
+        const auto has_extension = [] ( const char* aName ) -> bool
+                                   {
+                                       GLint count = 0;
+                                       glGetIntegerv ( GL_NUM_EXTENSIONS, &count );
+                                       for ( GLint i = 0; i < count; ++i )
+    {
+        const GLubyte* extension = glGetStringi ( GL_EXTENSIONS, static_cast<GLuint> ( i ) );
+            if ( extension != nullptr && std::strcmp ( reinterpret_cast<const char*> ( extension ), aName ) == 0 )
+            {
+                return true;
+            }
+        }
+        return false;
+                                   };
+        mHasBindlessTexture = has_extension ( "GL_ARB_bindless_texture" );
+        mHasIndirectParameters = has_extension ( "GL_ARB_indirect_parameters" );
+        mHasComputeShader = ( major > 4 ) || ( major == 4 && minor >= 3 );
+        std::cout << LogLevel::Info << "OpenGLRenderer version " << major << "." << minor
+                  << " | bindless_texture: " << ( mHasBindlessTexture ? "yes" : "no" )
+                  << " | indirect_parameters: " << ( mHasIndirectParameters ? "yes" : "no" )
+                  << " | compute(4.3+): " << ( mHasComputeShader ? "yes" : "no" ) << std::endl;
+        if ( !mHasBindlessTexture )
+        {
+            std::cout << LogLevel::Warning << "OpenGLRenderer: GL_ARB_bindless_texture unavailable; the bindless texture path will be disabled." << std::endl;
+        }
+        if ( !mHasIndirectParameters )
+        {
+            std::cout << LogLevel::Warning << "OpenGLRenderer: GL_ARB_indirect_parameters unavailable; the GPU-driven indirect-count path will be disabled." << std::endl;
+        }
+        if ( !mHasComputeShader )
+        {
+            std::cout << LogLevel::Warning << "OpenGLRenderer: compute shaders (GL 4.3+) unavailable; GPU culling will be disabled." << std::endl;
+        }
+    }
 
     void OpenGLRenderer::InitializeOverlay()
     {

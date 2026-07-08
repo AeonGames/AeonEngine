@@ -54,14 +54,14 @@ namespace AeonGames
     private:
         const OpenGLRenderer&  mOpenGLRenderer;
         size_t mOffset{0};
-        // Ring of distinct buffer objects, one per in-flight frame. Per-frame
-        // draws read their object matrices straight from these buffers; reusing
-        // a single buffer every frame lets the next frame's writes race the
-        // previous frame's still-in-flight draws (a write-after-read hazard the
-        // AMD OpenGL driver does not serialize and that buffer orphaning did not
-        // cure). Advancing to a different physical buffer each frame removes the
-        // hazard without relying on driver buffer-renaming.
-        static constexpr size_t kFramesInFlight = 3;
+        // Ring of distinct buffer objects, one per in-flight frame (see
+        // AeonGames::kFramesInFlight). Per-frame draws read their object
+        // matrices straight from these buffers; reusing a single buffer every
+        // frame lets the next frame's writes race the previous frame's
+        // still-in-flight draws (a write-after-read hazard the AMD OpenGL driver
+        // does not serialize and that buffer orphaning did not cure). Advancing
+        // to a different physical buffer each frame removes the hazard without
+        // relying on driver buffer-renaming.
         std::array<OpenGLBuffer, kFramesInFlight> mStorageBuffers{};
         size_t mCurrent{0};
     };

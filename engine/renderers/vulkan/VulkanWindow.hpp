@@ -344,8 +344,16 @@ namespace AeonGames
         // cannot be sampled directly).
         VkImageView mVkDepthSampleImageView { VK_NULL_HANDLE };
         VkSampler mVkDepthSampler{ VK_NULL_HANDLE };
-        VkCommandPool mVkCommandPool{ VK_NULL_HANDLE };
+        // Command pools/buffers are ring-buffered one per frame in flight so the
+        // CPU can record frame N+1 while the GPU still executes frame N.
+        // mVkCommandBuffer aliases the current frame's buffer (set in BeginFrame)
+        // so the recording code can stay index-agnostic.
+        std::array<VkCommandPool, kFramesInFlight> mVkCommandPools{};
+        std::array<VkCommandBuffer, kFramesInFlight> mVkCommandBuffers{};
         VkCommandBuffer mVkCommandBuffer{ VK_NULL_HANDLE };
+        // Index of the frame currently being recorded (0..kFramesInFlight-1),
+        // advanced once per EndRender. Distinct from the swapchain image index.
+        uint32_t mFrameIndex{ 0 };
         bool mHasStencil{ false };
         uint32_t mActiveImageIndex{ UINT32_MAX };
         VkViewport mVkViewport{0, 0, 1, 1, 0, 1};

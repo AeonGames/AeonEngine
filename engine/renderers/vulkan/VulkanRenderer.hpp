@@ -63,6 +63,9 @@ namespace AeonGames
         const VkPhysicalDeviceProperties& GetPhysicalDeviceProperties() const;
         /// @brief Get the physical device memory properties.
         const VkPhysicalDeviceMemoryProperties& GetPhysicalDeviceMemoryProperties() const;
+        /// @brief Get the descriptor-indexing (bindless) limits queried at
+        ///        device creation, used to size the global bindless resource arrays.
+        const VkPhysicalDeviceDescriptorIndexingProperties& GetDescriptorIndexingProperties() const;
         /// @brief Get or create a descriptor set layout matching the given create info.
         const VkDescriptorSetLayout& GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const;
         //const VkDescriptorSetLayout& GetSamplerDescriptorSetLayout ( size_t aSamplerCount ) const;
@@ -200,6 +203,10 @@ namespace AeonGames
         VkPhysicalDevice mVkPhysicalDevice{ VK_NULL_HANDLE };
         VkPhysicalDeviceProperties  mVkPhysicalDeviceProperties{};
         VkPhysicalDeviceMemoryProperties  mVkPhysicalDeviceMemoryProperties{};
+        // Descriptor-indexing (bindless) limits queried at device creation and
+        // used later to size the global bindless texture array. Populated in
+        // InitializeDevice alongside the feature checks.
+        VkPhysicalDeviceDescriptorIndexingProperties mVkDescriptorIndexingProperties{};
         PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{nullptr};
         PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{nullptr};
         VkDebugUtilsMessengerEXT mVkDebugUtilsMessengerEXT{VK_NULL_HANDLE};

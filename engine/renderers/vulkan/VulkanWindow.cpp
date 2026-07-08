@@ -209,8 +209,10 @@ namespace AeonGames
         std::swap ( mPointShadowDepthMatrixStride, aVulkanWindow.mPointShadowDepthMatrixStride );
         std::swap ( mFrameLightGrid, aVulkanWindow.mFrameLightGrid );
         std::swap ( mFrameLightIndexList, aVulkanWindow.mFrameLightIndexList );
-        std::swap ( mVkCommandPool, aVulkanWindow.mVkCommandPool );
+        std::swap ( mVkCommandPools, aVulkanWindow.mVkCommandPools );
+        std::swap ( mVkCommandBuffers, aVulkanWindow.mVkCommandBuffers );
         std::swap ( mVkCommandBuffer, aVulkanWindow.mVkCommandBuffer );
+        std::swap ( mFrameIndex, aVulkanWindow.mFrameIndex );
         std::swap ( mVkAcquireSemaphore, aVulkanWindow.mVkAcquireSemaphore );
         std::swap ( mVkFence, aVulkanWindow.mVkFence );
         mVkSwapchainImages.swap ( aVulkanWindow.mVkSwapchainImages );
@@ -2868,23 +2870,34 @@ namespace AeonGames
          */
         command_pool_create_info.flags = /*VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT*/ 0;
         command_pool_create_info.queueFamilyIndex = mVulkanRenderer.GetQueueFamilyIndex();
-        vkCreateCommandPool ( mVulkanRenderer.GetDevice(), &command_pool_create_info, nullptr, &mVkCommandPool );
+        // One pool + primary buffer per frame in flight so recording a new frame
+        // does not have to wait for a previous frame's buffer to be idle.
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            vkCreateCommandPool ( mVulkanRenderer.GetDevice(), &command_pool_create_info, nullptr, &mVkCommandPools[i] );
 
-        VkCommandBufferAllocateInfo command_buffer_allocate_info{};
-        command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        command_buffer_allocate_info.commandPool = mVkCommandPool;
-        command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        command_buffer_allocate_info.commandBufferCount = 1;
-        vkAllocateCommandBuffers ( mVulkanRenderer.GetDevice(), &command_buffer_allocate_info, &mVkCommandBuffer );
+            VkCommandBufferAllocateInfo command_buffer_allocate_info{};
+            command_buffer_allocate_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+            command_buffer_allocate_info.commandPool = mVkCommandPools[i];
+            command_buffer_allocate_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+            command_buffer_allocate_info.commandBufferCount = 1;
+            vkAllocateCommandBuffers ( mVulkanRenderer.GetDevice(), &command_buffer_allocate_info, &mVkCommandBuffers[i] );
+        }
+        // Alias the first frame's buffer until BeginFrame selects per frame.
+        mVkCommandBuffer = mVkCommandBuffers[0];
     }
 
     void VulkanWindow::FinalizeCommandBuffer()
     {
-        if ( mVkCommandPool != VK_NULL_HANDLE )
+        for ( VkCommandPool& command_pool : mVkCommandPools )
         {
-            vkDestroyCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPool, nullptr );
-            mVkCommandPool = VK_NULL_HANDLE;
+            if ( command_pool != VK_NULL_HANDLE )
+            {
+                vkDestroyCommandPool ( mVulkanRenderer.GetDevice(), command_pool, nullptr );
+                command_pool = VK_NULL_HANDLE;
+            }
         }
+        mVkCommandBuffer = VK_NULL_HANDLE;
     }
 
     void VulkanWindow::BeginFrame()
@@ -2921,7 +2934,11 @@ namespace AeonGames
         VkCommandBufferBeginInfo command_buffer_begin_info{};
         command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        vkResetCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPool, 0 );
+        // Record this frame into its own ring slot. The frame fence waited on
+        // above guarantees this slot's previous submission has completed, so
+        // resetting its pool is safe.
+        mVkCommandBuffer = mVkCommandBuffers[mFrameIndex];
+        vkResetCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPools[mFrameIndex], 0 );
         if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  Error Code: " << result << " at " << __func__ << " line " << __LINE__ << " " << std::endl;
@@ -3209,6 +3226,10 @@ namespace AeonGames
         mMemoryPoolBuffer.Reset();
         mStorageMemoryPoolBuffer.Reset();
         mFrameBegun = false;
+        // Advance to the next ring slot for command buffers (and, in later
+        // steps, per-frame buffers/targets). Independent of the swapchain image
+        // index resolved by vkAcquireNextImageKHR.
+        mFrameIndex = ( mFrameIndex + 1 ) % kFramesInFlight;
     }
 
     static const std::unordered_map<Topology, VkPrimitiveTopology> TopologyMap

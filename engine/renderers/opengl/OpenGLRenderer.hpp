@@ -182,6 +182,9 @@ namespace AeonGames
         void InitializeOverlay();
         /// @brief Release overlay shader program and quad buffer.
         void FinalizeOverlay();
+        /// @brief Probe and log the GL version and the extensions the bindless /
+        ///        GPU-driven path depends on; records the capability flags below.
+        void LogCapabilities();
         /// @brief Submit the scene's render queue for a single pass, resolving
         ///        the target window once and issuing instanced draws on it.
         void SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass ) final;
@@ -196,6 +199,13 @@ namespace AeonGames
 #endif
         /// General VAO
         GLuint mVertexArrayObject{};
+        /// @name Bindless / GPU-driven capability flags, probed at construction
+        ///       by LogCapabilities() and used to gate the bindless / indirect paths.
+        ///@{
+        bool mHasBindlessTexture{false};
+        bool mHasIndirectParameters{false};
+        bool mHasComputeShader{false};
+        ///@}
         /** \addtogroup OverlayFunctionality Overlay functionality.
          * Both the shader program and the buffer describing the window/screen quad are
          * pretty much constant and usable without modifications by any Opengl window,
