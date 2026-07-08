@@ -119,6 +119,8 @@ namespace AeonGames
         std::swap ( mVkDepthStencilImage, aVulkanWindow.mVkDepthStencilImage );
         std::swap ( mVkDepthStencilImageMemory, aVulkanWindow.mVkDepthStencilImageMemory );
         std::swap ( mVkDepthStencilImageView, aVulkanWindow.mVkDepthStencilImageView );
+        std::swap ( mVkDepthSampleImageView, aVulkanWindow.mVkDepthSampleImageView );
+        std::swap ( mVkDepthSampler, aVulkanWindow.mVkDepthSampler );
         std::swap ( mHasStencil, aVulkanWindow.mHasStencil );
         std::swap ( mActiveImageIndex, aVulkanWindow.mActiveImageIndex );
         std::swap ( mVkViewport, aVulkanWindow.mVkViewport );
@@ -458,7 +460,9 @@ namespace AeonGames
         image_create_info.arrayLayers = 1;
         image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
         image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-        image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+        // SAMPLED so the SSR composite can read the scene depth to reconstruct
+        // view-space positions and ray-march reflections.
+        image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
         image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
         image_create_info.queueFamilyIndexCount = 0;
         image_create_info.pQueueFamilyIndices = nullptr;
@@ -517,6 +521,25 @@ namespace AeonGames
         image_view_create_info.subresourceRange.baseArrayLayer = 0;
         image_view_create_info.subresourceRange.layerCount = 1;
         vkCreateImageView ( mVulkanRenderer.GetDevice(), &image_view_create_info, nullptr, &mVkDepthStencilImageView );
+
+        // Depth-only view for sampling in the SSR composite (a combined
+        // depth-stencil image cannot be sampled through a depth+stencil view).
+        VkImageViewCreateInfo depth_sample_view_create_info = image_view_create_info;
+        depth_sample_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+        vkCreateImageView ( mVulkanRenderer.GetDevice(), &depth_sample_view_create_info, nullptr, &mVkDepthSampleImageView );
+
+        // Point-sampled, clamped, non-comparison sampler: the composite reads raw
+        // depth values (NEAREST avoids blending depths across silhouettes).
+        VkSamplerCreateInfo depth_sampler_create_info{};
+        depth_sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        depth_sampler_create_info.magFilter = VK_FILTER_NEAREST;
+        depth_sampler_create_info.minFilter = VK_FILTER_NEAREST;
+        depth_sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        depth_sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        depth_sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        depth_sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        depth_sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        vkCreateSampler ( mVulkanRenderer.GetDevice(), &depth_sampler_create_info, nullptr, &mVkDepthSampler );
     }
 
     void VulkanWindow::InitializeFrameBuffers()
@@ -602,11 +625,11 @@ namespace AeonGames
         }
 
         // Tonemap/composite descriptor set (set 0): the HDR colour (binding 0)
-        // plus the deferred G-buffer normal+roughness (1) and specular weight (2)
-        // sampled by tonemap.frag. The Matrices, Globals and prefiltered-
-        // environment sets the composite also needs are bound at their reflected
-        // indices at draw time. Recreated on resize (points at the image views).
-        std::array<VkDescriptorSetLayoutBinding, 3> tonemap_layout_bindings{};
+        // plus the deferred G-buffer normal+roughness (1), specular weight (2)
+        // and the scene depth (3) sampled by tonemap.frag. The Matrices, Globals
+        // and prefiltered-environment sets the composite also needs are bound at
+        // their reflected indices at draw time. Recreated on resize.
+        std::array<VkDescriptorSetLayoutBinding, 4> tonemap_layout_bindings{};
         for ( uint32_t b = 0; b < tonemap_layout_bindings.size(); ++b )
         {
             tonemap_layout_bindings[b].binding = b;
@@ -618,16 +641,17 @@ namespace AeonGames
         tonemap_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         tonemap_layout_create_info.bindingCount = static_cast<uint32_t> ( tonemap_layout_bindings.size() );
         tonemap_layout_create_info.pBindings = tonemap_layout_bindings.data();
-        mTonemapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3}} );
+        mTonemapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4}} );
         mTonemapDescriptorSet = CreateDescriptorSet ( device, mTonemapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( tonemap_layout_create_info ) );
-        const VkImageView tonemap_views[3] = { mVkHdrColorImageView, mVkGNormalRoughImageView, mVkGSpecWeightImageView };
-        std::array<VkDescriptorImageInfo, 3> tonemap_image_infos{};
-        std::array<VkWriteDescriptorSet, 3> tonemap_writes{};
-        for ( uint32_t b = 0; b < 3; ++b )
+        const VkImageView tonemap_views[4] = { mVkHdrColorImageView, mVkGNormalRoughImageView, mVkGSpecWeightImageView, mVkDepthSampleImageView };
+        const VkSampler tonemap_samplers[4] = { mVkHdrSampler, mVkHdrSampler, mVkHdrSampler, mVkDepthSampler };
+        std::array<VkDescriptorImageInfo, 4> tonemap_image_infos{};
+        std::array<VkWriteDescriptorSet, 4> tonemap_writes{};
+        for ( uint32_t b = 0; b < 4; ++b )
         {
-            tonemap_image_infos[b].sampler = mVkHdrSampler;
+            tonemap_image_infos[b].sampler = tonemap_samplers[b];
             tonemap_image_infos[b].imageView = tonemap_views[b];
-            tonemap_image_infos[b].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            tonemap_image_infos[b].imageLayout = ( b == 3 ) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             tonemap_writes[b].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             tonemap_writes[b].dstSet = mTonemapDescriptorSet;
             tonemap_writes[b].dstBinding = b;
@@ -635,7 +659,7 @@ namespace AeonGames
             tonemap_writes[b].descriptorCount = 1;
             tonemap_writes[b].pImageInfo = &tonemap_image_infos[b];
         }
-        vkUpdateDescriptorSets ( device, 3, tonemap_writes.data(), 0, nullptr );
+        vkUpdateDescriptorSets ( device, 4, tonemap_writes.data(), 0, nullptr );
     }
 
     void VulkanWindow::InitializeRenderPass()
@@ -3088,6 +3112,26 @@ namespace AeonGames
         }
         vkCmdEndRenderPass ( mVkCommandBuffer );
 
+        // Transition the scene depth to a read-only layout so the composite pass
+        // can sample it (SSR reconstructs view-space positions from it and marches
+        // reflection rays against it).
+        VkImageMemoryBarrier depth_barrier{};
+        depth_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        depth_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        depth_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        depth_barrier.image = mVkDepthStencilImage;
+        depth_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( mHasStencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        depth_barrier.subresourceRange.levelCount = 1;
+        depth_barrier.subresourceRange.layerCount = 1;
+        depth_barrier.oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        depth_barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        depth_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &depth_barrier );
+
         // Resolve the linear HDR scene target to the swapchain: a second render
         // pass runs the fullscreen tonemap pipeline (exposure + ACES tone map +
         // sRGB encode), sampling the HDR colour image the scene pass left in
@@ -3720,6 +3764,16 @@ namespace AeonGames
 
     void VulkanWindow::FinalizeDepthStencil()
     {
+        if ( mVkDepthSampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( mVulkanRenderer.GetDevice(), mVkDepthSampler, nullptr );
+            mVkDepthSampler = VK_NULL_HANDLE;
+        }
+        if ( mVkDepthSampleImageView != VK_NULL_HANDLE )
+        {
+            vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthSampleImageView, nullptr );
+            mVkDepthSampleImageView = VK_NULL_HANDLE;
+        }
         if ( mVkDepthStencilImageView != VK_NULL_HANDLE )
         {
             vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageView, nullptr );

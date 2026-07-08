@@ -339,6 +339,11 @@ namespace AeonGames
         VkImage mVkDepthStencilImage{ VK_NULL_HANDLE };
         VkDeviceMemory mVkDepthStencilImageMemory{ VK_NULL_HANDLE };
         VkImageView mVkDepthStencilImageView { VK_NULL_HANDLE};
+        // Depth-aspect view + non-comparison sampler used by the SSR composite to
+        // sample the scene depth (the attachment view above may carry stencil and
+        // cannot be sampled directly).
+        VkImageView mVkDepthSampleImageView { VK_NULL_HANDLE };
+        VkSampler mVkDepthSampler{ VK_NULL_HANDLE };
         VkCommandPool mVkCommandPool{ VK_NULL_HANDLE };
         VkCommandBuffer mVkCommandBuffer{ VK_NULL_HANDLE };
         bool mHasStencil{ false };
