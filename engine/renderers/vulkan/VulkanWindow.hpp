@@ -450,6 +450,16 @@ namespace AeonGames
         VkImage mVkHdrColorImage{VK_NULL_HANDLE};
         VkDeviceMemory mVkHdrColorImageMemory{VK_NULL_HANDLE};
         VkImageView mVkHdrColorImageView{VK_NULL_HANDLE};
+        // Deferred-specular G-buffer, rendered alongside the HDR colour as extra
+        // colour attachments of the main pass and sampled by the composite in
+        // the tonemap pass: view-space normal + roughness, and specular weight.
+        // Both RGBA16F, extent-dependent (recreated on resize).
+        VkImage mVkGNormalRoughImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkGNormalRoughImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkGNormalRoughImageView{VK_NULL_HANDLE};
+        VkImage mVkGSpecWeightImage{VK_NULL_HANDLE};
+        VkDeviceMemory mVkGSpecWeightImageMemory{VK_NULL_HANDLE};
+        VkImageView mVkGSpecWeightImageView{VK_NULL_HANDLE};
         VkFramebuffer mVkHdrFramebuffer{VK_NULL_HANDLE};
         VkSampler mVkHdrSampler{VK_NULL_HANDLE};
         VkRenderPass mVkTonemapRenderPass{VK_NULL_HANDLE};

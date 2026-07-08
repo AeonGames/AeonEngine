@@ -32,36 +32,44 @@ namespace AeonGames
         glBindFramebuffer ( GL_FRAMEBUFFER, mFBO );
         OPENGL_CHECK_ERROR_THROW;
 
-        // Color Buffer
-        glGenTextures ( 1, &mColorBuffer );
+        // Creates an RGBA16F colour texture and attaches it at aAttachment.
+        auto make_color = [] ( GLuint & aTexture, GLenum aAttachment, GLint aFilter )
+        {
+            glGenTextures ( 1, &aTexture );
+            glBindTexture ( GL_TEXTURE_2D, aTexture );
+            glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_HALF_FLOAT, nullptr );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, aFilter );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, aFilter );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+            glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+            glBindTexture ( GL_TEXTURE_2D, 0 );
+            glFramebufferTexture2D ( GL_FRAMEBUFFER, aAttachment, GL_TEXTURE_2D, aTexture, 0 );
+        };
+        // [0] linear HDR radiance (tonemap samples it, LINEAR); [1] view normal +
+        // roughness; [2] specular weight. The G-buffer is point-sampled (NEAREST)
+        // so the composite reads exact per-pixel normals and weights.
+        make_color ( mColorBuffer, GL_COLOR_ATTACHMENT0, GL_LINEAR );
+        make_color ( mNormalRoughBuffer, GL_COLOR_ATTACHMENT1, GL_NEAREST );
+        make_color ( mSpecWeightBuffer, GL_COLOR_ATTACHMENT2, GL_NEAREST );
         OPENGL_CHECK_ERROR_THROW;
-        glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
+
+        const GLenum draw_buffers[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+        glDrawBuffers ( 3, draw_buffers );
         OPENGL_CHECK_ERROR_THROW;
-        // RGBA16F so the geometry pass can store linear HDR radiance that the
-        // fullscreen tonemap pass later exposes, tone maps and sRGB-encodes.
-        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, 800, 600, 0, GL_RGBA, GL_HALF_FLOAT, nullptr );
-        OPENGL_CHECK_ERROR_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
-        OPENGL_CHECK_ERROR_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-        OPENGL_CHECK_ERROR_THROW;
+
+        // Sampleable depth/stencil texture (renderbuffers cannot be sampled; the
+        // composite reconstructs view-space position from this depth).
+        glGenTextures ( 1, &mDepthTexture );
+        glBindTexture ( GL_TEXTURE_2D, mDepthTexture );
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, 800, 600, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
         glBindTexture ( GL_TEXTURE_2D, 0 );
+        glFramebufferTexture2D ( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, mDepthTexture, 0 );
         OPENGL_CHECK_ERROR_THROW;
 
-        glFramebufferTexture2D ( GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mColorBuffer, 0 );
-        OPENGL_CHECK_ERROR_THROW;
-        // Render Buffer
-        glGenRenderbuffers ( 1, &mRBO );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindRenderbuffer ( GL_RENDERBUFFER, mRBO );
-        OPENGL_CHECK_ERROR_THROW;
-        glRenderbufferStorage ( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 800, 600 );
-        OPENGL_CHECK_ERROR_THROW;
-        glBindRenderbuffer ( GL_RENDERBUFFER, 0 );
-        OPENGL_CHECK_ERROR_THROW;
-
-        glFramebufferRenderbuffer ( GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRBO );
-        OPENGL_CHECK_ERROR_THROW;
         if ( glCheckFramebufferStatus ( GL_FRAMEBUFFER ) != GL_FRAMEBUFFER_COMPLETE )
         {
             std::cout << LogLevel::Error << "Incomplete Framebuffer." << std::endl;
@@ -75,20 +83,20 @@ namespace AeonGames
 
     void OpenGLFrameBuffer::Finalize()
     {
-        if ( glIsRenderbuffer ( mRBO ) )
+        auto drop = [] ( GLuint & aTexture )
         {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteRenderbuffers ( 1, &mRBO );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mRBO = 0;
-        }
-        if ( glIsTexture ( mColorBuffer ) )
-        {
-            OPENGL_CHECK_ERROR_NO_THROW;
-            glDeleteTextures ( 1, &mColorBuffer );
-            OPENGL_CHECK_ERROR_NO_THROW;
-            mColorBuffer = 0;
-        }
+            if ( glIsTexture ( aTexture ) )
+            {
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glDeleteTextures ( 1, &aTexture );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                aTexture = 0;
+            }
+        };
+        drop ( mDepthTexture );
+        drop ( mSpecWeightBuffer );
+        drop ( mNormalRoughBuffer );
+        drop ( mColorBuffer );
         if ( glIsFramebuffer ( mFBO ) )
         {
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -103,9 +111,13 @@ namespace AeonGames
     {
         glBindTexture ( GL_TEXTURE_2D, mColorBuffer );
         glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, aWidth, aHeight, 0, GL_RGBA, GL_HALF_FLOAT, nullptr );
-        glBindRenderbuffer ( GL_RENDERBUFFER, mRBO );
-        glRenderbufferStorage ( GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, aWidth, aHeight );
-        glBindRenderbuffer ( GL_RENDERBUFFER, 0 );
+        glBindTexture ( GL_TEXTURE_2D, mNormalRoughBuffer );
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, aWidth, aHeight, 0, GL_RGBA, GL_HALF_FLOAT, nullptr );
+        glBindTexture ( GL_TEXTURE_2D, mSpecWeightBuffer );
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_RGBA16F, aWidth, aHeight, 0, GL_RGBA, GL_HALF_FLOAT, nullptr );
+        glBindTexture ( GL_TEXTURE_2D, mDepthTexture );
+        glTexImage2D ( GL_TEXTURE_2D, 0, GL_DEPTH24_STENCIL8, aWidth, aHeight, 0, GL_DEPTH_STENCIL, GL_UNSIGNED_INT_24_8, nullptr );
+        glBindTexture ( GL_TEXTURE_2D, 0 );
     }
     void OpenGLFrameBuffer::Bind()
     {
@@ -127,10 +139,27 @@ namespace AeonGames
         return mColorBuffer;
     }
 
+    GLuint OpenGLFrameBuffer::GetNormalRoughBuffer() const
+    {
+        return mNormalRoughBuffer;
+    }
+
+    GLuint OpenGLFrameBuffer::GetSpecWeightBuffer() const
+    {
+        return mSpecWeightBuffer;
+    }
+
+    GLuint OpenGLFrameBuffer::GetDepthBuffer() const
+    {
+        return mDepthTexture;
+    }
+
     OpenGLFrameBuffer::OpenGLFrameBuffer ( OpenGLFrameBuffer&& aOpenGLFrameBuffer )
     {
         std::swap ( mFBO, aOpenGLFrameBuffer.mFBO );
         std::swap ( mColorBuffer, aOpenGLFrameBuffer.mColorBuffer );
-        std::swap ( mRBO, aOpenGLFrameBuffer.mRBO );
+        std::swap ( mNormalRoughBuffer, aOpenGLFrameBuffer.mNormalRoughBuffer );
+        std::swap ( mSpecWeightBuffer, aOpenGLFrameBuffer.mSpecWeightBuffer );
+        std::swap ( mDepthTexture, aOpenGLFrameBuffer.mDepthTexture );
     }
 }

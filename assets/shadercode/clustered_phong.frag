@@ -230,25 +230,18 @@ uniform Globals
       vec4 sh[9];
 };
 
-// GGX-prefiltered specular radiance of the environment, stored as a cube-map
-// mip chain: mip 0 is mirror-sharp and each higher mip is a rougher
-// convolution, so textureLod(..., roughness * maxLod) yields the split-sum
-// pre-integrated radiance term. Sampled with a world-space direction (uniform
-// angular resolution, hardware-seamless edges). A 1x1 map means "no
-// environment", in which case the shader falls back to the flat ambient fill.
-#ifdef VULKAN
-layout(set = 15, binding = 0)
-#else
-layout(binding = 11)
-#endif
-uniform samplerCube PrefilteredEnvironment;
-
 layout(location = 0) in vec3 tnorm;
 layout(location = 1) in vec3 eyeCoords;
 layout(location = 2) in vec2 CoordUV;
 layout(location = 3) in vec3 ttangent;
 layout(location = 4) in vec3 tbitangent;
+// Deferred specular G-buffer: FragColor holds scene radiance WITHOUT the
+// specular ambient (the composite/tonemap pass adds it), GNormalRough carries
+// the view-space normal + roughness, and GSpecWeight the pre-integrated
+// specular weight the composite multiplies the reflection by.
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 GNormalRough;
+layout(location = 2) out vec4 GSpecWeight;
 
 // Map a view-space fragment to its cluster index, matching the tiling used by
 // the cluster-build compute stage: NDC.xy select the screen tile, view-space Y
@@ -702,46 +695,26 @@ void main()
             }
       }
 
-      // Ambient light via the split-sum IBL form. When the scene has an
-      // environment map, its SH gives the diffuse irradiance and its GGX
-      // prefiltered mip chain gives the specular reflection; otherwise the flat
-      // ambient colour (ambient.rgb * ambient.a) stands in for both. Splitting
-      // it this way gives metals a Fresnel-weighted, roughness-blurred ambient
-      // reflection instead of a flat albedo fill, and keeps energy roughly
-      // conserved. The result is linear HDR radiance that the fullscreen tonemap
-      // pass resolves (exposure + ACES + sRGB) on both backends.
-      vec3  env              = ambient.rgb * ambient.a;
+      // Ambient light via the split-sum IBL form, with the specular reflection
+      // DEFERRED: the diffuse irradiance (from the environment's SH, or the flat
+      // ambient when a scene has none) is added here, while the specular
+      // reflection is left to the composite/tonemap pass. That pass samples the
+      // prefiltered environment (or screen-space reflections) along the
+      // reflection vector and multiplies by the specular weight written below,
+      // so reflections can mix cube-map and SSR without double counting.
       float NdotV_ambient    = max ( dot ( N, V ), 0.0 );
       vec3  F_ambient        = fresnel_schlick_roughness ( NdotV_ambient, F0, roughness );
       vec3  kd_ambient       = ( vec3 ( 1.0 ) - F_ambient ) * ( 1.0 - metallic );
       vec2  ambient_brdf     = env_brdf_approx ( NdotV_ambient, roughness );
       // Diffuse IBL from the environment's SH irradiance, evaluated with the
-      // world-space normal. The SH encodes the real environment, or the flat
-      // ambient when a scene has none, so this stays correct either way. The
-      // Lambertian response is albedo / pi * E(n).
+      // world-space normal (albedo / pi * E(n)).
       vec3  world_normal     = normalize ( mat3 ( inverse ( ViewMatrix ) ) * N );
       vec3  diffuse_ambient  = albedo * sh_irradiance ( world_normal ) / PI;
-      // Specular IBL: sample the prefiltered environment cube along the
-      // world-space reflection vector at a mip chosen by roughness, then weight
-      // by the pre-integrated environment BRDF (F0 * scale + bias). A 1x1
-      // prefiltered map means the scene has no environment, so fall back to the
-      // flat env radiance to preserve the ambient-only look.
-      vec3  prefiltered_specular;
-      if ( textureSize ( PrefilteredEnvironment, 0 ).x > 1 )
-      {
-            vec3  world_view = normalize ( mat3 ( inverse ( ViewMatrix ) ) * V );
-            vec3  world_refl = reflect ( -world_view, world_normal );
-            float max_lod    = float ( textureQueryLevels ( PrefilteredEnvironment ) - 1 );
-            prefiltered_specular = textureLod ( PrefilteredEnvironment,
-                                                world_refl,
-                                                roughness * max_lod ).rgb;
-      }
-      else
-      {
-            prefiltered_specular = env;
-      }
-      vec3  specular_ambient = prefiltered_specular * ( F0 * ambient_brdf.x + ambient_brdf.y );
-      vec3  ambient_term     = ( kd_ambient * diffuse_ambient + specular_ambient ) * ao;
-      vec3 color = ambient_term + Lo + emissive;
+      vec3  color = kd_ambient * diffuse_ambient * ao + Lo + emissive;
       FragColor = vec4 ( color, tex.a * BaseColorFactor.a );
+      // G-buffer for the deferred specular composite: the view-space normal and
+      // roughness select the reflection, and the pre-integrated specular weight
+      // (with AO) scales it.
+      GNormalRough = vec4 ( N, roughness );
+      GSpecWeight  = vec4 ( ( F0 * ambient_brdf.x + ambient_brdf.y ) * ao, 1.0 );
 }

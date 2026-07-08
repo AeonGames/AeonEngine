@@ -183,7 +183,10 @@ namespace AeonGames
                 shaders.back().setAutoMapBindings ( true );
             }
             const int defaultVersion = mOptions & EOptionDefaultDesktop ? 110 : 100;
-            glslang::DefaultTBuiltInResource.maxDrawBuffers = true;
+            // Number of colour attachments a fragment shader may write. Must be
+            // an actual count (not a bool); the deferred-specular G-buffer uses
+            // three, so a value of 1 would reject its extra outputs.
+            glslang::DefaultTBuiltInResource.maxDrawBuffers = 8;
             // Compute-stage limits are otherwise left zero-initialized, which
             // would reject any non-trivial local_size; use glslang's standard
             // desktop defaults so compute shaders can declare workgroups.

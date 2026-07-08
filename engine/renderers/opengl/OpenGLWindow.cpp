@@ -1202,7 +1202,16 @@ namespace AeonGames
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         mOpenGLRenderer.BindPipeline ( mTonemapPipeline );
+        // Deferred specular composite inputs: HDR colour (unit 0), the G-buffer
+        // normal+roughness (unit 1) and specular weight (unit 2), plus the
+        // prefiltered environment cube (unit 11) and the Matrices / Globals
+        // UBOs the composite reflects and falls back with.
         glBindTextureUnit ( 0, mFrameBuffer.GetColorBuffer() );
+        glBindTextureUnit ( 1, mFrameBuffer.GetNormalRoughBuffer() );
+        glBindTextureUnit ( 2, mFrameBuffer.GetSpecWeightBuffer() );
+        glBindTextureUnit ( PREFILTERED_ENV_TEXTURE_UNIT, mPrefilteredEnvTexture );
+        mOpenGLRenderer.SetMatrices ( mMatrices );
+        mOpenGLRenderer.SetGlobals ( mGlobals );
         OPENGL_CHECK_ERROR_NO_THROW;
         glBindVertexArray ( mFullscreenVAO );
         OPENGL_CHECK_ERROR_NO_THROW;

@@ -46,10 +46,18 @@ namespace AeonGames
         GLuint GetFBO() const; /// This is temporary
         /// @brief Get the colour attachment texture (RGBA16F HDR).
         GLuint GetColorBuffer() const;
+        /// @brief Get the G-buffer view-normal + roughness attachment (RGBA16F).
+        GLuint GetNormalRoughBuffer() const;
+        /// @brief Get the G-buffer specular-weight attachment (RGBA16F).
+        GLuint GetSpecWeightBuffer() const;
+        /// @brief Get the sampleable depth/stencil attachment texture.
+        GLuint GetDepthBuffer() const;
     private:
         GLuint mFBO {};
         GLuint mColorBuffer {};
-        GLuint mRBO {};
+        GLuint mNormalRoughBuffer {};
+        GLuint mSpecWeightBuffer {};
+        GLuint mDepthTexture {};
     };
 }
 #endif

@@ -65,6 +65,7 @@ namespace AeonGames
         const VkPushConstantRange& GetPushConstantModelMatrix() const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
+        void ReflectColorAttachments ( SpvReflectShaderModule& module );
         void ReflectDescriptorSets ( SpvReflectShaderModule& module, ShaderType aType );
         void ReflectPushConstants ( SpvReflectShaderModule& module, ShaderType aType );
         const VulkanRenderer& mVulkanRenderer;
@@ -73,6 +74,10 @@ namespace AeonGames
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
         std::vector<VkPipeline> mVkComputePipelines{};
         uint32_t mVertexStride{0};
+        // Number of colour attachments the fragment shader writes (max output
+        // location + 1); sizes the pipeline's colour-blend-attachment array so
+        // MRT pipelines (the G-buffer pass) match their render pass.
+        uint32_t mColorAttachmentCount{1};
         std::vector<VkVertexInputAttributeDescription> mVertexAttributes{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
         VkPushConstantRange mPushConstantModelMatrix{};

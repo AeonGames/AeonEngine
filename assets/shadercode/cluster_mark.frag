@@ -40,7 +40,12 @@ buffer ClusterActive
 };
 
 layout(location = 0) in vec3 eyeCoords;
+// The main pass is MRT (deferred specular G-buffer). This pre-pass only marks
+// clusters, so all three colour outputs are throwaway sentinels the main colour
+// pass re-clears; they exist solely to match the render pass's attachment count.
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 GNormalRough;
+layout(location = 2) out vec4 GSpecWeight;
 
 // Map a view-space fragment to its cluster index, matching the tiling used by
 // the cluster-build compute stage and clustered_phong.frag exactly.
@@ -71,4 +76,6 @@ void main()
 {
       cluster_active[fragment_cluster_index()] = 1u;
       FragColor = vec4 ( 0.0 );
+      GNormalRough = vec4 ( 0.0 );
+      GSpecWeight = vec4 ( 0.0 );
 }

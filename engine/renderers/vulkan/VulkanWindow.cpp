@@ -129,6 +129,12 @@ namespace AeonGames
         std::swap ( mVkHdrColorImage, aVulkanWindow.mVkHdrColorImage );
         std::swap ( mVkHdrColorImageMemory, aVulkanWindow.mVkHdrColorImageMemory );
         std::swap ( mVkHdrColorImageView, aVulkanWindow.mVkHdrColorImageView );
+        std::swap ( mVkGNormalRoughImage, aVulkanWindow.mVkGNormalRoughImage );
+        std::swap ( mVkGNormalRoughImageMemory, aVulkanWindow.mVkGNormalRoughImageMemory );
+        std::swap ( mVkGNormalRoughImageView, aVulkanWindow.mVkGNormalRoughImageView );
+        std::swap ( mVkGSpecWeightImage, aVulkanWindow.mVkGSpecWeightImage );
+        std::swap ( mVkGSpecWeightImageMemory, aVulkanWindow.mVkGSpecWeightImageMemory );
+        std::swap ( mVkGSpecWeightImageView, aVulkanWindow.mVkGSpecWeightImageView );
         std::swap ( mVkHdrFramebuffer, aVulkanWindow.mVkHdrFramebuffer );
         std::swap ( mVkHdrSampler, aVulkanWindow.mVkHdrSampler );
         std::swap ( mVkTonemapRenderPass, aVulkanWindow.mVkTonemapRenderPass );
@@ -525,44 +531,50 @@ namespace AeonGames
         const uint32_t width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
         const uint32_t height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
 
-        // HDR offscreen colour image the scene renders linear radiance into,
-        // sampled by the fullscreen tonemap pass. Extent-dependent, so it is
-        // (re)created here alongside the framebuffers.
-        VkImageCreateInfo hdr_image_create_info{};
-        hdr_image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        hdr_image_create_info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-        hdr_image_create_info.imageType = VK_IMAGE_TYPE_2D;
-        hdr_image_create_info.extent = { width, height, 1 };
-        hdr_image_create_info.mipLevels = 1;
-        hdr_image_create_info.arrayLayers = 1;
-        hdr_image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-        hdr_image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-        hdr_image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        hdr_image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        hdr_image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        vkCreateImage ( device, &hdr_image_create_info, nullptr, &mVkHdrColorImage );
-        VkMemoryRequirements hdr_memory_requirements;
-        vkGetImageMemoryRequirements ( device, mVkHdrColorImage, &hdr_memory_requirements );
-        VkMemoryAllocateInfo hdr_memory_allocate_info{};
-        hdr_memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        hdr_memory_allocate_info.allocationSize = hdr_memory_requirements.size;
-        hdr_memory_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( hdr_memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
-        vkAllocateMemory ( device, &hdr_memory_allocate_info, nullptr, &mVkHdrColorImageMemory );
-        vkBindImageMemory ( device, mVkHdrColorImage, mVkHdrColorImageMemory, 0 );
+        // HDR offscreen colour image the scene renders linear radiance into, plus
+        // the deferred-specular G-buffer (view normal + roughness, specular
+        // weight). All three are RGBA16F colour attachments of the main pass,
+        // sampled by the composite/tonemap pass, and extent-dependent.
+        auto create_color_target = [&] ( VkImage & aImage, VkDeviceMemory & aMemory, VkImageView & aView )
+        {
+            VkImageCreateInfo image_create_info{};
+            image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            image_create_info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+            image_create_info.imageType = VK_IMAGE_TYPE_2D;
+            image_create_info.extent = { width, height, 1 };
+            image_create_info.mipLevels = 1;
+            image_create_info.arrayLayers = 1;
+            image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+            image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+            image_create_info.usage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            vkCreateImage ( device, &image_create_info, nullptr, &aImage );
+            VkMemoryRequirements memory_requirements;
+            vkGetImageMemoryRequirements ( device, aImage, &memory_requirements );
+            VkMemoryAllocateInfo memory_allocate_info{};
+            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memory_allocate_info.allocationSize = memory_requirements.size;
+            memory_allocate_info.memoryTypeIndex = mVulkanRenderer.FindMemoryTypeIndex ( memory_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+            vkAllocateMemory ( device, &memory_allocate_info, nullptr, &aMemory );
+            vkBindImageMemory ( device, aImage, aMemory, 0 );
+            VkImageViewCreateInfo view_create_info{};
+            view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            view_create_info.image = aImage;
+            view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            view_create_info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
+            view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            view_create_info.subresourceRange.levelCount = 1;
+            view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( device, &view_create_info, nullptr, &aView );
+        };
+        create_color_target ( mVkHdrColorImage, mVkHdrColorImageMemory, mVkHdrColorImageView );
+        create_color_target ( mVkGNormalRoughImage, mVkGNormalRoughImageMemory, mVkGNormalRoughImageView );
+        create_color_target ( mVkGSpecWeightImage, mVkGSpecWeightImageMemory, mVkGSpecWeightImageView );
 
-        VkImageViewCreateInfo hdr_view_create_info{};
-        hdr_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        hdr_view_create_info.image = mVkHdrColorImage;
-        hdr_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        hdr_view_create_info.format = VK_FORMAT_R16G16B16A16_SFLOAT;
-        hdr_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        hdr_view_create_info.subresourceRange.levelCount = 1;
-        hdr_view_create_info.subresourceRange.layerCount = 1;
-        vkCreateImageView ( device, &hdr_view_create_info, nullptr, &mVkHdrColorImageView );
-
-        // Scene framebuffer: HDR colour + the shared depth-stencil, drawn with
-        // the main render pass.
-        std::array<VkImageView, 2> hdr_attachments { { mVkHdrColorImageView, mVkDepthStencilImageView } };
+        // Scene framebuffer: HDR colour + the two G-buffer attachments + the
+        // shared depth-stencil, drawn with the main render pass.
+        std::array<VkImageView, 4> hdr_attachments { { mVkHdrColorImageView, mVkGNormalRoughImageView, mVkGSpecWeightImageView, mVkDepthStencilImageView } };
         VkFramebufferCreateInfo hdr_framebuffer_create_info{};
         hdr_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
         hdr_framebuffer_create_info.renderPass = mVkRenderPass;
@@ -589,33 +601,41 @@ namespace AeonGames
             vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkFramebuffers[i] );
         }
 
-        // Tonemap descriptor set: the HDR colour image sampled by tonemap.frag
-        // (set 0, binding 0). Mirrors the shadow-map combined image sampler; the
-        // VK_SHADER_STAGE_ALL layout stays compatible with the reflected pipeline
-        // layout. Recreated on resize because it points at the HDR image view.
+        // Tonemap/composite descriptor set (set 0): the HDR colour (binding 0)
+        // plus the deferred G-buffer normal+roughness (1) and specular weight (2)
+        // sampled by tonemap.frag. The Matrices, Globals and prefiltered-
+        // environment sets the composite also needs are bound at their reflected
+        // indices at draw time. Recreated on resize (points at the image views).
+        std::array<VkDescriptorSetLayoutBinding, 3> tonemap_layout_bindings{};
+        for ( uint32_t b = 0; b < tonemap_layout_bindings.size(); ++b )
+        {
+            tonemap_layout_bindings[b].binding = b;
+            tonemap_layout_bindings[b].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            tonemap_layout_bindings[b].descriptorCount = 1;
+            tonemap_layout_bindings[b].stageFlags = VK_SHADER_STAGE_ALL;
+        }
         VkDescriptorSetLayoutCreateInfo tonemap_layout_create_info{};
         tonemap_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        tonemap_layout_create_info.bindingCount = 1;
-        VkDescriptorSetLayoutBinding tonemap_layout_binding{};
-        tonemap_layout_binding.binding = 0;
-        tonemap_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        tonemap_layout_binding.descriptorCount = 1;
-        tonemap_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
-        tonemap_layout_create_info.pBindings = &tonemap_layout_binding;
-        mTonemapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
+        tonemap_layout_create_info.bindingCount = static_cast<uint32_t> ( tonemap_layout_bindings.size() );
+        tonemap_layout_create_info.pBindings = tonemap_layout_bindings.data();
+        mTonemapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3}} );
         mTonemapDescriptorSet = CreateDescriptorSet ( device, mTonemapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( tonemap_layout_create_info ) );
-        VkDescriptorImageInfo tonemap_image_info{};
-        tonemap_image_info.sampler = mVkHdrSampler;
-        tonemap_image_info.imageView = mVkHdrColorImageView;
-        tonemap_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        VkWriteDescriptorSet tonemap_write{};
-        tonemap_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        tonemap_write.dstSet = mTonemapDescriptorSet;
-        tonemap_write.dstBinding = 0;
-        tonemap_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        tonemap_write.descriptorCount = 1;
-        tonemap_write.pImageInfo = &tonemap_image_info;
-        vkUpdateDescriptorSets ( device, 1, &tonemap_write, 0, nullptr );
+        const VkImageView tonemap_views[3] = { mVkHdrColorImageView, mVkGNormalRoughImageView, mVkGSpecWeightImageView };
+        std::array<VkDescriptorImageInfo, 3> tonemap_image_infos{};
+        std::array<VkWriteDescriptorSet, 3> tonemap_writes{};
+        for ( uint32_t b = 0; b < 3; ++b )
+        {
+            tonemap_image_infos[b].sampler = mVkHdrSampler;
+            tonemap_image_infos[b].imageView = tonemap_views[b];
+            tonemap_image_infos[b].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            tonemap_writes[b].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            tonemap_writes[b].dstSet = mTonemapDescriptorSet;
+            tonemap_writes[b].dstBinding = b;
+            tonemap_writes[b].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            tonemap_writes[b].descriptorCount = 1;
+            tonemap_writes[b].pImageInfo = &tonemap_image_infos[b];
+        }
+        vkUpdateDescriptorSets ( device, 3, tonemap_writes.data(), 0, nullptr );
     }
 
     void VulkanWindow::InitializeRenderPass()
@@ -688,36 +708,42 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        std::array<VkAttachmentDescription, 2> attachment_descriptions{ {} };
-        attachment_descriptions[0].flags = 0;
-        // The scene renders linear HDR radiance here; a fullscreen tonemap pass
-        // resolves it to the swapchain, so the colour target is an RGBA16F image
-        // left in SHADER_READ_ONLY for that pass (not the swapchain any more).
-        attachment_descriptions[0].format = VK_FORMAT_R16G16B16A16_SFLOAT;
-        attachment_descriptions[0].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment_descriptions[0].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[0].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        attachment_descriptions[0].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_descriptions[0].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment_descriptions[0].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[0].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        std::array<VkAttachmentDescription, 4> attachment_descriptions{ {} };
+        // Attachments 0..2 are the RGBA16F scene colour + deferred G-buffer (view
+        // normal + roughness, specular weight); all cleared, stored and left in
+        // SHADER_READ_ONLY for the composite/tonemap pass. Attachment 3 is depth.
+        for ( uint32_t c = 0; c < 3; ++c )
+        {
+            attachment_descriptions[c].flags = 0;
+            attachment_descriptions[c].format = VK_FORMAT_R16G16B16A16_SFLOAT;
+            attachment_descriptions[c].samples = VK_SAMPLE_COUNT_1_BIT;
+            attachment_descriptions[c].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+            attachment_descriptions[c].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+            attachment_descriptions[c].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+            attachment_descriptions[c].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+            attachment_descriptions[c].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            attachment_descriptions[c].finalLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        }
 
-        attachment_descriptions[1].flags = 0;
-        attachment_descriptions[1].format = mVkDepthStencilFormat;
-        attachment_descriptions[1].samples = VK_SAMPLE_COUNT_1_BIT;
-        attachment_descriptions[1].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[1].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment_descriptions[1].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        attachment_descriptions[1].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        attachment_descriptions[1].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        attachment_descriptions[1].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachment_descriptions[3].flags = 0;
+        attachment_descriptions[3].format = mVkDepthStencilFormat;
+        attachment_descriptions[3].samples = VK_SAMPLE_COUNT_1_BIT;
+        attachment_descriptions[3].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[3].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[3].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        attachment_descriptions[3].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        attachment_descriptions[3].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        attachment_descriptions[3].finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-        std::array<VkAttachmentReference, 1> color_attachment_references{};
-        color_attachment_references[0].attachment = 0;
-        color_attachment_references[0].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        std::array<VkAttachmentReference, 3> color_attachment_references{};
+        for ( uint32_t c = 0; c < 3; ++c )
+        {
+            color_attachment_references[c].attachment = c;
+            color_attachment_references[c].layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        }
 
         VkAttachmentReference depth_stencil_attachment_reference{};
-        depth_stencil_attachment_reference.attachment = 1;
+        depth_stencil_attachment_reference.attachment = 3;
         depth_stencil_attachment_reference.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         std::array<VkSubpassDescription, 1> subpass_descriptions{};
@@ -2887,15 +2913,26 @@ namespace AeonGames
 
     void VulkanWindow::BeginRenderPass()
     {
-        /* [0] is color, [1] is depth/stencil.*/
+        // [0] scene colour, [1] G-buffer normal+roughness, [2] G-buffer specular
+        // weight, [3] depth/stencil.
         /**@todo Allow for changing the clear values.*/
-        std::array<VkClearValue, 2> clear_values{ { { {{0}} }, { {{0}} } } };
+        std::array<VkClearValue, 4> clear_values{};
         clear_values[0].color.float32[0] = 0.5f;
         clear_values[0].color.float32[1] = 0.5f;
         clear_values[0].color.float32[2] = 0.5f;
         clear_values[0].color.float32[3] = 0.0f;
-        clear_values[1].depthStencil.depth = 1.0f;
-        clear_values[1].depthStencil.stencil = 0;
+        // Zeroed G-buffer: an untouched pixel has zero specular weight, so the
+        // composite adds no reflection there.
+        clear_values[1].color.float32[0] = 0.0f;
+        clear_values[1].color.float32[1] = 0.0f;
+        clear_values[1].color.float32[2] = 0.0f;
+        clear_values[1].color.float32[3] = 0.0f;
+        clear_values[2].color.float32[0] = 0.0f;
+        clear_values[2].color.float32[1] = 0.0f;
+        clear_values[2].color.float32[2] = 0.0f;
+        clear_values[2].color.float32[3] = 0.0f;
+        clear_values[3].depthStencil.depth = 1.0f;
+        clear_values[3].depthStencil.stencil = 0;
 
         VkRenderPassBeginInfo render_pass_begin_info{};
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -3076,6 +3113,21 @@ namespace AeonGames
         vkCmdSetDepthBias ( mVkCommandBuffer, 0.0f, 0.0f, 0.0f );
         vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
                                   tonemap_pipeline->GetPipelineLayout(), 0, 1, &mTonemapDescriptorSet, 0, nullptr );
+        // The deferred-specular composite also needs the camera matrices (to
+        // build the per-pixel view ray), the scene globals (flat-ambient
+        // fallback) and the prefiltered environment cube. Bind the engine-owned
+        // sets at the indices the tonemap pipeline reflected them to.
+        auto bind_composite_set = [&] ( uint32_t aBinding, VkDescriptorSet aSet )
+        {
+            if ( uint32_t set_index = tonemap_pipeline->GetDescriptorSetIndex ( aBinding ); set_index != std::numeric_limits<uint32_t>::max() )
+            {
+                vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                          tonemap_pipeline->GetPipelineLayout(), set_index, 1, &aSet, 0, nullptr );
+            }
+        };
+        bind_composite_set ( Mesh::BindingLocations::MATRICES, mMatricesDescriptorSet );
+        bind_composite_set ( Mesh::BindingLocations::GLOBALS, mGlobalsDescriptorSet );
+        bind_composite_set ( Mesh::BindingLocations::PREFILTERED_ENVIRONMENT, mPrefilteredEnvDescriptorSet );
         vkCmdDraw ( mVkCommandBuffer, 3, 1, 0, 0 );
         vkCmdEndRenderPass ( mVkCommandBuffer );
 
@@ -3722,6 +3774,27 @@ namespace AeonGames
             vkFreeMemory ( device, mVkHdrColorImageMemory, nullptr );
             mVkHdrColorImageMemory = VK_NULL_HANDLE;
         }
+        // Deferred-specular G-buffer attachments.
+        auto destroy_target = [&] ( VkImageView & aView, VkImage & aImage, VkDeviceMemory & aMemory )
+        {
+            if ( aView != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( device, aView, nullptr );
+                aView = VK_NULL_HANDLE;
+            }
+            if ( aImage != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( device, aImage, nullptr );
+                aImage = VK_NULL_HANDLE;
+            }
+            if ( aMemory != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( device, aMemory, nullptr );
+                aMemory = VK_NULL_HANDLE;
+            }
+        };
+        destroy_target ( mVkGNormalRoughImageView, mVkGNormalRoughImage, mVkGNormalRoughImageMemory );
+        destroy_target ( mVkGSpecWeightImageView, mVkGSpecWeightImage, mVkGSpecWeightImageMemory );
     }
 
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )

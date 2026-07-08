@@ -268,6 +268,11 @@ namespace AeonGames
                 // Only vertex shader needs attribute reflection
                 ReflectAttributes ( module );
             }
+            if ( stage == FRAG )
+            {
+                // Fragment outputs size the colour-blend array (MRT G-buffer).
+                ReflectColorAttachments ( module );
+            }
             ReflectDescriptorSets ( module, stage );
             ReflectPushConstants ( module, stage );
             spvReflectDestroyShaderModule ( &module );
@@ -423,7 +428,9 @@ namespace AeonGames
         pipeline_depth_stencil_state_create_info.maxDepthBounds = 1.0f;
 
         //----------------Color Blend State------------------//
-        std::array<VkPipelineColorBlendAttachmentState, 1> pipeline_color_blend_attachment_states{ {} };
+        std::vector<VkPipelineColorBlendAttachmentState> pipeline_color_blend_attachment_states ( mColorAttachmentCount );
+        // Attachment 0 (scene colour) keeps alpha blending; any extra G-buffer
+        // attachments overwrite (no blend) so packed normals / weights are exact.
         pipeline_color_blend_attachment_states[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
         pipeline_color_blend_attachment_states[0].blendEnable = VK_TRUE;
         pipeline_color_blend_attachment_states[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
@@ -432,6 +439,11 @@ namespace AeonGames
         pipeline_color_blend_attachment_states[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         pipeline_color_blend_attachment_states[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
         pipeline_color_blend_attachment_states[0].alphaBlendOp = VK_BLEND_OP_ADD;
+        for ( uint32_t a = 1; a < mColorAttachmentCount; ++a )
+        {
+            pipeline_color_blend_attachment_states[a].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+            pipeline_color_blend_attachment_states[a].blendEnable = VK_FALSE;
+        }
 
         VkPipelineColorBlendStateCreateInfo pipeline_color_blend_state_create_info{};
         pipeline_color_blend_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -707,6 +719,34 @@ namespace AeonGames
             attr.offset = mVertexStride;
             mVertexStride += VkFormatToVulkanSize.at ( attr.format );
         }
+    }
+
+    void VulkanPipeline::ReflectColorAttachments ( SpvReflectShaderModule& module )
+    {
+        // Count the fragment shader's colour outputs so the colour-blend array
+        // matches the render pass. The count is (max output location + 1),
+        // ignoring built-ins (e.g. gl_FragDepth). Defaults to 1 on any failure.
+        uint32_t var_count{0};
+        if ( spvReflectEnumerateOutputVariables ( &module, &var_count, nullptr ) != SPV_REFLECT_RESULT_SUCCESS )
+        {
+            return;
+        }
+        std::vector<SpvReflectInterfaceVariable*> output_vars ( var_count );
+        if ( spvReflectEnumerateOutputVariables ( &module, &var_count, output_vars.data() ) != SPV_REFLECT_RESULT_SUCCESS )
+        {
+            return;
+        }
+        uint32_t max_location{0};
+        bool any{false};
+        for ( const auto& o : output_vars )
+        {
+            if ( o->built_in < 0 )
+            {
+                max_location = std::max ( max_location, o->location );
+                any = true;
+            }
+        }
+        mColorAttachmentCount = any ? ( max_location + 1u ) : 1u;
     }
 
     void VulkanPipeline::ReflectDescriptorSets ( SpvReflectShaderModule& aModule, ShaderType aType )
