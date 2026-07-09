@@ -295,10 +295,14 @@ namespace AeonGames
         mutable std::vector<VulkanStorageMemoryPoolBuffer> mStorageMemoryPoolBuffers;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
-        VulkanBuffer mMatrices;
-        VulkanBuffer mLights;
-        VulkanBuffer mClusterParams;
-        VulkanBuffer mGlobals;
+        // Per-frame-in-flight rings of the core per-frame uniform/storage
+        // buffers; writers target [mFrameIndex]. Ringed (not single) so the CPU
+        // can write frame N+1 while the GPU still reads frame N once overlap is
+        // enabled. std::vector because VulkanBuffer has no default constructor.
+        std::vector<VulkanBuffer> mMatrices;
+        std::vector<VulkanBuffer> mLights;
+        std::vector<VulkanBuffer> mClusterParams;
+        std::vector<VulkanBuffer> mGlobals;
         VulkanBuffer mShadowParams;
         // Spot shadow params (all caster matrices + positions) sampled by the
         // shading pass, and the per-slot depth matrices read by the spot depth
@@ -365,12 +369,19 @@ namespace AeonGames
         VkRect2D mVkScissor{};
 
         VkDescriptorPool mMatricesDescriptorPool{VK_NULL_HANDLE};
+        // Per-frame descriptor sets (one per ring buffer). The singular handle
+        // below aliases the current frame's set (assigned in BeginFrame) so the
+        // binders stay index-agnostic.
+        std::array<VkDescriptorSet, kFramesInFlight> mMatricesDescriptorSets{};
         VkDescriptorSet mMatricesDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mLightsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mLightsDescriptorSets{};
         VkDescriptorSet mLightsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mClusterParamsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mClusterParamsDescriptorSets{};
         VkDescriptorSet mClusterParamsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mGlobalsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mGlobalsDescriptorSets{};
         VkDescriptorSet mGlobalsDescriptorSet{VK_NULL_HANDLE};
         // Directional shadow map: a fixed-size depth target the shadow pass
         // writes and the shading pass samples. A throwaway color attachment is

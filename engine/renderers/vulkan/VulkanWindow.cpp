@@ -69,10 +69,6 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
-        mMatrices { aVulkanRenderer },
-        mLights { aVulkanRenderer },
-        mClusterParams { aVulkanRenderer },
-        mGlobals { aVulkanRenderer },
         mShadowParams { aVulkanRenderer },
         mSpotShadowParams { aVulkanRenderer },
         mSpotShadowDepthMatrices { aVulkanRenderer },
@@ -85,10 +81,18 @@ namespace AeonGames
         // Vulkan handles) are never relocated during emplacement.
         mMemoryPoolBuffers.reserve ( kFramesInFlight );
         mStorageMemoryPoolBuffers.reserve ( kFramesInFlight );
+        mMatrices.reserve ( kFramesInFlight );
+        mLights.reserve ( kFramesInFlight );
+        mClusterParams.reserve ( kFramesInFlight );
+        mGlobals.reserve ( kFramesInFlight );
         for ( uint32_t i = 0; i < kFramesInFlight; ++i )
         {
             mMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 64_kb );
             mStorageMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 8_mb );
+            mMatrices.emplace_back ( mVulkanRenderer );
+            mLights.emplace_back ( mVulkanRenderer );
+            mClusterParams.emplace_back ( mVulkanRenderer );
+            mGlobals.emplace_back ( mVulkanRenderer );
         }
         try
         {
@@ -164,12 +168,16 @@ namespace AeonGames
         std::swap ( mPrefilteredEnvDescriptorPool, aVulkanWindow.mPrefilteredEnvDescriptorPool );
         std::swap ( mPrefilteredEnvDescriptorSet, aVulkanWindow.mPrefilteredEnvDescriptorSet );
         std::swap ( mMatricesDescriptorPool, aVulkanWindow.mMatricesDescriptorPool );
+        std::swap ( mMatricesDescriptorSets, aVulkanWindow.mMatricesDescriptorSets );
         std::swap ( mMatricesDescriptorSet, aVulkanWindow.mMatricesDescriptorSet );
         std::swap ( mLightsDescriptorPool, aVulkanWindow.mLightsDescriptorPool );
+        std::swap ( mLightsDescriptorSets, aVulkanWindow.mLightsDescriptorSets );
         std::swap ( mLightsDescriptorSet, aVulkanWindow.mLightsDescriptorSet );
         std::swap ( mClusterParamsDescriptorPool, aVulkanWindow.mClusterParamsDescriptorPool );
+        std::swap ( mClusterParamsDescriptorSets, aVulkanWindow.mClusterParamsDescriptorSets );
         std::swap ( mClusterParamsDescriptorSet, aVulkanWindow.mClusterParamsDescriptorSet );
         std::swap ( mGlobalsDescriptorPool, aVulkanWindow.mGlobalsDescriptorPool );
+        std::swap ( mGlobalsDescriptorSets, aVulkanWindow.mGlobalsDescriptorSets );
         std::swap ( mGlobalsDescriptorSet, aVulkanWindow.mGlobalsDescriptorSet );
         std::swap ( mVkShadowDepthImage, aVulkanWindow.mVkShadowDepthImage );
         std::swap ( mVkShadowDepthImageMemory, aVulkanWindow.mVkShadowDepthImageMemory );
@@ -890,11 +898,6 @@ namespace AeonGames
 
     void VulkanWindow::InitializeMatrices()
     {
-        mMatrices.Initialize (
-            sizeof ( float ) * 16 * 2,
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
-
         VkDescriptorSetLayoutCreateInfo matrices_descriptor_set_layout_create_info{};
         matrices_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         matrices_descriptor_set_layout_create_info.bindingCount = 1;
@@ -908,45 +911,48 @@ namespace AeonGames
         matrices_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         matrices_descriptor_set_layout_create_info.pBindings = &matrices_descriptor_set_layout_binding;
 
-        mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mMatricesDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( matrices_descriptor_set_layout_create_info ) );
-        VkDescriptorBufferInfo descriptor_buffer_info{};
-        descriptor_buffer_info.buffer = mMatrices.GetBuffer();
-        descriptor_buffer_info.offset = 0;
-        descriptor_buffer_info.range = mMatrices.GetSize();
-        VkWriteDescriptorSet write_descriptor_set{};
-        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.pNext = nullptr;
-        write_descriptor_set.dstSet = mMatricesDescriptorSet;
-        write_descriptor_set.dstBinding = 0;
-        write_descriptor_set.dstArrayElement = 0;
-        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_set.descriptorCount = 1;
-        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
-        write_descriptor_set.pImageInfo = nullptr;
-        write_descriptor_set.pTexelBufferView = nullptr;
-        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        // One uniform buffer + descriptor set per frame in flight; the pool is
+        // sized for kFramesInFlight sets (CreateDescriptorPool derives maxSets
+        // from the number of pool-size entries).
+        mMatricesDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} ) );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mMatrices[i].Initialize (
+                sizeof ( float ) * 16 * 2,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+            mMatricesDescriptorSets[i] = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( matrices_descriptor_set_layout_create_info ) );
+            VkDescriptorBufferInfo descriptor_buffer_info{};
+            descriptor_buffer_info.buffer = mMatrices[i].GetBuffer();
+            descriptor_buffer_info.offset = 0;
+            descriptor_buffer_info.range = mMatrices[i].GetSize();
+            VkWriteDescriptorSet write_descriptor_set{};
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mMatricesDescriptorSets[i];
+            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pTexelBufferView = nullptr;
+            vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        }
+        mMatricesDescriptorSet = mMatricesDescriptorSets[0];
     }
 
     void VulkanWindow::FinalizeMatrices()
     {
         DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mMatricesDescriptorPool );
-        mMatrices.Finalize();
+        for ( VulkanBuffer& buffer : mMatrices )
+        {
+            buffer.Finalize();
+        }
     }
 
     void VulkanWindow::InitializeLights()
     {
-        // Per-frame Lights is a persistent storage buffer (SSBO): the light cap
-        // is large (MAX_LIGHTS_PER_FRAME) so it no longer fits a uniform buffer.
-        mLights.Initialize (
-            GpuLightsBufferSize,
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            nullptr );
-        // Zero the header so a frame that draws before SetLights reads no lights.
-        const GpuLightsHeader empty_header{};
-        mLights.WriteMemory ( 0, sizeof ( empty_header ), &empty_header );
-
         VkDescriptorSetLayoutCreateInfo lights_descriptor_set_layout_create_info{};
         lights_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         lights_descriptor_set_layout_create_info.bindingCount = 1;
@@ -958,40 +964,53 @@ namespace AeonGames
         lights_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         lights_descriptor_set_layout_create_info.pBindings = &lights_descriptor_set_layout_binding;
 
-        mLightsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1}} );
-        mLightsDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mLightsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( lights_descriptor_set_layout_create_info ) );
-        VkDescriptorBufferInfo descriptor_buffer_info{};
-        descriptor_buffer_info.buffer = mLights.GetBuffer();
-        descriptor_buffer_info.offset = 0;
-        descriptor_buffer_info.range = mLights.GetSize();
-        VkWriteDescriptorSet write_descriptor_set{};
-        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.pNext = nullptr;
-        write_descriptor_set.dstSet = mLightsDescriptorSet;
-        write_descriptor_set.dstBinding = 0;
-        write_descriptor_set.dstArrayElement = 0;
-        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        write_descriptor_set.descriptorCount = 1;
-        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
-        write_descriptor_set.pImageInfo = nullptr;
-        write_descriptor_set.pTexelBufferView = nullptr;
-        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        // Per-frame Lights is a persistent storage buffer (SSBO): the light cap
+        // is large (MAX_LIGHTS_PER_FRAME) so it no longer fits a uniform buffer.
+        // One buffer + descriptor set per frame in flight.
+        const GpuLightsHeader empty_header{};
+        mLightsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1} ) );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mLights[i].Initialize (
+                GpuLightsBufferSize,
+                VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                nullptr );
+            // Zero the header so a frame that draws before SetLights reads no lights.
+            mLights[i].WriteMemory ( 0, sizeof ( empty_header ), &empty_header );
+            mLightsDescriptorSets[i] = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mLightsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( lights_descriptor_set_layout_create_info ) );
+            VkDescriptorBufferInfo descriptor_buffer_info{};
+            descriptor_buffer_info.buffer = mLights[i].GetBuffer();
+            descriptor_buffer_info.offset = 0;
+            descriptor_buffer_info.range = mLights[i].GetSize();
+            VkWriteDescriptorSet write_descriptor_set{};
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mLightsDescriptorSets[i];
+            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pTexelBufferView = nullptr;
+            vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        }
+        mLightsDescriptorSet = mLightsDescriptorSets[0];
     }
 
     void VulkanWindow::FinalizeLights()
     {
         DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mLightsDescriptorPool );
-        mLights.Finalize();
+        for ( VulkanBuffer& buffer : mLights )
+        {
+            buffer.Finalize();
+        }
     }
 
     void VulkanWindow::InitializeClusterParams()
     {
         GpuClusterParams empty{};
-        mClusterParams.Initialize (
-            sizeof ( GpuClusterParams ),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &empty );
 
         VkDescriptorSetLayoutCreateInfo cluster_params_descriptor_set_layout_create_info{};
         cluster_params_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -1004,40 +1023,47 @@ namespace AeonGames
         cluster_params_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         cluster_params_descriptor_set_layout_create_info.pBindings = &cluster_params_descriptor_set_layout_binding;
 
-        mClusterParamsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mClusterParamsDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mClusterParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( cluster_params_descriptor_set_layout_create_info ) );
-        VkDescriptorBufferInfo descriptor_buffer_info{};
-        descriptor_buffer_info.buffer = mClusterParams.GetBuffer();
-        descriptor_buffer_info.offset = 0;
-        descriptor_buffer_info.range = mClusterParams.GetSize();
-        VkWriteDescriptorSet write_descriptor_set{};
-        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.pNext = nullptr;
-        write_descriptor_set.dstSet = mClusterParamsDescriptorSet;
-        write_descriptor_set.dstBinding = 0;
-        write_descriptor_set.dstArrayElement = 0;
-        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_set.descriptorCount = 1;
-        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
-        write_descriptor_set.pImageInfo = nullptr;
-        write_descriptor_set.pTexelBufferView = nullptr;
-        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        mClusterParamsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} ) );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mClusterParams[i].Initialize (
+                sizeof ( GpuClusterParams ),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                &empty );
+            mClusterParamsDescriptorSets[i] = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mClusterParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( cluster_params_descriptor_set_layout_create_info ) );
+            VkDescriptorBufferInfo descriptor_buffer_info{};
+            descriptor_buffer_info.buffer = mClusterParams[i].GetBuffer();
+            descriptor_buffer_info.offset = 0;
+            descriptor_buffer_info.range = mClusterParams[i].GetSize();
+            VkWriteDescriptorSet write_descriptor_set{};
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mClusterParamsDescriptorSets[i];
+            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pTexelBufferView = nullptr;
+            vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        }
+        mClusterParamsDescriptorSet = mClusterParamsDescriptorSets[0];
     }
 
     void VulkanWindow::FinalizeClusterParams()
     {
         DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mClusterParamsDescriptorPool );
-        mClusterParams.Finalize();
+        for ( VulkanBuffer& buffer : mClusterParams )
+        {
+            buffer.Finalize();
+        }
     }
 
     void VulkanWindow::InitializeGlobals()
     {
         GpuGlobals empty{};
-        mGlobals.Initialize (
-            sizeof ( GpuGlobals ),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &empty );
 
         VkDescriptorSetLayoutCreateInfo globals_descriptor_set_layout_create_info{};
         globals_descriptor_set_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -1050,35 +1076,47 @@ namespace AeonGames
         globals_descriptor_set_layout_binding.pImmutableSamplers = nullptr;
         globals_descriptor_set_layout_create_info.pBindings = &globals_descriptor_set_layout_binding;
 
-        mGlobalsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mGlobalsDescriptorSet = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mGlobalsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( globals_descriptor_set_layout_create_info ) );
-        VkDescriptorBufferInfo descriptor_buffer_info{};
-        descriptor_buffer_info.buffer = mGlobals.GetBuffer();
-        descriptor_buffer_info.offset = 0;
-        descriptor_buffer_info.range = mGlobals.GetSize();
-        VkWriteDescriptorSet write_descriptor_set{};
-        write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        write_descriptor_set.pNext = nullptr;
-        write_descriptor_set.dstSet = mGlobalsDescriptorSet;
-        write_descriptor_set.dstBinding = 0;
-        write_descriptor_set.dstArrayElement = 0;
-        write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        write_descriptor_set.descriptorCount = 1;
-        write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
-        write_descriptor_set.pImageInfo = nullptr;
-        write_descriptor_set.pTexelBufferView = nullptr;
-        vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        mGlobalsDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} ) );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mGlobals[i].Initialize (
+                sizeof ( GpuGlobals ),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                &empty );
+            mGlobalsDescriptorSets[i] = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mGlobalsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( globals_descriptor_set_layout_create_info ) );
+            VkDescriptorBufferInfo descriptor_buffer_info{};
+            descriptor_buffer_info.buffer = mGlobals[i].GetBuffer();
+            descriptor_buffer_info.offset = 0;
+            descriptor_buffer_info.range = mGlobals[i].GetSize();
+            VkWriteDescriptorSet write_descriptor_set{};
+            write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            write_descriptor_set.pNext = nullptr;
+            write_descriptor_set.dstSet = mGlobalsDescriptorSets[i];
+            write_descriptor_set.dstBinding = 0;
+            write_descriptor_set.dstArrayElement = 0;
+            write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            write_descriptor_set.descriptorCount = 1;
+            write_descriptor_set.pBufferInfo = &descriptor_buffer_info;
+            write_descriptor_set.pImageInfo = nullptr;
+            write_descriptor_set.pTexelBufferView = nullptr;
+            vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &write_descriptor_set, 0, nullptr );
+        }
+        mGlobalsDescriptorSet = mGlobalsDescriptorSets[0];
     }
 
     void VulkanWindow::FinalizeGlobals()
     {
         DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mGlobalsDescriptorPool );
-        mGlobals.Finalize();
+        for ( VulkanBuffer& buffer : mGlobals )
+        {
+            buffer.Finalize();
+        }
     }
 
     void VulkanWindow::SetGlobals ( const GpuGlobals& aGlobals )
     {
-        mGlobals.WriteMemory ( 0, sizeof ( GpuGlobals ), &aGlobals );
+        mGlobals[mFrameIndex].WriteMemory ( 0, sizeof ( GpuGlobals ), &aGlobals );
     }
 
     void VulkanWindow::FinalizeEnvironmentMap()
@@ -2706,7 +2744,7 @@ namespace AeonGames
         // screen.w gates active-cluster culling in the light-cull stage: it is
         // only set once the depth pre-pass mark stage has run this frame.
         params.screen[3] = mActiveCullEnabled ? 1.0f : 0.0f;
-        mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
+        mClusterParams[mFrameIndex].WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
     void VulkanWindow::Initialize()
@@ -2802,7 +2840,7 @@ namespace AeonGames
     {
         mProjectionMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        mMatrices[mFrameIndex].WriteMemory ( 0, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
         UpdateClusterParams();
     }
 
@@ -2810,7 +2848,7 @@ namespace AeonGames
     {
         mViewMatrix = aMatrix;
         mFrustum = mProjectionMatrix * mViewMatrix;
-        mMatrices.WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
+        mMatrices[mFrameIndex].WriteMemory ( sizeof ( float ) * 16, sizeof ( float ) * 16, aMatrix.GetMatrix4x4() );
     }
 
     void VulkanWindow::SetLights ( std::span<const GpuLight> aLights )
@@ -2835,10 +2873,10 @@ namespace AeonGames
         // (count) then the tightly packed array.
         const size_t count = mVisibleLights.size();
         const GpuLightsHeader header{ static_cast<uint32_t> ( count ), { 0, 0, 0 } };
-        mLights.WriteMemory ( 0, sizeof ( header ), &header );
+        mLights[mFrameIndex].WriteMemory ( 0, sizeof ( header ), &header );
         if ( count > 0 )
         {
-            mLights.WriteMemory ( sizeof ( GpuLightsHeader ), count * sizeof ( GpuLight ), mVisibleLights.data() );
+            mLights[mFrameIndex].WriteMemory ( sizeof ( GpuLightsHeader ), count * sizeof ( GpuLight ), mVisibleLights.data() );
         }
     }
 
@@ -2946,6 +2984,12 @@ namespace AeonGames
         // above guarantees this slot's previous submission has completed, so
         // resetting its pool is safe.
         mVkCommandBuffer = mVkCommandBuffers[mFrameIndex];
+        // Point the current-frame descriptor-set aliases at this frame's ring
+        // slot so the pass binders stay index-agnostic.
+        mMatricesDescriptorSet = mMatricesDescriptorSets[mFrameIndex];
+        mLightsDescriptorSet = mLightsDescriptorSets[mFrameIndex];
+        mClusterParamsDescriptorSet = mClusterParamsDescriptorSets[mFrameIndex];
+        mGlobalsDescriptorSet = mGlobalsDescriptorSets[mFrameIndex];
         vkResetCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPools[mFrameIndex], 0 );
         if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
         {
