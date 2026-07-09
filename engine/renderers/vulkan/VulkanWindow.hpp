@@ -286,8 +286,13 @@ namespace AeonGames
         VulkanRenderer& mVulkanRenderer;
         void* mWindowId{};
         Frustum mFrustum{};
-        VulkanMemoryPoolBuffer mMemoryPoolBuffer;
-        mutable VulkanStorageMemoryPoolBuffer mStorageMemoryPoolBuffer;
+        // Transient per-frame allocators, ring-buffered one per frame in flight
+        // and indexed by mFrameIndex so a new frame's allocations never overwrite
+        // storage a previous frame's in-flight GPU work may still read. Each
+        // instance owns its own descriptor pool/sets, so ringing at this level
+        // avoids any cross-frame descriptor aliasing.
+        std::vector<VulkanMemoryPoolBuffer> mMemoryPoolBuffers;
+        mutable std::vector<VulkanStorageMemoryPoolBuffer> mStorageMemoryPoolBuffers;
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         VulkanBuffer mMatrices;

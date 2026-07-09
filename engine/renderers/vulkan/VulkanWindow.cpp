@@ -69,8 +69,6 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
-        mMemoryPoolBuffer{mVulkanRenderer, 64_kb},
-        mStorageMemoryPoolBuffer{mVulkanRenderer, 8_mb},
         mMatrices { aVulkanRenderer },
         mLights { aVulkanRenderer },
         mClusterParams { aVulkanRenderer },
@@ -82,6 +80,16 @@ namespace AeonGames
         mPointShadowDepthMatrices { aVulkanRenderer }
     {
         std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
+        // Build the per-frame-in-flight transient allocator rings before
+        // Initialize(); reserve first so the move-only pool objects (which hold
+        // Vulkan handles) are never relocated during emplacement.
+        mMemoryPoolBuffers.reserve ( kFramesInFlight );
+        mStorageMemoryPoolBuffers.reserve ( kFramesInFlight );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 64_kb );
+            mStorageMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 8_mb );
+        }
         try
         {
             Initialize();
@@ -95,8 +103,8 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( VulkanWindow&& aVulkanWindow ) :
         mVulkanRenderer { aVulkanWindow.mVulkanRenderer },
-        mMemoryPoolBuffer{std::move ( aVulkanWindow.mMemoryPoolBuffer ) },
-        mStorageMemoryPoolBuffer{std::move ( aVulkanWindow.mStorageMemoryPoolBuffer ) },
+        mMemoryPoolBuffers{std::move ( aVulkanWindow.mMemoryPoolBuffers ) },
+        mStorageMemoryPoolBuffers{std::move ( aVulkanWindow.mStorageMemoryPoolBuffers ) },
         mMatrices{std::move ( aVulkanWindow.mMatrices ) },
         mLights{std::move ( aVulkanWindow.mLights ) },
         mClusterParams{std::move ( aVulkanWindow.mClusterParams ) },
@@ -3016,8 +3024,8 @@ namespace AeonGames
             // No clustering this frame: still hand the clustered fragment
             // shader valid, empty light buffers so it reads zero lights per
             // cluster instead of sampling an unbound buffer.
-            mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
-            mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
+            mFrameLightGrid = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+            mFrameLightIndexList = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
             if ( void * grid = mFrameLightGrid.Map() )
             {
                 std::memset ( grid, 0, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
@@ -3053,15 +3061,15 @@ namespace AeonGames
         // both this build dispatch and the post-mark light-cull dispatch bind
         // the same storage; reflection silently drops the blocks a given stage
         // does not declare.
-        mFrameClusterAABBs = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
-        mFrameLightGrid = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
-        mFrameLightIndexList = mStorageMemoryPoolBuffer.Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
+        mFrameClusterAABBs = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( CLUSTER_COUNT * sizeof ( GpuClusterAABB ) );
+        mFrameLightGrid = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
+        mFrameLightIndexList = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( LIGHT_INDEX_LIST_CAPACITY * sizeof ( uint32_t ) );
         // Global atomic allocator for the flat LightIndexList (R1). cluster_build
         // zeroes it from invocation 0, so no host-side initialisation is needed.
-        mFrameLightIndexCounter = mStorageMemoryPoolBuffer.Allocate ( sizeof ( uint32_t ) );
+        mFrameLightIndexCounter = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( sizeof ( uint32_t ) );
         // Per-cluster active flags (R2): cluster_build clears them, the mark
         // pass sets them, the light-cull stage reads them.
-        mFrameClusterActive = mStorageMemoryPoolBuffer.Allocate ( CLUSTER_COUNT * sizeof ( uint32_t ) );
+        mFrameClusterActive = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( CLUSTER_COUNT * sizeof ( uint32_t ) );
 
         const StorageBufferBinding bindings[]
         {
@@ -3223,12 +3231,12 @@ namespace AeonGames
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
-        mMemoryPoolBuffer.Reset();
-        mStorageMemoryPoolBuffer.Reset();
+        mMemoryPoolBuffers[mFrameIndex].Reset();
+        mStorageMemoryPoolBuffers[mFrameIndex].Reset();
         mFrameBegun = false;
-        // Advance to the next ring slot for command buffers (and, in later
-        // steps, per-frame buffers/targets). Independent of the swapchain image
-        // index resolved by vkAcquireNextImageKHR.
+        // Advance to the next ring slot for command buffers and transient
+        // pools (and, in later steps, per-frame buffers/targets). Independent of
+        // the swapchain image index resolved by vkAcquireNextImageKHR.
         mFrameIndex = ( mFrameIndex + 1 ) % kFramesInFlight;
     }
 
@@ -3421,7 +3429,7 @@ namespace AeonGames
         // VK_WHOLE_SIZE range is illegal (VUID-vkCmdBindDescriptorSets-
         // pDescriptorSets-06715). The descriptor pool grows on demand, so the
         // number of batched draws is not bounded by a fixed pool capacity.
-        BufferAccessor object_matrices = mStorageMemoryPoolBuffer.Allocate ( size );
+        BufferAccessor object_matrices = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( size );
         object_matrices.WriteMemory ( 0, size, aMatrices.data() );
         const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
             reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( object_matrices.GetMemoryPoolBuffer() );
@@ -3874,12 +3882,12 @@ namespace AeonGames
 
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )
     {
-        return mMemoryPoolBuffer.Allocate ( aSize );
+        return mMemoryPoolBuffers[mFrameIndex].Allocate ( aSize );
     }
 
     BufferAccessor VulkanWindow::AllocateSingleFrameStorageMemory ( size_t aSize )
     {
-        return mStorageMemoryPoolBuffer.Allocate ( aSize );
+        return mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( aSize );
     }
 
     VkRenderPass VulkanWindow::GetRenderPass() const
