@@ -2804,6 +2804,37 @@ namespace AeonGames
         // pass can run, then open the caster's six-layer multiview framebuffer.
         vkCmdEndRenderPass ( mVkCommandBuffer );
 
+        // Option A (point shadow targets are shared, not ring-buffered): this
+        // caster's six cube-face layers may still be sampled by an earlier,
+        // still-in-flight frame's shading pass. BeginPointShadowPass is only
+        // reached on a cache miss, so guard the re-render's depth writes behind
+        // any prior frames' reads (write-after-read; the single-queue barrier's
+        // src scope covers every previously-submitted frame's sample). The image
+        // stays in SHADER_READ_ONLY here (the render pass discards it via an
+        // UNDEFINED initial layout), so this is a pure execution barrier.
+        const bool has_stencil =
+            ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
+              mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
+        VkImageMemoryBarrier pre_render_barrier{};
+        pre_render_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        pre_render_barrier.oldLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        pre_render_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        pre_render_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        pre_render_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        pre_render_barrier.image = mVkPointShadowDepthImage;
+        pre_render_barrier.subresourceRange.aspectMask =
+            VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        pre_render_barrier.subresourceRange.levelCount = 1;
+        pre_render_barrier.subresourceRange.baseArrayLayer = aCaster * POINT_SHADOW_FACES;
+        pre_render_barrier.subresourceRange.layerCount = POINT_SHADOW_FACES;
+        pre_render_barrier.srcAccessMask = 0; // write-after-read needs execution ordering only
+        pre_render_barrier.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                               VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &pre_render_barrier );
+
         std::array<VkClearValue, 2> clear_values{};
         clear_values[1].depthStencil.depth = 1.0f;
         clear_values[1].depthStencil.stencil = 0;
