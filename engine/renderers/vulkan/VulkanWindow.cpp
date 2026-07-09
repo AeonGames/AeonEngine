@@ -1629,38 +1629,45 @@ namespace AeonGames
             vkBindImageMemory ( device, image, memory, 0 );
         };
 
-        // Sampleable depth target the shadow pass writes; uses the same depth
-        // format as the main pass so the shadow render pass stays
-        // attachment-compatible with pipelines created against the main pass.
-        create_image ( mVkDepthStencilFormat,
-                       VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-                       mVkShadowDepthImage, mVkShadowDepthImageMemory );
-        // Throwaway color attachment, never sampled, carried only for
-        // render-pass compatibility with the main color+depth render pass.
-        create_image ( mVkSurfaceFormatKHR.format,
-                       VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-                       mVkShadowColorImage, mVkShadowColorImageMemory );
+        // Ring one directional shadow depth target (+ its throwaway colour and,
+        // below, framebuffer / shadow-map set) per frame in flight, so the shading
+        // pass sampling this frame's map is never overwritten by the next frame's
+        // shadow pass once frames overlap.
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            // Sampleable depth target the shadow pass writes; uses the same depth
+            // format as the main pass so the shadow render pass stays
+            // attachment-compatible with pipelines created against the main pass.
+            create_image ( mVkDepthStencilFormat,
+                           VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+                           mVkShadowDepthImage[frame], mVkShadowDepthImageMemory[frame] );
+            // Throwaway color attachment, never sampled, carried only for
+            // render-pass compatibility with the main color+depth render pass.
+            create_image ( mVkSurfaceFormatKHR.format,
+                           VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+                           mVkShadowColorImage[frame], mVkShadowColorImageMemory[frame] );
 
-        // Depth view (depth aspect only so it can be sampled as sampler2DShadow).
-        VkImageViewCreateInfo depth_view_create_info{};
-        depth_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        depth_view_create_info.image = mVkShadowDepthImage;
-        depth_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        depth_view_create_info.format = mVkDepthStencilFormat;
-        depth_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        depth_view_create_info.subresourceRange.levelCount = 1;
-        depth_view_create_info.subresourceRange.layerCount = 1;
-        vkCreateImageView ( device, &depth_view_create_info, nullptr, &mVkShadowDepthImageView );
+            // Depth view (depth aspect only so it can be sampled as sampler2DShadow).
+            VkImageViewCreateInfo depth_view_create_info{};
+            depth_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            depth_view_create_info.image = mVkShadowDepthImage[frame];
+            depth_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            depth_view_create_info.format = mVkDepthStencilFormat;
+            depth_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            depth_view_create_info.subresourceRange.levelCount = 1;
+            depth_view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( device, &depth_view_create_info, nullptr, &mVkShadowDepthImageView[frame] );
 
-        VkImageViewCreateInfo color_view_create_info{};
-        color_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        color_view_create_info.image = mVkShadowColorImage;
-        color_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        color_view_create_info.format = mVkSurfaceFormatKHR.format;
-        color_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        color_view_create_info.subresourceRange.levelCount = 1;
-        color_view_create_info.subresourceRange.layerCount = 1;
-        vkCreateImageView ( device, &color_view_create_info, nullptr, &mVkShadowColorImageView );
+            VkImageViewCreateInfo color_view_create_info{};
+            color_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            color_view_create_info.image = mVkShadowColorImage[frame];
+            color_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            color_view_create_info.format = mVkSurfaceFormatKHR.format;
+            color_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            color_view_create_info.subresourceRange.levelCount = 1;
+            color_view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( device, &color_view_create_info, nullptr, &mVkShadowColorImageView[frame] );
+        }
 
         // Comparison sampler: hardware PCF, depth <= stored => lit; sampling
         // outside the map returns the white border (1.0) so it reads as lit.
@@ -1735,16 +1742,19 @@ namespace AeonGames
         render_pass_create_info.pDependencies = &subpass_dependency;
         vkCreateRenderPass ( device, &render_pass_create_info, nullptr, &mVkShadowRenderPass );
 
-        std::array<VkImageView, 2> framebuffer_attachments{ { mVkShadowColorImageView, mVkShadowDepthImageView } };
-        VkFramebufferCreateInfo framebuffer_create_info{};
-        framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        framebuffer_create_info.renderPass = mVkShadowRenderPass;
-        framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( framebuffer_attachments.size() );
-        framebuffer_create_info.pAttachments = framebuffer_attachments.data();
-        framebuffer_create_info.width = SHADOW_MAP_RESOLUTION;
-        framebuffer_create_info.height = SHADOW_MAP_RESOLUTION;
-        framebuffer_create_info.layers = 1;
-        vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkShadowFramebuffer );
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            std::array<VkImageView, 2> framebuffer_attachments{ { mVkShadowColorImageView[frame], mVkShadowDepthImageView[frame] } };
+            VkFramebufferCreateInfo framebuffer_create_info{};
+            framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebuffer_create_info.renderPass = mVkShadowRenderPass;
+            framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( framebuffer_attachments.size() );
+            framebuffer_create_info.pAttachments = framebuffer_attachments.data();
+            framebuffer_create_info.width = SHADOW_MAP_RESOLUTION;
+            framebuffer_create_info.height = SHADOW_MAP_RESOLUTION;
+            framebuffer_create_info.layers = 1;
+            vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkShadowFramebuffer[frame] );
+        }
 
         // ShadowParams UBO (light view-projection + bias/PCF/enable), shared by
         // the shadow depth vertex shader (set 8) and the shading fragment shader.
@@ -1795,41 +1805,47 @@ namespace AeonGames
         shadow_map_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
         shadow_map_layout_create_info.pBindings = &shadow_map_layout_binding;
 
-        mShadowMapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
-        mShadowMapDescriptorSet = CreateDescriptorSet ( device, mShadowMapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( shadow_map_layout_create_info ) );
-        VkDescriptorImageInfo shadow_map_image_info{};
-        shadow_map_image_info.sampler = mVkShadowSampler;
-        shadow_map_image_info.imageView = mVkShadowDepthImageView;
-        shadow_map_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        VkWriteDescriptorSet shadow_map_write{};
-        shadow_map_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        shadow_map_write.dstSet = mShadowMapDescriptorSet;
-        shadow_map_write.dstBinding = 0;
-        shadow_map_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        shadow_map_write.descriptorCount = 1;
-        shadow_map_write.pImageInfo = &shadow_map_image_info;
-        vkUpdateDescriptorSets ( device, 1, &shadow_map_write, 0, nullptr );
+        mShadowMapDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1} ) );
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            mShadowMapDescriptorSet[frame] = CreateDescriptorSet ( device, mShadowMapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( shadow_map_layout_create_info ) );
+            VkDescriptorImageInfo shadow_map_image_info{};
+            shadow_map_image_info.sampler = mVkShadowSampler;
+            shadow_map_image_info.imageView = mVkShadowDepthImageView[frame];
+            shadow_map_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            VkWriteDescriptorSet shadow_map_write{};
+            shadow_map_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            shadow_map_write.dstSet = mShadowMapDescriptorSet[frame];
+            shadow_map_write.dstBinding = 0;
+            shadow_map_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            shadow_map_write.descriptorCount = 1;
+            shadow_map_write.pImageInfo = &shadow_map_image_info;
+            vkUpdateDescriptorSets ( device, 1, &shadow_map_write, 0, nullptr );
+        }
 
         // Transition the shadow depth image to the sampled layout once, so a
         // frame that draws no caster (ShadowParams.enabled == 0, shader skips
         // the sample) still presents a descriptor in a valid layout.
         VkCommandBuffer command_buffer = mVulkanRenderer.BeginSingleTimeCommands();
-        VkImageMemoryBarrier barrier{};
-        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-        barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        barrier.image = mVkShadowDepthImage;
-        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
-        barrier.subresourceRange.levelCount = 1;
-        barrier.subresourceRange.layerCount = 1;
-        barrier.srcAccessMask = 0;
-        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-        vkCmdPipelineBarrier ( command_buffer,
-                               VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
-                               VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-                               0, 0, nullptr, 0, nullptr, 1, &barrier );
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            VkImageMemoryBarrier barrier{};
+            barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+            barrier.image = mVkShadowDepthImage[frame];
+            barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+            barrier.subresourceRange.levelCount = 1;
+            barrier.subresourceRange.layerCount = 1;
+            barrier.srcAccessMask = 0;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+            vkCmdPipelineBarrier ( command_buffer,
+                                   VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                                   VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+                                   0, 0, nullptr, 0, nullptr, 1, &barrier );
+        }
         mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
     }
 
@@ -2472,10 +2488,6 @@ namespace AeonGames
         {
             buffer.Finalize();
         }
-        if ( mVkShadowFramebuffer != VK_NULL_HANDLE )
-        {
-            vkDestroyFramebuffer ( device, mVkShadowFramebuffer, nullptr );
-        }
         if ( mVkShadowRenderPass != VK_NULL_HANDLE )
         {
             vkDestroyRenderPass ( device, mVkShadowRenderPass, nullptr );
@@ -2484,29 +2496,36 @@ namespace AeonGames
         {
             vkDestroySampler ( device, mVkShadowSampler, nullptr );
         }
-        if ( mVkShadowColorImageView != VK_NULL_HANDLE )
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
         {
-            vkDestroyImageView ( device, mVkShadowColorImageView, nullptr );
-        }
-        if ( mVkShadowColorImage != VK_NULL_HANDLE )
-        {
-            vkDestroyImage ( device, mVkShadowColorImage, nullptr );
-        }
-        if ( mVkShadowColorImageMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( device, mVkShadowColorImageMemory, nullptr );
-        }
-        if ( mVkShadowDepthImageView != VK_NULL_HANDLE )
-        {
-            vkDestroyImageView ( device, mVkShadowDepthImageView, nullptr );
-        }
-        if ( mVkShadowDepthImage != VK_NULL_HANDLE )
-        {
-            vkDestroyImage ( device, mVkShadowDepthImage, nullptr );
-        }
-        if ( mVkShadowDepthImageMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( device, mVkShadowDepthImageMemory, nullptr );
+            if ( mVkShadowFramebuffer[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyFramebuffer ( device, mVkShadowFramebuffer[frame], nullptr );
+            }
+            if ( mVkShadowColorImageView[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( device, mVkShadowColorImageView[frame], nullptr );
+            }
+            if ( mVkShadowColorImage[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( device, mVkShadowColorImage[frame], nullptr );
+            }
+            if ( mVkShadowColorImageMemory[frame] != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( device, mVkShadowColorImageMemory[frame], nullptr );
+            }
+            if ( mVkShadowDepthImageView[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( device, mVkShadowDepthImageView[frame], nullptr );
+            }
+            if ( mVkShadowDepthImage[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( device, mVkShadowDepthImage[frame], nullptr );
+            }
+            if ( mVkShadowDepthImageMemory[frame] != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( device, mVkShadowDepthImageMemory[frame], nullptr );
+            }
         }
     }
 
@@ -2542,7 +2561,7 @@ namespace AeonGames
         VkRenderPassBeginInfo render_pass_begin_info{};
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_begin_info.renderPass = mVkShadowRenderPass;
-        render_pass_begin_info.framebuffer = mVkShadowFramebuffer;
+        render_pass_begin_info.framebuffer = mVkShadowFramebuffer[mFrameIndex];
         render_pass_begin_info.renderArea.offset = { 0, 0 };
         render_pass_begin_info.renderArea.extent = { SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION };
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
@@ -2581,7 +2600,7 @@ namespace AeonGames
         shadow_depth_barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         shadow_depth_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         shadow_depth_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        shadow_depth_barrier.image = mVkShadowDepthImage;
+        shadow_depth_barrier.image = mVkShadowDepthImage[mFrameIndex];
         shadow_depth_barrier.subresourceRange.aspectMask =
             VK_IMAGE_ASPECT_DEPTH_BIT | ( has_stencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
         shadow_depth_barrier.subresourceRange.levelCount = 1;
@@ -3456,7 +3475,7 @@ namespace AeonGames
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
         bind ( Mesh::BindingLocations::SHADOW_PARAMS, mShadowParamsDescriptorSet );
-        bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapDescriptorSet );
+        bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapDescriptorSet[mFrameIndex] );
         bind ( Mesh::BindingLocations::SPOT_SHADOW_PARAMS, mSpotShadowParamsDescriptorSet );
         bind ( Mesh::BindingLocations::SPOT_SHADOW_MAP, mSpotShadowMapDescriptorSet );
         bind ( Mesh::BindingLocations::POINT_SHADOW_PARAMS, mPointShadowParamsDescriptorSet );

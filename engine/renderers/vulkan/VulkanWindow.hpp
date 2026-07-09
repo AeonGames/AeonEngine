@@ -391,20 +391,20 @@ namespace AeonGames
         // carried so the shadow render pass stays attachment-compatible with
         // the window's main render pass (pipelines are created against the
         // latter). See render-pass compatibility notes.
-        VkImage mVkShadowDepthImage{VK_NULL_HANDLE};
-        VkDeviceMemory mVkShadowDepthImageMemory{VK_NULL_HANDLE};
-        VkImageView mVkShadowDepthImageView{VK_NULL_HANDLE};
-        VkImage mVkShadowColorImage{VK_NULL_HANDLE};
-        VkDeviceMemory mVkShadowColorImageMemory{VK_NULL_HANDLE};
-        VkImageView mVkShadowColorImageView{VK_NULL_HANDLE};
+        std::array<VkImage, kFramesInFlight> mVkShadowDepthImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkShadowDepthImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkShadowDepthImageView{};
+        std::array<VkImage, kFramesInFlight> mVkShadowColorImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkShadowColorImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkShadowColorImageView{};
         VkSampler mVkShadowSampler{VK_NULL_HANDLE};
         VkRenderPass mVkShadowRenderPass{VK_NULL_HANDLE};
-        VkFramebuffer mVkShadowFramebuffer{VK_NULL_HANDLE};
+        std::array<VkFramebuffer, kFramesInFlight> mVkShadowFramebuffer{};
         VkDescriptorPool mShadowParamsDescriptorPool{VK_NULL_HANDLE};
         std::array<VkDescriptorSet, kFramesInFlight> mShadowParamsDescriptorSets{};
         VkDescriptorSet mShadowParamsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mShadowMapDescriptorPool{VK_NULL_HANDLE};
-        VkDescriptorSet mShadowMapDescriptorSet{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mShadowMapDescriptorSet{};
         // Spot shadow maps: a depth texture ARRAY with one layer per caster,
         // sampled as a sampler2DArrayShadow by the shading pass. Each layer is
         // rendered through its own single-layer image view and framebuffer
