@@ -308,13 +308,13 @@ namespace AeonGames
         // shading pass, and the per-slot depth matrices read by the spot depth
         // passes (one aligned GpuShadowParams slot per caster).
         std::vector<VulkanBuffer> mSpotShadowParams;
-        VulkanBuffer mSpotShadowDepthMatrices;
+        std::vector<VulkanBuffer> mSpotShadowDepthMatrices;
         // Point shadow params (six-per-caster matrices + caster positions/radii)
         // sampled by the shading pass, and the per-layer depth matrices read by
         // the point depth passes (one aligned GpuShadowParams slot per cube face
         // per caster).
         std::vector<VulkanBuffer> mPointShadowParams;
-        VulkanBuffer mPointShadowDepthMatrices;
+        std::vector<VulkanBuffer> mPointShadowDepthMatrices;
         // Scratch buffer holding the frustum-culled subset of this frame's
         // lights; reused across frames so capacity is not reallocated.
         std::vector<GpuLight> mVisibleLights{};
@@ -425,7 +425,7 @@ namespace AeonGames
         VkDescriptorPool mSpotShadowMapDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mSpotShadowMapDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mSpotShadowDepthMatricesDescriptorPool{VK_NULL_HANDLE};
-        std::array<VkDescriptorSet, MAX_SPOT_SHADOW_CASTERS> mSpotShadowDepthMatricesDescriptorSets{};
+        std::array<std::array<VkDescriptorSet, MAX_SPOT_SHADOW_CASTERS>, kFramesInFlight> mSpotShadowDepthMatricesDescriptorSets{};
         VkDeviceSize mSpotShadowDepthMatrixStride{0};
         bool mInSpotShadowPass{false};
         uint32_t mCurrentSpotShadowSlot{0};
@@ -451,7 +451,7 @@ namespace AeonGames
         VkDescriptorPool mPointShadowMapDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mPointShadowMapDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mPointShadowDepthMatricesDescriptorPool{VK_NULL_HANDLE};
-        std::array<VkDescriptorSet, MAX_POINT_SHADOW_CASTERS> mPointShadowDepthMatricesDescriptorSets{};
+        std::array<std::array<VkDescriptorSet, MAX_POINT_SHADOW_CASTERS>, kFramesInFlight> mPointShadowDepthMatricesDescriptorSets{};
         VkDeviceSize mPointShadowDepthMatrixStride{0};
         // Point passes use a dedicated depth pipeline that writes linear radial
         // distance from the light (point_shadow_depth) instead of projected

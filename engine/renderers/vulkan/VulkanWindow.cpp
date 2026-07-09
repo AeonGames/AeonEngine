@@ -68,9 +68,7 @@ namespace AeonGames
     static constexpr uint32_t SKYBOX_ENV_FACE_SIZE = 512;
 
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
-        mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
-        mSpotShadowDepthMatrices { aVulkanRenderer },
-        mPointShadowDepthMatrices { aVulkanRenderer }
+        mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId}
     {
         std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
         // Build the per-frame-in-flight transient allocator rings before
@@ -85,6 +83,8 @@ namespace AeonGames
         mShadowParams.reserve ( kFramesInFlight );
         mSpotShadowParams.reserve ( kFramesInFlight );
         mPointShadowParams.reserve ( kFramesInFlight );
+        mSpotShadowDepthMatrices.reserve ( kFramesInFlight );
+        mPointShadowDepthMatrices.reserve ( kFramesInFlight );
         for ( uint32_t i = 0; i < kFramesInFlight; ++i )
         {
             mMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 64_kb );
@@ -96,6 +96,8 @@ namespace AeonGames
             mShadowParams.emplace_back ( mVulkanRenderer );
             mSpotShadowParams.emplace_back ( mVulkanRenderer );
             mPointShadowParams.emplace_back ( mVulkanRenderer );
+            mSpotShadowDepthMatrices.emplace_back ( mVulkanRenderer );
+            mPointShadowDepthMatrices.emplace_back ( mVulkanRenderer );
         }
         try
         {
@@ -1991,11 +1993,6 @@ namespace AeonGames
             mVulkanRenderer.GetPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
         mSpotShadowDepthMatrixStride =
             ( ( sizeof ( GpuShadowParams ) - 1 ) | ( ( alignment > 0 ? alignment : 1 ) - 1 ) ) + 1;
-        mSpotShadowDepthMatrices.Initialize (
-            mSpotShadowDepthMatrixStride * MAX_SPOT_SHADOW_CASTERS,
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            nullptr );
 
         VkDescriptorSetLayoutCreateInfo depth_matrix_layout_create_info{};
         depth_matrix_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -2008,25 +2005,34 @@ namespace AeonGames
         depth_matrix_layout_create_info.pBindings = &depth_matrix_layout_binding;
         const VkDescriptorSetLayout depth_matrix_layout = mVulkanRenderer.GetDescriptorSetLayout ( depth_matrix_layout_create_info );
 
-        // One pool entry per slot so maxSets covers all caster descriptor sets.
-        std::vector<VkDescriptorPoolSize> depth_matrix_pool_sizes ( MAX_SPOT_SHADOW_CASTERS, {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} );
+        // One buffer (MAX_SPOT_SHADOW_CASTERS aligned slots) plus its caster
+        // descriptor sets per frame in flight; the pool covers all of them.
+        std::vector<VkDescriptorPoolSize> depth_matrix_pool_sizes ( kFramesInFlight * MAX_SPOT_SHADOW_CASTERS, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} );
         mSpotShadowDepthMatricesDescriptorPool = CreateDescriptorPool ( device, depth_matrix_pool_sizes );
-        for ( uint32_t slot = 0; slot < MAX_SPOT_SHADOW_CASTERS; ++slot )
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
         {
-            mSpotShadowDepthMatricesDescriptorSets[slot] =
-                CreateDescriptorSet ( device, mSpotShadowDepthMatricesDescriptorPool, depth_matrix_layout );
-            VkDescriptorBufferInfo depth_matrix_buffer_info{};
-            depth_matrix_buffer_info.buffer = mSpotShadowDepthMatrices.GetBuffer();
-            depth_matrix_buffer_info.offset = slot * mSpotShadowDepthMatrixStride;
-            depth_matrix_buffer_info.range = sizeof ( GpuShadowParams );
-            VkWriteDescriptorSet depth_matrix_write{};
-            depth_matrix_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            depth_matrix_write.dstSet = mSpotShadowDepthMatricesDescriptorSets[slot];
-            depth_matrix_write.dstBinding = 0;
-            depth_matrix_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            depth_matrix_write.descriptorCount = 1;
-            depth_matrix_write.pBufferInfo = &depth_matrix_buffer_info;
-            vkUpdateDescriptorSets ( device, 1, &depth_matrix_write, 0, nullptr );
+            mSpotShadowDepthMatrices[frame].Initialize (
+                mSpotShadowDepthMatrixStride * MAX_SPOT_SHADOW_CASTERS,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                nullptr );
+            for ( uint32_t slot = 0; slot < MAX_SPOT_SHADOW_CASTERS; ++slot )
+            {
+                mSpotShadowDepthMatricesDescriptorSets[frame][slot] =
+                    CreateDescriptorSet ( device, mSpotShadowDepthMatricesDescriptorPool, depth_matrix_layout );
+                VkDescriptorBufferInfo depth_matrix_buffer_info{};
+                depth_matrix_buffer_info.buffer = mSpotShadowDepthMatrices[frame].GetBuffer();
+                depth_matrix_buffer_info.offset = slot * mSpotShadowDepthMatrixStride;
+                depth_matrix_buffer_info.range = sizeof ( GpuShadowParams );
+                VkWriteDescriptorSet depth_matrix_write{};
+                depth_matrix_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                depth_matrix_write.dstSet = mSpotShadowDepthMatricesDescriptorSets[frame][slot];
+                depth_matrix_write.dstBinding = 0;
+                depth_matrix_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                depth_matrix_write.descriptorCount = 1;
+                depth_matrix_write.pBufferInfo = &depth_matrix_buffer_info;
+                vkUpdateDescriptorSets ( device, 1, &depth_matrix_write, 0, nullptr );
+            }
         }
 
         // Transition every depth layer to the sampled layout once, so frames
@@ -2057,7 +2063,10 @@ namespace AeonGames
         DestroyDescriptorPool ( device, mSpotShadowDepthMatricesDescriptorPool );
         DestroyDescriptorPool ( device, mSpotShadowMapDescriptorPool );
         DestroyDescriptorPool ( device, mSpotShadowParamsDescriptorPool );
-        mSpotShadowDepthMatrices.Finalize();
+        for ( VulkanBuffer& buffer : mSpotShadowDepthMatrices )
+        {
+            buffer.Finalize();
+        }
         for ( VulkanBuffer& buffer : mSpotShadowParams )
         {
             buffer.Finalize();
@@ -2319,11 +2328,6 @@ namespace AeonGames
             mVulkanRenderer.GetPhysicalDeviceProperties().limits.minUniformBufferOffsetAlignment;
         mPointShadowDepthMatrixStride =
             ( ( sizeof ( GpuPointDepthParams ) - 1 ) | ( ( alignment > 0 ? alignment : 1 ) - 1 ) ) + 1;
-        mPointShadowDepthMatrices.Initialize (
-            mPointShadowDepthMatrixStride * MAX_POINT_SHADOW_CASTERS,
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            nullptr );
 
         VkDescriptorSetLayoutCreateInfo depth_matrix_layout_create_info{};
         depth_matrix_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -2336,24 +2340,34 @@ namespace AeonGames
         depth_matrix_layout_create_info.pBindings = &depth_matrix_layout_binding;
         const VkDescriptorSetLayout depth_matrix_layout = mVulkanRenderer.GetDescriptorSetLayout ( depth_matrix_layout_create_info );
 
-        std::vector<VkDescriptorPoolSize> depth_matrix_pool_sizes ( MAX_POINT_SHADOW_CASTERS, {VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} );
+        // One buffer (MAX_POINT_SHADOW_CASTERS aligned slots) plus its caster
+        // descriptor sets per frame in flight; the pool covers all of them.
+        std::vector<VkDescriptorPoolSize> depth_matrix_pool_sizes ( kFramesInFlight * MAX_POINT_SHADOW_CASTERS, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} );
         mPointShadowDepthMatricesDescriptorPool = CreateDescriptorPool ( device, depth_matrix_pool_sizes );
-        for ( uint32_t caster = 0; caster < MAX_POINT_SHADOW_CASTERS; ++caster )
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
         {
-            mPointShadowDepthMatricesDescriptorSets[caster] =
-                CreateDescriptorSet ( device, mPointShadowDepthMatricesDescriptorPool, depth_matrix_layout );
-            VkDescriptorBufferInfo depth_matrix_buffer_info{};
-            depth_matrix_buffer_info.buffer = mPointShadowDepthMatrices.GetBuffer();
-            depth_matrix_buffer_info.offset = caster * mPointShadowDepthMatrixStride;
-            depth_matrix_buffer_info.range = sizeof ( GpuPointDepthParams );
-            VkWriteDescriptorSet depth_matrix_write{};
-            depth_matrix_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            depth_matrix_write.dstSet = mPointShadowDepthMatricesDescriptorSets[caster];
-            depth_matrix_write.dstBinding = 0;
-            depth_matrix_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            depth_matrix_write.descriptorCount = 1;
-            depth_matrix_write.pBufferInfo = &depth_matrix_buffer_info;
-            vkUpdateDescriptorSets ( device, 1, &depth_matrix_write, 0, nullptr );
+            mPointShadowDepthMatrices[frame].Initialize (
+                mPointShadowDepthMatrixStride * MAX_POINT_SHADOW_CASTERS,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                nullptr );
+            for ( uint32_t caster = 0; caster < MAX_POINT_SHADOW_CASTERS; ++caster )
+            {
+                mPointShadowDepthMatricesDescriptorSets[frame][caster] =
+                    CreateDescriptorSet ( device, mPointShadowDepthMatricesDescriptorPool, depth_matrix_layout );
+                VkDescriptorBufferInfo depth_matrix_buffer_info{};
+                depth_matrix_buffer_info.buffer = mPointShadowDepthMatrices[frame].GetBuffer();
+                depth_matrix_buffer_info.offset = caster * mPointShadowDepthMatrixStride;
+                depth_matrix_buffer_info.range = sizeof ( GpuPointDepthParams );
+                VkWriteDescriptorSet depth_matrix_write{};
+                depth_matrix_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                depth_matrix_write.dstSet = mPointShadowDepthMatricesDescriptorSets[frame][caster];
+                depth_matrix_write.dstBinding = 0;
+                depth_matrix_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                depth_matrix_write.descriptorCount = 1;
+                depth_matrix_write.pBufferInfo = &depth_matrix_buffer_info;
+                vkUpdateDescriptorSets ( device, 1, &depth_matrix_write, 0, nullptr );
+            }
         }
 
         // Transition every depth layer to the sampled layout once.
@@ -2383,7 +2397,10 @@ namespace AeonGames
         DestroyDescriptorPool ( device, mPointShadowDepthMatricesDescriptorPool );
         DestroyDescriptorPool ( device, mPointShadowMapDescriptorPool );
         DestroyDescriptorPool ( device, mPointShadowParamsDescriptorPool );
-        mPointShadowDepthMatrices.Finalize();
+        for ( VulkanBuffer& buffer : mPointShadowDepthMatrices )
+        {
+            buffer.Finalize();
+        }
         for ( VulkanBuffer& buffer : mPointShadowParams )
         {
             buffer.Finalize();
@@ -2593,8 +2610,8 @@ namespace AeonGames
         GpuShadowParams depth_matrix{};
         depth_matrix.light_view_projection = aLightViewProjection;
         depth_matrix.params[3] = 1.0f; // enabled (unused by the depth vertex shader)
-        mSpotShadowDepthMatrices.WriteMemory ( aSlot * mSpotShadowDepthMatrixStride,
-                                               sizeof ( GpuShadowParams ), &depth_matrix );
+        mSpotShadowDepthMatrices[mFrameIndex].WriteMemory ( aSlot * mSpotShadowDepthMatrixStride,
+                sizeof ( GpuShadowParams ), &depth_matrix );
         mInSpotShadowPass = true;
         mCurrentSpotShadowSlot = aSlot;
 
@@ -2691,8 +2708,8 @@ namespace AeonGames
                 mPointShadowParamsCpu.point_light_view_projection[aCaster * POINT_SHADOW_FACES + face];
         }
         depth_params.light_position_radius = mPointShadowParamsCpu.caster_position_radius[aCaster];
-        mPointShadowDepthMatrices.WriteMemory ( aCaster * mPointShadowDepthMatrixStride,
-                                                sizeof ( GpuPointDepthParams ), &depth_params );
+        mPointShadowDepthMatrices[mFrameIndex].WriteMemory ( aCaster * mPointShadowDepthMatrixStride,
+                sizeof ( GpuPointDepthParams ), &depth_params );
         mInPointShadowPass = true;
         mCurrentPointShadowCaster = aCaster;
 
@@ -3478,9 +3495,9 @@ namespace AeonGames
             // Point passes bind their caster's six-face matrix set, spot passes
             // their slot's set, the directional pass the directional set.
             const VkDescriptorSet shadow_depth_set = mInPointShadowPass
-                ? mPointShadowDepthMatricesDescriptorSets[mCurrentPointShadowCaster]
+                ? mPointShadowDepthMatricesDescriptorSets[mFrameIndex][mCurrentPointShadowCaster]
                 : mInSpotShadowPass
-                ? mSpotShadowDepthMatricesDescriptorSets[mCurrentSpotShadowSlot]
+                ? mSpotShadowDepthMatricesDescriptorSets[mFrameIndex][mCurrentSpotShadowSlot]
                 : mShadowParamsDescriptorSet;
             vkCmdBindDescriptorSets ( GetCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS,
                                       aPipeline->GetPipelineLayout(), shadow_params_set_index, 1, &shadow_depth_set, 0, nullptr );
