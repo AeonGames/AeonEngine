@@ -119,6 +119,7 @@ namespace AeonGames
         void BeginPointShadowPass ( void* aWindowId, uint32_t aCaster ) final;
         void EndPointShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
+        void Finish ( void* aWindowId ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,
                       const Mesh& aMesh,

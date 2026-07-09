@@ -337,6 +337,18 @@ namespace AeonGames
          * @param aWindowId Platform dependent window handle.
          */
         virtual void EndRender ( void* aWindowId ) = 0;
+        /** Blocks until all GPU work previously submitted for the given window
+         * surface has completed. Provided so callers can safely read back
+         * GPU-written buffers, capture the framebuffer, or tear resources down
+         * while frames are pipelined: with multiple frames in flight BeginFrame
+         * no longer implies the previous frame finished. The default is a no-op
+         * for backends that render fully synchronously.
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void Finish ( void* aWindowId )
+        {
+            ( void ) aWindowId;
+        }
         /** Issues a draw call for a mesh with the given pipeline and optional material.
          * @param aWindowId Platform dependent window handle.
          * @param aModelMatrix Model transformation matrix.

@@ -237,12 +237,13 @@ namespace AeonGames
         std::swap ( mVkCommandBuffers, aVulkanWindow.mVkCommandBuffers );
         std::swap ( mVkCommandBuffer, aVulkanWindow.mVkCommandBuffer );
         std::swap ( mFrameIndex, aVulkanWindow.mFrameIndex );
-        std::swap ( mVkAcquireSemaphore, aVulkanWindow.mVkAcquireSemaphore );
-        std::swap ( mVkFence, aVulkanWindow.mVkFence );
+        std::swap ( mVkAcquireSemaphores, aVulkanWindow.mVkAcquireSemaphores );
+        std::swap ( mVkFences, aVulkanWindow.mVkFences );
         mVkSwapchainImages.swap ( aVulkanWindow.mVkSwapchainImages );
         mVkSwapchainImageViews.swap ( aVulkanWindow.mVkSwapchainImageViews );
         mVkFramebuffers.swap ( aVulkanWindow.mVkFramebuffers );
         mVkSubmitSemaphores.swap ( aVulkanWindow.mVkSubmitSemaphores );
+        mImagesInFlight.swap ( aVulkanWindow.mImagesInFlight );
     }
 
     VulkanWindow::~VulkanWindow()
@@ -384,16 +385,27 @@ namespace AeonGames
         }
 
         std::cout << LogLevel::Debug << "VulkanWindow Swapchain created with " << mSwapchainImageCount << " images." << std::endl;
-        // Create semaphores for rendering.
+        // Create sync objects. Acquire semaphores and frame fences are per frame
+        // in flight (the acquire happens before the image index is known, and
+        // each in-flight frame owns its fence so the CPU can record the next
+        // frame while the GPU still works on a previous one). Submit/present
+        // semaphores stay per swapchain image.
         VkSemaphoreCreateInfo semaphore_create_info{};
         semaphore_create_info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-        if ( VkResult result = vkCreateSemaphore ( mVulkanRenderer.GetDevice(), &semaphore_create_info, nullptr, &mVkAcquireSemaphore ) )
+        VkFenceCreateInfo fence_create_info{};
+        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
         {
-            std::ostringstream stream;
-            stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
-            throw std::runtime_error ( stream.str().c_str() );
+            if ( VkResult result = vkCreateSemaphore ( mVulkanRenderer.GetDevice(), &semaphore_create_info, nullptr, &mVkAcquireSemaphores[i] ) )
+            {
+                std::ostringstream stream;
+                stream << "Could not create VulkanRenderer semaphore. error code: ( " << GetVulkanResultString ( result ) << " )";
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            vkCreateFence ( mVulkanRenderer.GetDevice(), &fence_create_info, nullptr, &mVkFences[i] );
         }
-        std::cout << LogLevel::Debug << "Created Acquire Semaphore " << std::hex << mVkAcquireSemaphore << std::endl;
+        std::cout << LogLevel::Debug << "Created " << kFramesInFlight << " acquire semaphores + frame fences" << std::endl;
         mVkSubmitSemaphores.resize ( mSwapchainImageCount );
         for ( size_t i = 0; i < mSwapchainImageCount; ++i )
         {
@@ -405,10 +417,8 @@ namespace AeonGames
             }
             std::cout << LogLevel::Debug << "Created Submit Semaphore " << std::hex << mVkSubmitSemaphores[i] << std::endl;
         }
-        VkFenceCreateInfo fence_create_info{};
-        fence_create_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-        fence_create_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-        vkCreateFence ( mVulkanRenderer.GetDevice(), &fence_create_info, nullptr, &mVkFence );
+        // Per-image guard slots start empty; no image is in flight yet.
+        mImagesInFlight.assign ( mSwapchainImageCount, VK_NULL_HANDLE );
     }
 
     void VulkanWindow::InitializeImageViews()
@@ -826,12 +836,19 @@ namespace AeonGames
         subpass_descriptions[0].pPreserveAttachments = nullptr;
 
         std::array<VkSubpassDependency, 2> subpass_dependencies{};
+        // Cover both the colour attachments and the depth attachment. The depth
+        // target is ring-buffered per frame in flight, so a reused slot's layout
+        // transition + loadOp clear (EARLY/LATE_FRAGMENT_TESTS,
+        // DEPTH_STENCIL_ATTACHMENT_WRITE) must be ordered after the previous
+        // frame's depth writes; without the depth stages/access here the
+        // write-after-write is a real hazard once frames overlap (surfaced by
+        // synchronization validation).
         subpass_dependencies[0].srcSubpass = VK_SUBPASS_EXTERNAL;
         subpass_dependencies[0].dstSubpass = 0;
-        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependencies[0].srcAccessMask = 0;
-        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        subpass_dependencies[0].srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependencies[0].dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpass_dependencies[0].dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
         // Make the HDR colour writes available/visible to the tonemap pass's
         // fragment-shader sample of this image.
         subpass_dependencies[1].srcSubpass = 0;
@@ -1718,19 +1735,22 @@ namespace AeonGames
         subpass_description.pColorAttachments = &color_attachment_reference;
         subpass_description.pDepthStencilAttachment = &depth_attachment_reference;
 
-        // Render-pass compatibility (Vulkan spec, Render Pass Compatibility)
-        // requires identical subpass dependencies, because the shadow depth
-        // pipeline is created against the window's main render pass yet executed
-        // here. Mirror the main pass's single dependency exactly; the depth
-        // write -> shader read hazard is instead handled by an explicit barrier
-        // in EndShadowPass.
+        // The shadow depth pipeline is created against the window's main render
+        // pass but executed here; render-pass compatibility (Vulkan spec, Render
+        // Pass Compatibility) depends only on the attachment references, NOT on
+        // subpass dependencies, so this pass carries its own dependency covering
+        // the ring-buffered depth target: a reused frame slot's layout
+        // transition + loadOp clear (EARLY/LATE_FRAGMENT_TESTS,
+        // DEPTH_STENCIL_ATTACHMENT_WRITE) must be ordered after the previous
+        // frame's depth writes. The within-frame depth-write -> shader-read
+        // hazard is still handled by the explicit barrier in End(Spot)ShadowPass.
         VkSubpassDependency subpass_dependency{};
         subpass_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
         subpass_dependency.dstSubpass = 0;
-        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.srcAccessMask = 0;
-        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        subpass_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+        subpass_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        subpass_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+        subpass_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
         VkRenderPassCreateInfo render_pass_create_info{};
         render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
@@ -2269,6 +2289,19 @@ namespace AeonGames
             multiview_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_MULTIVIEW_CREATE_INFO;
             multiview_create_info.subpassCount = 1;
             multiview_create_info.pViewMasks = &view_mask;
+            // Order this pass's depth layout transition + loadOp clear
+            // (EARLY/LATE_FRAGMENT_TESTS, DEPTH_STENCIL_ATTACHMENT_WRITE) after
+            // any prior depth writes so the write-after-write is synchronized
+            // whenever a point caster is (re-)rendered. The point depth target is
+            // shared (not ring-buffered); its cross-frame read/write ordering is
+            // handled separately by the cache-miss barrier.
+            VkSubpassDependency point_dependency{};
+            point_dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+            point_dependency.dstSubpass = 0;
+            point_dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+            point_dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+            point_dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+            point_dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
             VkRenderPassCreateInfo render_pass_create_info{};
             render_pass_create_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
             render_pass_create_info.pNext = &multiview_create_info;
@@ -2276,6 +2309,8 @@ namespace AeonGames
             render_pass_create_info.pAttachments = attachments.data();
             render_pass_create_info.subpassCount = 1;
             render_pass_create_info.pSubpasses = &subpass;
+            render_pass_create_info.dependencyCount = 1;
+            render_pass_create_info.pDependencies = &point_dependency;
             vkCreateRenderPass ( device, &render_pass_create_info, nullptr, &mVkPointShadowRenderPass );
         }
 
@@ -3050,27 +3085,37 @@ namespace AeonGames
             return;
         }
         mFrameBegun = true;
+        // Wait only on THIS frame slot's previous submission (per-frame fence),
+        // so the CPU can get up to kFramesInFlight frames ahead of the GPU
+        // rather than stalling on a single global fence every frame.
         if ( VkResult result = vkWaitForFences ( mVulkanRenderer.GetDevice(), 1,
-                               &mVkFence,
+                               &mVkFences[mFrameIndex],
                                VK_TRUE, UINT64_MAX ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
-        if ( VkResult result = vkResetFences ( mVulkanRenderer.GetDevice(), 1,
-                                               &mVkFence ) )
-        {
-            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
-        }
+        // Acquire the next swapchain image, signalling this frame's acquire
+        // semaphore. The image index is not known until this returns, which is
+        // why acquire semaphores are per frame in flight, not per image.
         if ( VkResult result = vkAcquireNextImageKHR (
                                    mVulkanRenderer.GetDevice(),
                                    mVkSwapchainKHR,
                                    UINT64_MAX,
-                                   mVkAcquireSemaphore,
+                                   mVkAcquireSemaphores[mFrameIndex],
                                    VK_NULL_HANDLE,
                                    const_cast<uint32_t * > ( &mActiveImageIndex ) ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
+        // If a previous, still-in-flight frame is rendering into the image we
+        // just acquired, wait on its fence before reusing the image, then record
+        // that this image is now guarded by this frame's fence. Swapchain image
+        // count and frames in flight need not match, so this guard is required.
+        if ( mImagesInFlight[mActiveImageIndex] != VK_NULL_HANDLE )
+        {
+            vkWaitForFences ( mVulkanRenderer.GetDevice(), 1, &mImagesInFlight[mActiveImageIndex], VK_TRUE, UINT64_MAX );
+        }
+        mImagesInFlight[mActiveImageIndex] = mVkFences[mFrameIndex];
         VkCommandBufferBeginInfo command_buffer_begin_info{};
         command_buffer_begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         command_buffer_begin_info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
@@ -3349,13 +3394,21 @@ namespace AeonGames
         VkPipelineStageFlags wait_stages{ VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
         submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         submit_info.waitSemaphoreCount = 1;
-        submit_info.pWaitSemaphores = &mVkAcquireSemaphore;
+        submit_info.pWaitSemaphores = &mVkAcquireSemaphores[mFrameIndex];
         submit_info.pWaitDstStageMask = &wait_stages;
         submit_info.commandBufferCount = 1;
         submit_info.pCommandBuffers = &mVkCommandBuffer;
         submit_info.signalSemaphoreCount = 1;
         submit_info.pSignalSemaphores = &mVkSubmitSemaphores[mActiveImageIndex];
-        if ( VkResult result = vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, mVkFence ) )
+        // Reset this frame's fence immediately before the submit that signals
+        // it. It stayed signalled through BeginFrame's waits (including the
+        // images-in-flight guard, which may reference this same fence), so no
+        // wait could have deadlocked on it.
+        if ( VkResult result = vkResetFences ( mVulkanRenderer.GetDevice(), 1, &mVkFences[mFrameIndex] ) )
+        {
+            std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+        }
+        if ( VkResult result = vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, mVkFences[mFrameIndex] ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
         }
@@ -3898,11 +3951,13 @@ namespace AeonGames
             vkDestroySwapchainKHR ( mVulkanRenderer.GetDevice(), mVkSwapchainKHR, nullptr );
             mVkSwapchainKHR = VK_NULL_HANDLE;
         }
-        if ( mVkAcquireSemaphore != VK_NULL_HANDLE )
+        for ( VkSemaphore& acquire_semaphore : mVkAcquireSemaphores )
         {
-            vkDestroySemaphore ( mVulkanRenderer.GetDevice(), mVkAcquireSemaphore, nullptr );
-            std::cout << LogLevel::Debug << "Destroyed Acquire Semaphore " << std::hex << mVkAcquireSemaphore << std::endl;
-            mVkAcquireSemaphore = VK_NULL_HANDLE;
+            if ( acquire_semaphore != VK_NULL_HANDLE )
+            {
+                vkDestroySemaphore ( mVulkanRenderer.GetDevice(), acquire_semaphore, nullptr );
+                acquire_semaphore = VK_NULL_HANDLE;
+            }
         }
         for ( auto& i : mVkSubmitSemaphores )
         {
@@ -3913,11 +3968,16 @@ namespace AeonGames
             }
         }
         mVkSubmitSemaphores.clear();
-        if ( mVkFence != VK_NULL_HANDLE )
+        for ( VkFence& fence : mVkFences )
         {
-            vkDestroyFence ( mVulkanRenderer.GetDevice(), mVkFence, nullptr );
-            mVkFence = VK_NULL_HANDLE;
+            if ( fence != VK_NULL_HANDLE )
+            {
+                vkDestroyFence ( mVulkanRenderer.GetDevice(), fence, nullptr );
+                fence = VK_NULL_HANDLE;
+            }
         }
+        // Guard slots only reference the frame fences destroyed above; clear.
+        mImagesInFlight.clear();
     }
 
     void VulkanWindow::FinalizeImageViews()

@@ -168,10 +168,12 @@ namespace AeonGames
         renderer->BeginRenderPass ( hwnd );
         renderer->EndRender ( hwnd );
 
-        // Begin a second frame: this waits on the previous frame's completion
-        // (the Vulkan fence) and makes the GPU writes visible, and re-makes the
-        // OpenGL context current so the buffer can be mapped on this thread.
+        // Re-make the GL context current on this thread (OpenGL) so the buffer
+        // can be mapped here, then drain the GPU so the compute writes are
+        // complete before read-back. With multiple frames in flight BeginFrame
+        // no longer waits on the previous frame, so Finish() is the sync point.
         renderer->BeginFrame ( hwnd );
+        renderer->Finish ( hwnd );
 
         const uint32_t* data = static_cast<const uint32_t*> ( ssbo.Map() );
         ASSERT_NE ( data, nullptr );
@@ -237,9 +239,11 @@ namespace AeonGames
         renderer->BeginRenderPass ( hwnd );
         renderer->EndRender ( hwnd );
 
-        // Second BeginFrame waits on the previous frame's fence (Vulkan) and
-        // re-makes the GL context current so the buffer can be mapped here.
+        // Re-make the GL context current here, then Finish() to drain the GPU so
+        // the compute writes are visible before read-back (with frames in flight
+        // BeginFrame no longer waits on the previous frame).
         renderer->BeginFrame ( hwnd );
+        renderer->Finish ( hwnd );
 
         const GpuClusterAABB* aabbs = static_cast<const GpuClusterAABB*> ( aabb_buffer.Map() );
         ASSERT_NE ( aabbs, nullptr );
@@ -358,9 +362,11 @@ namespace AeonGames
         renderer->BeginRenderPass ( hwnd );
         renderer->EndRender ( hwnd );
 
-        // Second BeginFrame waits on the previous frame's fence (Vulkan) and
-        // re-makes the GL context current so the buffers can be mapped here.
+        // Re-make the GL context current here, then Finish() to drain the GPU so
+        // the compute writes are visible before read-back (with frames in flight
+        // BeginFrame no longer waits on the previous frame).
         renderer->BeginFrame ( hwnd );
+        renderer->Finish ( hwnd );
 
         const GpuLightGridCell* grid = static_cast<const GpuLightGridCell*> ( grid_buffer.Map() );
         ASSERT_NE ( grid, nullptr );
@@ -482,7 +488,11 @@ namespace AeonGames
         renderer->BeginRenderPass ( hwnd );
         renderer->EndRender ( hwnd );
 
+        // Drain the GPU so the compute writes are visible before read-back
+        // (BeginFrame no longer waits on the previous frame with frames in
+        // flight); the BeginFrame re-makes the GL context current on this thread.
         renderer->BeginFrame ( hwnd );
+        renderer->Finish ( hwnd );
 
         const GpuLightGridCell* grid = static_cast<const GpuLightGridCell*> ( grid_buffer.Map() );
         ASSERT_NE ( grid, nullptr );
@@ -604,9 +614,11 @@ namespace AeonGames
         renderer->EndDepthPrePass ( hwnd, &lighting );
         renderer->EndRender ( hwnd );
 
-        // Second BeginFrame waits on the previous frame's fence (Vulkan) and
-        // re-makes the GL context current so the frame buffers can be mapped.
+        // Re-make the GL context current here, then Finish() to drain the GPU so
+        // the compute writes are visible before read-back (with frames in flight
+        // BeginFrame no longer waits on the previous frame).
         renderer->BeginFrame ( hwnd );
+        renderer->Finish ( hwnd );
 
         const BufferAccessor* grid_accessor = renderer->GetFrameLightGrid ( hwnd );
         const BufferAccessor* active_accessor = renderer->GetFrameClusterActive ( hwnd );
@@ -776,7 +788,11 @@ namespace AeonGames
         renderer->BeginRenderPass ( hwnd );
         renderer->EndRender ( hwnd );
 
+        // Drain the GPU so the compute writes are visible before read-back
+        // (BeginFrame no longer waits on the previous frame with frames in
+        // flight); the BeginFrame re-makes the GL context current on this thread.
         renderer->BeginFrame ( hwnd );
+        renderer->Finish ( hwnd );
 
         const uint32_t* out = static_cast<const uint32_t*> ( skinned_buffer.Map() );
         ASSERT_NE ( out, nullptr );

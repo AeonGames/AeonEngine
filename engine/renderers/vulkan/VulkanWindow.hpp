@@ -468,8 +468,13 @@ namespace AeonGames
         GpuPointShadowParams mPointShadowParamsCpu{};
         bool mInPointShadowPass{false};
         uint32_t mCurrentPointShadowCaster{0};
-        VkSemaphore mVkAcquireSemaphore{VK_NULL_HANDLE};
-        VkFence mVkFence{ VK_NULL_HANDLE };
+        std::array<VkSemaphore, kFramesInFlight> mVkAcquireSemaphores{};
+        std::array<VkFence, kFramesInFlight> mVkFences{};
+        // One guard slot per swapchain image: the frame fence currently
+        // rendering into that image, so a newly-acquired image still in flight
+        // from an earlier frame is waited on before reuse. References into
+        // mVkFences (not owned) -- cleared on swapchain teardown, never destroyed.
+        ::std::vector<VkFence> mImagesInFlight{};
 
         ::std::vector<VkImage> mVkSwapchainImages{};
         ::std::vector<VkImageView> mVkSwapchainImageViews{};

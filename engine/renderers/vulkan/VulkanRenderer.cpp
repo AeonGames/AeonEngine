@@ -1235,6 +1235,21 @@ namespace AeonGames
         }
         it->second.EndRender();
     }
+    void VulkanRenderer::Finish ( void* aWindowId )
+    {
+        // Block until every submission is complete so the caller can safely map
+        // GPU-written buffers or capture the surface. With multiple frames in
+        // flight BeginFrame only waits on its own slot's fence, so this explicit
+        // drain is what guarantees a correct CPU read-back.
+        if ( mWindowStore.find ( aWindowId ) == mWindowStore.end() )
+        {
+            return;
+        }
+        if ( VkResult result = vkDeviceWaitIdle ( mVkDevice ) )
+        {
+            std::cout << LogLevel::Error << "vkDeviceWaitIdle failed in Finish: " << GetVulkanResultString ( result ) << std::endl;
+        }
+    }
     void VulkanRenderer::SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass )
     {
         auto it = mWindowStore.find ( aWindowId );
