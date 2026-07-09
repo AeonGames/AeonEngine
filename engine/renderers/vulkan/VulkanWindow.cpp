@@ -474,85 +474,92 @@ namespace AeonGames
             ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
               mVkDepthStencilFormat == VK_FORMAT_D24_UNORM_S8_UINT ||
               mVkDepthStencilFormat == VK_FORMAT_D16_UNORM_S8_UINT );
-        VkImageCreateInfo image_create_info{};
-        image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
-        image_create_info.flags = 0;
-        image_create_info.format = mVkDepthStencilFormat;
-        image_create_info.imageType = VK_IMAGE_TYPE_2D;
-        image_create_info.extent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
-        image_create_info.extent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
-        image_create_info.extent.depth = 1;
-        image_create_info.mipLevels = 1;
-        image_create_info.arrayLayers = 1;
-        image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
-        image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
-        // SAMPLED so the SSR composite can read the scene depth to reconstruct
-        // view-space positions and ray-march reflections.
-        image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-        image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-        image_create_info.queueFamilyIndexCount = 0;
-        image_create_info.pQueueFamilyIndices = nullptr;
-        image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        if ( VkResult result = vkCreateImage ( mVulkanRenderer.GetDevice(), &image_create_info, nullptr, &mVkDepthStencilImage ) )
-        {
-            std::ostringstream stream;
-            stream << "Call to vkCreateImage failed: ( " << GetVulkanResultString ( result ) << " )";
-            std::cout << LogLevel::Error << stream.str() << std::endl;
-            throw std::runtime_error ( stream.str().c_str() );
-        }
 
-        VkMemoryRequirements memory_requirements;
-        vkGetImageMemoryRequirements ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage, &memory_requirements );
-
-        auto required_bits = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
-        uint32_t memory_index = UINT32_MAX;
-        for ( uint32_t i = 0; i < mVulkanRenderer.GetPhysicalDeviceMemoryProperties().memoryTypeCount; ++i )
+        // Ring one depth target per frame in flight so an in-flight frame's depth
+        // (still being sampled by that frame's SSR composite) is never overwritten
+        // by the next frame's scene pass under overlap.
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
         {
-            if ( memory_requirements.memoryTypeBits & ( 1 << i ) )
+            VkImageCreateInfo image_create_info{};
+            image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            image_create_info.flags = 0;
+            image_create_info.format = mVkDepthStencilFormat;
+            image_create_info.imageType = VK_IMAGE_TYPE_2D;
+            image_create_info.extent.width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
+            image_create_info.extent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
+            image_create_info.extent.depth = 1;
+            image_create_info.mipLevels = 1;
+            image_create_info.arrayLayers = 1;
+            image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+            image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+            // SAMPLED so the SSR composite can read the scene depth to reconstruct
+            // view-space positions and ray-march reflections.
+            image_create_info.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+            image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            image_create_info.queueFamilyIndexCount = 0;
+            image_create_info.pQueueFamilyIndices = nullptr;
+            image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if ( VkResult result = vkCreateImage ( mVulkanRenderer.GetDevice(), &image_create_info, nullptr, &mVkDepthStencilImage[frame] ) )
             {
-                if ( ( mVulkanRenderer.GetPhysicalDeviceMemoryProperties().memoryTypes[i].propertyFlags & required_bits ) == required_bits )
+                std::ostringstream stream;
+                stream << "Call to vkCreateImage failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            VkMemoryRequirements memory_requirements;
+            vkGetImageMemoryRequirements ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage[frame], &memory_requirements );
+
+            auto required_bits = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+            uint32_t memory_index = UINT32_MAX;
+            for ( uint32_t i = 0; i < mVulkanRenderer.GetPhysicalDeviceMemoryProperties().memoryTypeCount; ++i )
+            {
+                if ( memory_requirements.memoryTypeBits & ( 1 << i ) )
                 {
-                    memory_index = i;
-                    break;
+                    if ( ( mVulkanRenderer.GetPhysicalDeviceMemoryProperties().memoryTypes[i].propertyFlags & required_bits ) == required_bits )
+                    {
+                        memory_index = i;
+                        break;
+                    }
                 }
             }
+
+            if ( memory_index == UINT32_MAX )
+            {
+                std::ostringstream stream;
+                stream << "Could not find a suitable memory index.";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+            VkMemoryAllocateInfo memory_allocate_info{};
+            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memory_allocate_info.allocationSize = memory_requirements.size;
+            memory_allocate_info.memoryTypeIndex = memory_index;
+            vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mVkDepthStencilImageMemory[frame] );
+            vkBindImageMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage[frame], mVkDepthStencilImageMemory[frame], 0 );
+
+            VkImageViewCreateInfo image_view_create_info{};
+            image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            image_view_create_info.image = mVkDepthStencilImage[frame];
+            image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            image_view_create_info.format = mVkDepthStencilFormat;
+            image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
+            image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( mHasStencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+            image_view_create_info.subresourceRange.baseMipLevel = 0;
+            image_view_create_info.subresourceRange.levelCount = 1;
+            image_view_create_info.subresourceRange.baseArrayLayer = 0;
+            image_view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( mVulkanRenderer.GetDevice(), &image_view_create_info, nullptr, &mVkDepthStencilImageView[frame] );
+
+            // Depth-only view for sampling in the SSR composite (a combined
+            // depth-stencil image cannot be sampled through a depth+stencil view).
+            VkImageViewCreateInfo depth_sample_view_create_info = image_view_create_info;
+            depth_sample_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
+            vkCreateImageView ( mVulkanRenderer.GetDevice(), &depth_sample_view_create_info, nullptr, &mVkDepthSampleImageView[frame] );
         }
-
-        if ( memory_index == UINT32_MAX )
-        {
-            std::ostringstream stream;
-            stream << "Could not find a suitable memory index.";
-            std::cout << LogLevel::Error << stream.str() << std::endl;
-            throw std::runtime_error ( stream.str().c_str() );
-        }
-        VkMemoryAllocateInfo memory_allocate_info{};
-        memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = memory_index;
-        vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mVkDepthStencilImageMemory );
-        vkBindImageMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage, mVkDepthStencilImageMemory, 0 );
-
-        VkImageViewCreateInfo image_view_create_info{};
-        image_view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        image_view_create_info.image = mVkDepthStencilImage;
-        image_view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
-        image_view_create_info.format = mVkDepthStencilFormat;
-        image_view_create_info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
-        image_view_create_info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
-        image_view_create_info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
-        image_view_create_info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-        image_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( mHasStencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
-        image_view_create_info.subresourceRange.baseMipLevel = 0;
-        image_view_create_info.subresourceRange.levelCount = 1;
-        image_view_create_info.subresourceRange.baseArrayLayer = 0;
-        image_view_create_info.subresourceRange.layerCount = 1;
-        vkCreateImageView ( mVulkanRenderer.GetDevice(), &image_view_create_info, nullptr, &mVkDepthStencilImageView );
-
-        // Depth-only view for sampling in the SSR composite (a combined
-        // depth-stencil image cannot be sampled through a depth+stencil view).
-        VkImageViewCreateInfo depth_sample_view_create_info = image_view_create_info;
-        depth_sample_view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT;
-        vkCreateImageView ( mVulkanRenderer.GetDevice(), &depth_sample_view_create_info, nullptr, &mVkDepthSampleImageView );
 
         // Point-sampled, clamped, non-comparison sampler: the composite reads raw
         // depth values (NEAREST avoids blending depths across silhouettes).
@@ -617,25 +624,72 @@ namespace AeonGames
             view_create_info.subresourceRange.layerCount = 1;
             vkCreateImageView ( device, &view_create_info, nullptr, &aView );
         };
-        create_color_target ( mVkHdrColorImage, mVkHdrColorImageMemory, mVkHdrColorImageView );
-        create_color_target ( mVkGNormalRoughImage, mVkGNormalRoughImageMemory, mVkGNormalRoughImageView );
-        create_color_target ( mVkGSpecWeightImage, mVkGSpecWeightImageMemory, mVkGSpecWeightImageView );
+        // Create the tonemap/composite descriptor layout + pool once; the set,
+        // HDR colour, G-buffer and scene framebuffer are ring-buffered one per
+        // frame in flight so a frame still being composited is never overwritten.
+        std::array<VkDescriptorSetLayoutBinding, 4> tonemap_layout_bindings{};
+        for ( uint32_t b = 0; b < tonemap_layout_bindings.size(); ++b )
+        {
+            tonemap_layout_bindings[b].binding = b;
+            tonemap_layout_bindings[b].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            tonemap_layout_bindings[b].descriptorCount = 1;
+            tonemap_layout_bindings[b].stageFlags = VK_SHADER_STAGE_ALL;
+        }
+        VkDescriptorSetLayoutCreateInfo tonemap_layout_create_info{};
+        tonemap_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        tonemap_layout_create_info.bindingCount = static_cast<uint32_t> ( tonemap_layout_bindings.size() );
+        tonemap_layout_create_info.pBindings = tonemap_layout_bindings.data();
+        const VkDescriptorSetLayout tonemap_layout = mVulkanRenderer.GetDescriptorSetLayout ( tonemap_layout_create_info );
+        // One pool-size entry per frame in flight: CreateDescriptorPool derives
+        // maxSets from the entry count, so kFramesInFlight entries of 4 samplers
+        // each yields maxSets=kFramesInFlight with room for N*4 samplers.
+        mTonemapDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4 } ) );
 
-        // Scene framebuffer: HDR colour + the two G-buffer attachments + the
-        // shared depth-stencil, drawn with the main render pass.
-        std::array<VkImageView, 4> hdr_attachments { { mVkHdrColorImageView, mVkGNormalRoughImageView, mVkGSpecWeightImageView, mVkDepthStencilImageView } };
-        VkFramebufferCreateInfo hdr_framebuffer_create_info{};
-        hdr_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-        hdr_framebuffer_create_info.renderPass = mVkRenderPass;
-        hdr_framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( hdr_attachments.size() );
-        hdr_framebuffer_create_info.pAttachments = hdr_attachments.data();
-        hdr_framebuffer_create_info.width = width;
-        hdr_framebuffer_create_info.height = height;
-        hdr_framebuffer_create_info.layers = 1;
-        vkCreateFramebuffer ( device, &hdr_framebuffer_create_info, nullptr, &mVkHdrFramebuffer );
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            create_color_target ( mVkHdrColorImage[frame], mVkHdrColorImageMemory[frame], mVkHdrColorImageView[frame] );
+            create_color_target ( mVkGNormalRoughImage[frame], mVkGNormalRoughImageMemory[frame], mVkGNormalRoughImageView[frame] );
+            create_color_target ( mVkGSpecWeightImage[frame], mVkGSpecWeightImageMemory[frame], mVkGSpecWeightImageView[frame] );
 
-        // Tonemap framebuffers: one per swapchain image (colour only), drawn
-        // with the tonemap render pass.
+            // Scene framebuffer: HDR colour + the two G-buffer attachments + this
+            // frame's depth-stencil, drawn with the main render pass.
+            std::array<VkImageView, 4> hdr_attachments { { mVkHdrColorImageView[frame], mVkGNormalRoughImageView[frame], mVkGSpecWeightImageView[frame], mVkDepthStencilImageView[frame] } };
+            VkFramebufferCreateInfo hdr_framebuffer_create_info{};
+            hdr_framebuffer_create_info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            hdr_framebuffer_create_info.renderPass = mVkRenderPass;
+            hdr_framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( hdr_attachments.size() );
+            hdr_framebuffer_create_info.pAttachments = hdr_attachments.data();
+            hdr_framebuffer_create_info.width = width;
+            hdr_framebuffer_create_info.height = height;
+            hdr_framebuffer_create_info.layers = 1;
+            vkCreateFramebuffer ( device, &hdr_framebuffer_create_info, nullptr, &mVkHdrFramebuffer[frame] );
+
+            // Tonemap/composite descriptor set (set 0): this frame's HDR colour
+            // (binding 0) plus the deferred G-buffer normal+roughness (1),
+            // specular weight (2) and scene depth (3) sampled by tonemap.frag.
+            mTonemapDescriptorSet[frame] = CreateDescriptorSet ( device, mTonemapDescriptorPool, tonemap_layout );
+            const VkImageView tonemap_views[4] = { mVkHdrColorImageView[frame], mVkGNormalRoughImageView[frame], mVkGSpecWeightImageView[frame], mVkDepthSampleImageView[frame] };
+            const VkSampler tonemap_samplers[4] = { mVkHdrSampler, mVkHdrSampler, mVkHdrSampler, mVkDepthSampler };
+            std::array<VkDescriptorImageInfo, 4> tonemap_image_infos{};
+            std::array<VkWriteDescriptorSet, 4> tonemap_writes{};
+            for ( uint32_t b = 0; b < 4; ++b )
+            {
+                tonemap_image_infos[b].sampler = tonemap_samplers[b];
+                tonemap_image_infos[b].imageView = tonemap_views[b];
+                tonemap_image_infos[b].imageLayout = ( b == 3 ) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                tonemap_writes[b].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                tonemap_writes[b].dstSet = mTonemapDescriptorSet[frame];
+                tonemap_writes[b].dstBinding = b;
+                tonemap_writes[b].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                tonemap_writes[b].descriptorCount = 1;
+                tonemap_writes[b].pImageInfo = &tonemap_image_infos[b];
+            }
+            vkUpdateDescriptorSets ( device, 4, tonemap_writes.data(), 0, nullptr );
+        }
+
+        // Tonemap framebuffers: one per swapchain image (colour only), drawn with
+        // the tonemap render pass. Not ring-buffered — these track the swapchain
+        // images, which the acquire index already rotates through.
         mVkFramebuffers.resize ( mSwapchainImageCount );
         for ( uint32_t i = 0; i < mSwapchainImageCount; ++i )
         {
@@ -649,43 +703,6 @@ namespace AeonGames
             framebuffer_create_info.layers = 1;
             vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkFramebuffers[i] );
         }
-
-        // Tonemap/composite descriptor set (set 0): the HDR colour (binding 0)
-        // plus the deferred G-buffer normal+roughness (1), specular weight (2)
-        // and the scene depth (3) sampled by tonemap.frag. The Matrices, Globals
-        // and prefiltered-environment sets the composite also needs are bound at
-        // their reflected indices at draw time. Recreated on resize.
-        std::array<VkDescriptorSetLayoutBinding, 4> tonemap_layout_bindings{};
-        for ( uint32_t b = 0; b < tonemap_layout_bindings.size(); ++b )
-        {
-            tonemap_layout_bindings[b].binding = b;
-            tonemap_layout_bindings[b].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            tonemap_layout_bindings[b].descriptorCount = 1;
-            tonemap_layout_bindings[b].stageFlags = VK_SHADER_STAGE_ALL;
-        }
-        VkDescriptorSetLayoutCreateInfo tonemap_layout_create_info{};
-        tonemap_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        tonemap_layout_create_info.bindingCount = static_cast<uint32_t> ( tonemap_layout_bindings.size() );
-        tonemap_layout_create_info.pBindings = tonemap_layout_bindings.data();
-        mTonemapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 4}} );
-        mTonemapDescriptorSet = CreateDescriptorSet ( device, mTonemapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( tonemap_layout_create_info ) );
-        const VkImageView tonemap_views[4] = { mVkHdrColorImageView, mVkGNormalRoughImageView, mVkGSpecWeightImageView, mVkDepthSampleImageView };
-        const VkSampler tonemap_samplers[4] = { mVkHdrSampler, mVkHdrSampler, mVkHdrSampler, mVkDepthSampler };
-        std::array<VkDescriptorImageInfo, 4> tonemap_image_infos{};
-        std::array<VkWriteDescriptorSet, 4> tonemap_writes{};
-        for ( uint32_t b = 0; b < 4; ++b )
-        {
-            tonemap_image_infos[b].sampler = tonemap_samplers[b];
-            tonemap_image_infos[b].imageView = tonemap_views[b];
-            tonemap_image_infos[b].imageLayout = ( b == 3 ) ? VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL : VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            tonemap_writes[b].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            tonemap_writes[b].dstSet = mTonemapDescriptorSet;
-            tonemap_writes[b].dstBinding = b;
-            tonemap_writes[b].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            tonemap_writes[b].descriptorCount = 1;
-            tonemap_writes[b].pImageInfo = &tonemap_image_infos[b];
-        }
-        vkUpdateDescriptorSets ( device, 4, tonemap_writes.data(), 0, nullptr );
     }
 
     void VulkanWindow::InitializeRenderPass()
@@ -3075,7 +3092,7 @@ namespace AeonGames
         VkRenderPassBeginInfo render_pass_begin_info{};
         render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
         render_pass_begin_info.renderPass = mVkRenderPass;
-        render_pass_begin_info.framebuffer = mVkHdrFramebuffer;
+        render_pass_begin_info.framebuffer = mVkHdrFramebuffer[mFrameIndex];
         render_pass_begin_info.renderArea = mVkScissor;
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
@@ -3233,7 +3250,7 @@ namespace AeonGames
         depth_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
         depth_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
         depth_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-        depth_barrier.image = mVkDepthStencilImage;
+        depth_barrier.image = mVkDepthStencilImage[mFrameIndex];
         depth_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( mHasStencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
         depth_barrier.subresourceRange.levelCount = 1;
         depth_barrier.subresourceRange.layerCount = 1;
@@ -3270,7 +3287,7 @@ namespace AeonGames
         // state; it draws no depth, so keep it at zero for this pass.
         vkCmdSetDepthBias ( mVkCommandBuffer, 0.0f, 0.0f, 0.0f );
         vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
-                                  tonemap_pipeline->GetPipelineLayout(), 0, 1, &mTonemapDescriptorSet, 0, nullptr );
+                                  tonemap_pipeline->GetPipelineLayout(), 0, 1, &mTonemapDescriptorSet[mFrameIndex], 0, nullptr );
         // The deferred-specular composite also needs the camera matrices (to
         // build the per-pixel view ray), the scene globals (flat-ambient
         // fallback) and the prefiltered environment cube. Bind the engine-owned
@@ -3887,25 +3904,28 @@ namespace AeonGames
             vkDestroySampler ( mVulkanRenderer.GetDevice(), mVkDepthSampler, nullptr );
             mVkDepthSampler = VK_NULL_HANDLE;
         }
-        if ( mVkDepthSampleImageView != VK_NULL_HANDLE )
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
         {
-            vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthSampleImageView, nullptr );
-            mVkDepthSampleImageView = VK_NULL_HANDLE;
-        }
-        if ( mVkDepthStencilImageView != VK_NULL_HANDLE )
-        {
-            vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageView, nullptr );
-            mVkDepthStencilImageView = VK_NULL_HANDLE;
-        }
-        if ( mVkDepthStencilImage != VK_NULL_HANDLE )
-        {
-            vkDestroyImage ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage, nullptr );
-            mVkDepthStencilImage = VK_NULL_HANDLE;
-        }
-        if ( mVkDepthStencilImageMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageMemory, nullptr );
-            mVkDepthStencilImageMemory = VK_NULL_HANDLE;
+            if ( mVkDepthSampleImageView[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthSampleImageView[frame], nullptr );
+                mVkDepthSampleImageView[frame] = VK_NULL_HANDLE;
+            }
+            if ( mVkDepthStencilImageView[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageView[frame], nullptr );
+                mVkDepthStencilImageView[frame] = VK_NULL_HANDLE;
+            }
+            if ( mVkDepthStencilImage[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( mVulkanRenderer.GetDevice(), mVkDepthStencilImage[frame], nullptr );
+                mVkDepthStencilImage[frame] = VK_NULL_HANDLE;
+            }
+            if ( mVkDepthStencilImageMemory[frame] != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageMemory[frame], nullptr );
+                mVkDepthStencilImageMemory[frame] = VK_NULL_HANDLE;
+            }
         }
     }
 
@@ -3920,33 +3940,14 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
-        if ( mVkHdrFramebuffer != VK_NULL_HANDLE )
-        {
-            vkDestroyFramebuffer ( device, mVkHdrFramebuffer, nullptr );
-            mVkHdrFramebuffer = VK_NULL_HANDLE;
-        }
         if ( mTonemapDescriptorPool != VK_NULL_HANDLE )
         {
             vkDestroyDescriptorPool ( device, mTonemapDescriptorPool, nullptr );
             mTonemapDescriptorPool = VK_NULL_HANDLE;
-            mTonemapDescriptorSet = VK_NULL_HANDLE;
+            mTonemapDescriptorSet.fill ( VK_NULL_HANDLE );
         }
-        if ( mVkHdrColorImageView != VK_NULL_HANDLE )
-        {
-            vkDestroyImageView ( device, mVkHdrColorImageView, nullptr );
-            mVkHdrColorImageView = VK_NULL_HANDLE;
-        }
-        if ( mVkHdrColorImage != VK_NULL_HANDLE )
-        {
-            vkDestroyImage ( device, mVkHdrColorImage, nullptr );
-            mVkHdrColorImage = VK_NULL_HANDLE;
-        }
-        if ( mVkHdrColorImageMemory != VK_NULL_HANDLE )
-        {
-            vkFreeMemory ( device, mVkHdrColorImageMemory, nullptr );
-            mVkHdrColorImageMemory = VK_NULL_HANDLE;
-        }
-        // Deferred-specular G-buffer attachments.
+        // Per-frame-in-flight HDR colour, deferred-specular G-buffer and the
+        // scene framebuffer that references them.
         auto destroy_target = [&] ( VkImageView & aView, VkImage & aImage, VkDeviceMemory & aMemory )
         {
             if ( aView != VK_NULL_HANDLE )
@@ -3965,8 +3966,17 @@ namespace AeonGames
                 aMemory = VK_NULL_HANDLE;
             }
         };
-        destroy_target ( mVkGNormalRoughImageView, mVkGNormalRoughImage, mVkGNormalRoughImageMemory );
-        destroy_target ( mVkGSpecWeightImageView, mVkGSpecWeightImage, mVkGSpecWeightImageMemory );
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            if ( mVkHdrFramebuffer[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyFramebuffer ( device, mVkHdrFramebuffer[frame], nullptr );
+                mVkHdrFramebuffer[frame] = VK_NULL_HANDLE;
+            }
+            destroy_target ( mVkHdrColorImageView[frame], mVkHdrColorImage[frame], mVkHdrColorImageMemory[frame] );
+            destroy_target ( mVkGNormalRoughImageView[frame], mVkGNormalRoughImage[frame], mVkGNormalRoughImageMemory[frame] );
+            destroy_target ( mVkGSpecWeightImageView[frame], mVkGSpecWeightImage[frame], mVkGSpecWeightImageMemory[frame] );
+        }
     }
 
     BufferAccessor VulkanWindow::AllocateSingleFrameUniformMemory ( size_t aSize )

@@ -345,13 +345,16 @@ namespace AeonGames
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };
-        VkImage mVkDepthStencilImage{ VK_NULL_HANDLE };
-        VkDeviceMemory mVkDepthStencilImageMemory{ VK_NULL_HANDLE };
-        VkImageView mVkDepthStencilImageView { VK_NULL_HANDLE};
+        // Ring-buffered one per frame in flight so an in-flight frame's depth is
+        // not overwritten by the next frame under overlap (the SSR composite
+        // samples the scene depth). The sampler is stateless and shared.
+        std::array<VkImage, kFramesInFlight> mVkDepthStencilImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkDepthStencilImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkDepthStencilImageView{};
         // Depth-aspect view + non-comparison sampler used by the SSR composite to
         // sample the scene depth (the attachment view above may carry stencil and
         // cannot be sampled directly).
-        VkImageView mVkDepthSampleImageView { VK_NULL_HANDLE };
+        std::array<VkImageView, kFramesInFlight> mVkDepthSampleImageView{};
         VkSampler mVkDepthSampler{ VK_NULL_HANDLE };
         // Command pools/buffers are ring-buffered one per frame in flight so the
         // CPU can record frame N+1 while the GPU still executes frame N.
@@ -479,24 +482,27 @@ namespace AeonGames
         // are extent-independent (created in InitializeRenderPass); the image,
         // framebuffer and descriptor set are extent-dependent (recreated on
         // resize in Initialize/FinalizeFrameBuffers).
-        VkImage mVkHdrColorImage{VK_NULL_HANDLE};
-        VkDeviceMemory mVkHdrColorImageMemory{VK_NULL_HANDLE};
-        VkImageView mVkHdrColorImageView{VK_NULL_HANDLE};
+        // HDR + G-buffer + scene framebuffer + tonemap set are ring-buffered one
+        // per frame in flight; the sampler, tonemap render pass and descriptor
+        // pool are stateless/shared. Extent-dependent (recreated on resize).
+        std::array<VkImage, kFramesInFlight> mVkHdrColorImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkHdrColorImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkHdrColorImageView{};
         // Deferred-specular G-buffer, rendered alongside the HDR colour as extra
         // colour attachments of the main pass and sampled by the composite in
         // the tonemap pass: view-space normal + roughness, and specular weight.
         // Both RGBA16F, extent-dependent (recreated on resize).
-        VkImage mVkGNormalRoughImage{VK_NULL_HANDLE};
-        VkDeviceMemory mVkGNormalRoughImageMemory{VK_NULL_HANDLE};
-        VkImageView mVkGNormalRoughImageView{VK_NULL_HANDLE};
-        VkImage mVkGSpecWeightImage{VK_NULL_HANDLE};
-        VkDeviceMemory mVkGSpecWeightImageMemory{VK_NULL_HANDLE};
-        VkImageView mVkGSpecWeightImageView{VK_NULL_HANDLE};
-        VkFramebuffer mVkHdrFramebuffer{VK_NULL_HANDLE};
+        std::array<VkImage, kFramesInFlight> mVkGNormalRoughImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkGNormalRoughImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkGNormalRoughImageView{};
+        std::array<VkImage, kFramesInFlight> mVkGSpecWeightImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkGSpecWeightImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkGSpecWeightImageView{};
+        std::array<VkFramebuffer, kFramesInFlight> mVkHdrFramebuffer{};
         VkSampler mVkHdrSampler{VK_NULL_HANDLE};
         VkRenderPass mVkTonemapRenderPass{VK_NULL_HANDLE};
         VkDescriptorPool mTonemapDescriptorPool{VK_NULL_HANDLE};
-        VkDescriptorSet mTonemapDescriptorSet{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mTonemapDescriptorSet{};
         Pipeline mTonemapPipeline{};
         bool mTonemapLoaded{false};
         // Equirectangular HDR environment (skybox). The source Texture is tracked
