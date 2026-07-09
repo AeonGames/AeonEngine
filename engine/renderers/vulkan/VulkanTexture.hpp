@@ -39,12 +39,19 @@ namespace AeonGames
         VulkanTexture& operator= ( VulkanTexture&& ) = delete;
         /// @brief Get the Vulkan descriptor image info for binding.
         const VkDescriptorImageInfo& GetDescriptorImageInfo() const;
+        /// @brief Slot this texture occupies in the renderer's global bindless
+        ///        combined-image-sampler array (UINT32_MAX if unregistered).
+        uint32_t GetBindlessSlot() const;
     private:
         const VulkanRenderer& mVulkanRenderer;
         const Texture* mTexture{nullptr};
         VkImage mVkImage{VK_NULL_HANDLE};
         VkDeviceMemory mVkDeviceMemory{VK_NULL_HANDLE};
         VkDescriptorImageInfo mVkDescriptorImageInfo{};
+        // Slot in the renderer's global bindless texture array, assigned in the
+        // constructor once the descriptor image info is complete and released in
+        // the destructor. UINT32_MAX means unregistered (e.g. moved-from).
+        uint32_t mBindlessSlot{UINT32_MAX};
     };
 }
 #endif

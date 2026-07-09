@@ -64,6 +64,7 @@ namespace AeonGames
                 InitializeDebug();
             }
             InitializeDevice();
+            InitializeBindless();
             InitializeCommandPools();
             AttachWindow ( aWindow );
             InitializeOverlay();
@@ -108,6 +109,7 @@ namespace AeonGames
             vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
         }
         mVkDescriptorSetLayouts.clear();
+        FinalizeBindless();
         FinalizeCommandPools();
         FinalizeDevice();
         FinalizeDebug();
@@ -917,6 +919,160 @@ namespace AeonGames
     const VkDescriptorImageInfo* VulkanRenderer::GetMaterialSamplerFallbackDescriptorImageInfo ( size_t aSlot ) const
     {
         return GetTextureDescriptorImageInfo ( *mMaterialSamplerFallbacks[aSlot] );
+    }
+
+    void VulkanRenderer::InitializeBindless()
+    {
+        // Cap the global combined-image-sampler array at a generous size clamped
+        // to the device's update-after-bind limits (a combined image sampler
+        // consumes one sampled-image and one sampler descriptor).
+        constexpr uint32_t kBindlessTextureHardCap = 16384;
+        uint32_t capacity = kBindlessTextureHardCap;
+        if ( mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSampledImages < capacity )
+        {
+            capacity = mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSampledImages;
+        }
+        if ( mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSamplers < capacity )
+        {
+            capacity = mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSamplers;
+        }
+        if ( capacity == 0 )
+        {
+            throw std::runtime_error ( "Device reports no update-after-bind sampled images; bindless textures unsupported." );
+        }
+        mBindlessTextureCapacity = capacity;
+
+        // One binding: a combined-image-sampler array that is update-after-bind
+        // (written as textures load, even while the set is bound) and partially
+        // bound (free slots may be left unwritten).
+        VkDescriptorSetLayoutBinding binding{};
+        binding.binding = 0;
+        binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        binding.descriptorCount = mBindlessTextureCapacity;
+        binding.stageFlags = VK_SHADER_STAGE_ALL;
+        VkDescriptorBindingFlags binding_flags =
+            VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+        VkDescriptorSetLayoutBindingFlagsCreateInfo binding_flags_info{};
+        binding_flags_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
+        binding_flags_info.bindingCount = 1;
+        binding_flags_info.pBindingFlags = &binding_flags;
+        VkDescriptorSetLayoutCreateInfo layout_info{};
+        layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layout_info.pNext = &binding_flags_info;
+        layout_info.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
+        layout_info.bindingCount = 1;
+        layout_info.pBindings = &binding;
+        if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &layout_info, nullptr, &mVkBindlessDescriptorSetLayout ) )
+        {
+            std::ostringstream stream;
+            stream << "Bindless descriptor set layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkDescriptorPoolSize pool_size{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, mBindlessTextureCapacity };
+        VkDescriptorPoolCreateInfo pool_info{};
+        pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+        pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
+        pool_info.maxSets = 1;
+        pool_info.poolSizeCount = 1;
+        pool_info.pPoolSizes = &pool_size;
+        if ( VkResult result = vkCreateDescriptorPool ( mVkDevice, &pool_info, nullptr, &mVkBindlessDescriptorPool ) )
+        {
+            std::ostringstream stream;
+            stream << "Bindless descriptor pool creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+
+        VkDescriptorSetAllocateInfo alloc_info{};
+        alloc_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        alloc_info.descriptorPool = mVkBindlessDescriptorPool;
+        alloc_info.descriptorSetCount = 1;
+        alloc_info.pSetLayouts = &mVkBindlessDescriptorSetLayout;
+        if ( VkResult result = vkAllocateDescriptorSets ( mVkDevice, &alloc_info, &mVkBindlessDescriptorSet ) )
+        {
+            std::ostringstream stream;
+            stream << "Bindless descriptor set allocation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        std::cout << LogLevel::Debug << "Bindless texture array capacity: " << mBindlessTextureCapacity << std::endl;
+    }
+
+    void VulkanRenderer::FinalizeBindless()
+    {
+        if ( mVkBindlessDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVkDevice, mVkBindlessDescriptorPool, nullptr );
+            mVkBindlessDescriptorPool = VK_NULL_HANDLE;
+            mVkBindlessDescriptorSet = VK_NULL_HANDLE;
+        }
+        if ( mVkBindlessDescriptorSetLayout != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorSetLayout ( mVkDevice, mVkBindlessDescriptorSetLayout, nullptr );
+            mVkBindlessDescriptorSetLayout = VK_NULL_HANDLE;
+        }
+    }
+
+    uint32_t VulkanRenderer::RegisterBindlessTexture ( const VkDescriptorImageInfo& aVkDescriptorImageInfo ) const
+    {
+        uint32_t slot;
+        if ( !mBindlessTextureFreeSlots.empty() )
+        {
+            slot = mBindlessTextureFreeSlots.back();
+            mBindlessTextureFreeSlots.pop_back();
+        }
+        else if ( mBindlessTextureHighWater < mBindlessTextureCapacity )
+        {
+            slot = mBindlessTextureHighWater++;
+        }
+        else
+        {
+            throw std::runtime_error ( "Global bindless texture array is full." );
+        }
+        VkWriteDescriptorSet write{};
+        write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        write.dstSet = mVkBindlessDescriptorSet;
+        write.dstBinding = 0;
+        write.dstArrayElement = slot;
+        write.descriptorCount = 1;
+        write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        write.pImageInfo = &aVkDescriptorImageInfo;
+        vkUpdateDescriptorSets ( mVkDevice, 1, &write, 0, nullptr );
+        return slot;
+    }
+
+    void VulkanRenderer::UnregisterBindlessTexture ( uint32_t aSlot ) const
+    {
+        if ( aSlot != UINT32_MAX )
+        {
+            mBindlessTextureFreeSlots.push_back ( aSlot );
+        }
+    }
+
+    uint32_t VulkanRenderer::GetTextureBindlessSlot ( const Texture& aTexture ) const
+    {
+        auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( it == mTextureStore.end() )
+        {
+            std::ostringstream stream;
+            stream << "Texture Not Found at: ( " << __FUNCTION__ << " )";
+            std::string error_string = stream.str();
+            std::cout << LogLevel::Error << error_string << std::endl;
+            throw std::runtime_error ( error_string.c_str() );
+        }
+        return it->second.GetBindlessSlot();
+    }
+
+    VkDescriptorSet VulkanRenderer::GetBindlessDescriptorSet() const
+    {
+        return mVkBindlessDescriptorSet;
+    }
+
+    VkDescriptorSetLayout VulkanRenderer::GetBindlessDescriptorSetLayout() const
+    {
+        return mVkBindlessDescriptorSetLayout;
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const

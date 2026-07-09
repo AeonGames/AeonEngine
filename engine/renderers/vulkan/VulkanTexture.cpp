@@ -301,6 +301,10 @@ namespace AeonGames
         mVulkanRenderer.EndSingleTimeCommands ( command_buffer );
         vkDestroyBuffer ( mVulkanRenderer.GetDevice(), image_buffer, nullptr );
         vkFreeMemory ( mVulkanRenderer.GetDevice(), image_buffer_memory, nullptr );
+
+        // Register the finished texture in the renderer's global bindless array
+        // so shaders can index it by slot without a per-material descriptor set.
+        mBindlessSlot = mVulkanRenderer.RegisterBindlessTexture ( mVkDescriptorImageInfo );
     }
 
     VulkanTexture::VulkanTexture ( VulkanTexture&& aVulkanTexture ) :
@@ -309,10 +313,15 @@ namespace AeonGames
         std::swap ( mVkImage, aVulkanTexture.mVkImage );
         std::swap ( mVkDeviceMemory, aVulkanTexture.mVkDeviceMemory );
         std::swap ( mVkDescriptorImageInfo, aVulkanTexture.mVkDescriptorImageInfo );
+        std::swap ( mBindlessSlot, aVulkanTexture.mBindlessSlot );
     }
 
     VulkanTexture::~VulkanTexture()
     {
+        // Release the global bindless slot first so it can be recycled; the
+        // renderer only frees the index (the descriptor is overwritten when the
+        // slot is next reused, and the set is never sampled at a freed slot).
+        mVulkanRenderer.UnregisterBindlessTexture ( mBindlessSlot );
         if ( mVkDescriptorImageInfo.sampler != VK_NULL_HANDLE )
         {
             vkDestroySampler ( mVulkanRenderer.GetDevice(), mVkDescriptorImageInfo.sampler, nullptr );
@@ -334,5 +343,10 @@ namespace AeonGames
     const VkDescriptorImageInfo& VulkanTexture::GetDescriptorImageInfo() const
     {
         return mVkDescriptorImageInfo;
+    }
+
+    uint32_t VulkanTexture::GetBindlessSlot() const
+    {
+        return mBindlessSlot;
     }
 }

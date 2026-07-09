@@ -22,6 +22,7 @@ limitations under the License.
 #include <memory>
 #include <tuple>
 #include <array>
+#include <vector>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -96,6 +97,20 @@ namespace AeonGames
         /// texture of material sampler slot @p aSlot (see kMaterialSamplerSlots),
         /// bound when a material omits that sampler.
         const VkDescriptorImageInfo* GetMaterialSamplerFallbackDescriptorImageInfo ( size_t aSlot ) const;
+        /// @brief Register a texture's descriptor image info into the global
+        ///        bindless combined-image-sampler array; returns its slot index.
+        ///        Called by VulkanTexture once its descriptor is complete.
+        uint32_t RegisterBindlessTexture ( const VkDescriptorImageInfo& aVkDescriptorImageInfo ) const;
+        /// @brief Release a global bindless texture slot for reuse
+        ///        (no-op for UINT32_MAX).
+        void UnregisterBindlessTexture ( uint32_t aSlot ) const;
+        /// @brief Slot of a loaded texture in the global bindless array.
+        uint32_t GetTextureBindlessSlot ( const Texture& aTexture ) const;
+        /// @brief The global bindless descriptor set (combined-image-sampler
+        ///        array), bound once per frame by the shading passes.
+        VkDescriptorSet GetBindlessDescriptorSet() const;
+        /// @brief Layout of the global bindless descriptor set, for pipeline layouts.
+        VkDescriptorSetLayout GetBindlessDescriptorSetLayout() const;
 
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
@@ -187,6 +202,11 @@ namespace AeonGames
         void FinalizeCommandPools();
         void FinalizeDebug();
         void FinalizeOverlay();
+        /// @brief Create the global bindless combined-image-sampler array
+        ///        (descriptor set, pool and layout). Called after the device.
+        void InitializeBindless();
+        /// @brief Destroy the global bindless descriptor set/pool/layout.
+        void FinalizeBindless();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
         /// @brief Submit the scene's render queue for one pass, resolving the
@@ -214,6 +234,17 @@ namespace AeonGames
         VkCommandPool mVkSingleTimeCommandPool{ VK_NULL_HANDLE };
         VkQueue mVkQueue{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout >> mVkDescriptorSetLayouts{};
+        // Global bindless combined-image-sampler array (descriptor set 0 of the
+        // shading pipelines): every VulkanTexture registers a slot here at load,
+        // so materials reference textures by index instead of owning per-material
+        // sampler descriptor sets. Created in InitializeBindless after the device;
+        // the free-list + high-water mark hand out and recycle array slots.
+        VkDescriptorPool mVkBindlessDescriptorPool{ VK_NULL_HANDLE };
+        VkDescriptorSetLayout mVkBindlessDescriptorSetLayout{ VK_NULL_HANDLE };
+        VkDescriptorSet mVkBindlessDescriptorSet{ VK_NULL_HANDLE };
+        uint32_t mBindlessTextureCapacity{ 0 };
+        mutable uint32_t mBindlessTextureHighWater{ 0 };
+        mutable std::vector<uint32_t> mBindlessTextureFreeSlots{};
         mutable const VulkanPipeline* mBoundPipeline{nullptr};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};
