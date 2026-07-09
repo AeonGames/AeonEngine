@@ -28,6 +28,7 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Transform.hpp"
 #include "aeongames/MaterialSamplers.hpp"
+#include "aeongames/GpuMaterial.hpp"
 #include "VulkanWindow.hpp"
 #include "VulkanBuffer.hpp"
 #include "VulkanMesh.hpp"
@@ -106,6 +107,15 @@ namespace AeonGames
         void UnregisterBindlessTexture ( uint32_t aSlot ) const;
         /// @brief Slot of a loaded texture in the global bindless array.
         uint32_t GetTextureBindlessSlot ( const Texture& aTexture ) const;
+        /// @brief Bindless slot of the canonical fallback texture for material
+        ///        sampler slot @p aSlot, bound when a material omits that sampler.
+        uint32_t GetMaterialSamplerFallbackBindlessSlot ( size_t aSlot ) const;
+        /// @brief Write a material record into the global material storage buffer
+        ///        and return its index (fetched per draw to read the factors and
+        ///        texture slots). Called by VulkanMaterial at load.
+        uint32_t RegisterBindlessMaterial ( const GpuMaterial& aGpuMaterial ) const;
+        /// @brief Release a global material-buffer index for reuse.
+        void UnregisterBindlessMaterial ( uint32_t aIndex ) const;
         /// @brief The global bindless descriptor set (combined-image-sampler
         ///        array), bound once per frame by the shading passes.
         VkDescriptorSet GetBindlessDescriptorSet() const;
@@ -245,6 +255,14 @@ namespace AeonGames
         uint32_t mBindlessTextureCapacity{ 0 };
         mutable uint32_t mBindlessTextureHighWater{ 0 };
         mutable std::vector<uint32_t> mBindlessTextureFreeSlots{};
+        // Global material storage buffer (descriptor set 0, binding 1): one
+        // GpuMaterial record per loaded material, indexed per draw by a material
+        // index. Host-visible + coherent, written when materials load; the
+        // free-list + high-water mark hand out and recycle record indices.
+        VulkanBuffer mMaterialStorageBuffer;
+        uint32_t mBindlessMaterialCapacity{ 0 };
+        mutable uint32_t mBindlessMaterialHighWater{ 0 };
+        mutable std::vector<uint32_t> mBindlessMaterialFreeSlots{};
         mutable const VulkanPipeline* mBoundPipeline{nullptr};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};

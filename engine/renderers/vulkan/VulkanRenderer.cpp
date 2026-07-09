@@ -46,7 +46,8 @@ limitations under the License.
 
 namespace AeonGames
 {
-    VulkanRenderer::VulkanRenderer ( void* aWindow )
+    VulkanRenderer::VulkanRenderer ( void* aWindow ) :
+        mMaterialStorageBuffer { *this }
     {
         try
         {
@@ -941,27 +942,48 @@ namespace AeonGames
             throw std::runtime_error ( "Device reports no update-after-bind sampled images; bindless textures unsupported." );
         }
         mBindlessTextureCapacity = capacity;
+        mBindlessMaterialCapacity = 4096;
 
-        // One binding: a combined-image-sampler array that is update-after-bind
-        // (written as textures load, even while the set is bound) and partially
-        // bound (free slots may be left unwritten).
-        VkDescriptorSetLayoutBinding binding{};
-        binding.binding = 0;
-        binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        binding.descriptorCount = mBindlessTextureCapacity;
-        binding.stageFlags = VK_SHADER_STAGE_ALL;
-        VkDescriptorBindingFlags binding_flags =
-            VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT;
+        // Global material storage buffer: one GpuMaterial record per material,
+        // fetched per draw by a material index. Host-visible + coherent so the
+        // records can be written directly when materials load.
+        mMaterialStorageBuffer.Initialize (
+            static_cast<VkDeviceSize> ( mBindlessMaterialCapacity ) * sizeof ( GpuMaterial ),
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            nullptr );
+
+        // Descriptor set 0: binding 0 = the combined-image-sampler array
+        // (bindless textures; update-after-bind + partially bound so slots are
+        // written lazily as textures load), binding 1 = the material storage
+        // buffer (written once here, so it is not update-after-bind -- storage
+        // buffer update-after-bind is not among the enabled features).
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings{};
+        bindings[0].binding = 0;
+        bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        bindings[0].descriptorCount = mBindlessTextureCapacity;
+        bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
+        bindings[1].binding = 1;
+        bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        bindings[1].descriptorCount = 1;
+        bindings[1].stageFlags = VK_SHADER_STAGE_ALL;
+        std::array<VkDescriptorBindingFlags, 2> binding_flags
+        {
+            {
+                VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
+                0
+            }
+        };
         VkDescriptorSetLayoutBindingFlagsCreateInfo binding_flags_info{};
         binding_flags_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_BINDING_FLAGS_CREATE_INFO;
-        binding_flags_info.bindingCount = 1;
-        binding_flags_info.pBindingFlags = &binding_flags;
+        binding_flags_info.bindingCount = static_cast<uint32_t> ( binding_flags.size() );
+        binding_flags_info.pBindingFlags = binding_flags.data();
         VkDescriptorSetLayoutCreateInfo layout_info{};
         layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         layout_info.pNext = &binding_flags_info;
         layout_info.flags = VK_DESCRIPTOR_SET_LAYOUT_CREATE_UPDATE_AFTER_BIND_POOL_BIT;
-        layout_info.bindingCount = 1;
-        layout_info.pBindings = &binding;
+        layout_info.bindingCount = static_cast<uint32_t> ( bindings.size() );
+        layout_info.pBindings = bindings.data();
         if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &layout_info, nullptr, &mVkBindlessDescriptorSetLayout ) )
         {
             std::ostringstream stream;
@@ -970,13 +992,19 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        VkDescriptorPoolSize pool_size{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, mBindlessTextureCapacity };
+        std::array<VkDescriptorPoolSize, 2> pool_sizes
+        {
+            {
+                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, mBindlessTextureCapacity },
+                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 }
+            }
+        };
         VkDescriptorPoolCreateInfo pool_info{};
         pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_UPDATE_AFTER_BIND_BIT;
         pool_info.maxSets = 1;
-        pool_info.poolSizeCount = 1;
-        pool_info.pPoolSizes = &pool_size;
+        pool_info.poolSizeCount = static_cast<uint32_t> ( pool_sizes.size() );
+        pool_info.pPoolSizes = pool_sizes.data();
         if ( VkResult result = vkCreateDescriptorPool ( mVkDevice, &pool_info, nullptr, &mVkBindlessDescriptorPool ) )
         {
             std::ostringstream stream;
@@ -997,7 +1025,22 @@ namespace AeonGames
             std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
-        std::cout << LogLevel::Debug << "Bindless texture array capacity: " << mBindlessTextureCapacity << std::endl;
+
+        // Point binding 1 at the material storage buffer (written once; the
+        // records inside it are updated as materials load).
+        VkDescriptorBufferInfo material_buffer_info{ mMaterialStorageBuffer.GetBuffer(), 0, VK_WHOLE_SIZE };
+        VkWriteDescriptorSet material_write{};
+        material_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        material_write.dstSet = mVkBindlessDescriptorSet;
+        material_write.dstBinding = 1;
+        material_write.dstArrayElement = 0;
+        material_write.descriptorCount = 1;
+        material_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        material_write.pBufferInfo = &material_buffer_info;
+        vkUpdateDescriptorSets ( mVkDevice, 1, &material_write, 0, nullptr );
+
+        std::cout << LogLevel::Debug << "Bindless texture array capacity: " << mBindlessTextureCapacity
+                  << ", material records: " << mBindlessMaterialCapacity << std::endl;
     }
 
     void VulkanRenderer::FinalizeBindless()
@@ -1013,6 +1056,7 @@ namespace AeonGames
             vkDestroyDescriptorSetLayout ( mVkDevice, mVkBindlessDescriptorSetLayout, nullptr );
             mVkBindlessDescriptorSetLayout = VK_NULL_HANDLE;
         }
+        mMaterialStorageBuffer.Finalize();
     }
 
     uint32_t VulkanRenderer::RegisterBindlessTexture ( const VkDescriptorImageInfo& aVkDescriptorImageInfo ) const
@@ -1073,6 +1117,39 @@ namespace AeonGames
     VkDescriptorSetLayout VulkanRenderer::GetBindlessDescriptorSetLayout() const
     {
         return mVkBindlessDescriptorSetLayout;
+    }
+
+    uint32_t VulkanRenderer::GetMaterialSamplerFallbackBindlessSlot ( size_t aSlot ) const
+    {
+        return GetTextureBindlessSlot ( *mMaterialSamplerFallbacks[aSlot] );
+    }
+
+    uint32_t VulkanRenderer::RegisterBindlessMaterial ( const GpuMaterial& aGpuMaterial ) const
+    {
+        uint32_t index;
+        if ( !mBindlessMaterialFreeSlots.empty() )
+        {
+            index = mBindlessMaterialFreeSlots.back();
+            mBindlessMaterialFreeSlots.pop_back();
+        }
+        else if ( mBindlessMaterialHighWater < mBindlessMaterialCapacity )
+        {
+            index = mBindlessMaterialHighWater++;
+        }
+        else
+        {
+            throw std::runtime_error ( "Global material storage buffer is full." );
+        }
+        mMaterialStorageBuffer.WriteMemory ( index * sizeof ( GpuMaterial ), sizeof ( GpuMaterial ), &aGpuMaterial );
+        return index;
+    }
+
+    void VulkanRenderer::UnregisterBindlessMaterial ( uint32_t aIndex ) const
+    {
+        if ( aIndex != UINT32_MAX )
+        {
+            mBindlessMaterialFreeSlots.push_back ( aIndex );
+        }
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const

@@ -17,6 +17,7 @@ limitations under the License.
 #include <ostream>
 #include <regex>
 #include <array>
+#include <algorithm>
 #include <cstring>
 #include <utility>
 #include <cassert>
@@ -39,6 +40,7 @@ limitations under the License.
 #include "aeongames/Vector4.hpp"
 #include "aeongames/Mesh.hpp"
 #include "aeongames/LogLevel.hpp"
+#include "aeongames/GpuMaterial.hpp"
 #include "VulkanMaterial.hpp"
 #include "VulkanTexture.hpp"
 #include "VulkanRenderer.hpp"
@@ -218,10 +220,49 @@ namespace AeonGames
         {
             vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), static_cast<uint32_t> ( write_descriptor_sets.size() ), write_descriptor_sets.data(), 0, nullptr );
         }
+
+        // Assemble this material's bindless record: resolve each canonical
+        // sampler slot to a global texture-array slot (falling back exactly like
+        // the sampler set above) and copy the factor block, then register it in
+        // the renderer's global material storage buffer. The record's factor
+        // region shares the std140 Material block layout, so the material's
+        // uniform buffer copies in verbatim. (Additive: the descriptor sets
+        // above still drive rendering until the shaders switch to bindless.)
+        GpuMaterial record{};
+        for ( uint32_t i = 0; i < sampler_binding_count; ++i )
+        {
+            const char* slot_name = kMaterialSamplerSlots[i].name;
+            const uint32_t slot_crc = crc32i ( slot_name, std::strlen ( slot_name ) );
+            uint32_t bindless_slot = mVulkanRenderer.GetMaterialSamplerFallbackBindlessSlot ( i );
+            for ( const auto& sampler : mMaterial->GetSamplers() )
+            {
+                if ( std::get<0> ( sampler ) == slot_crc )
+                {
+                    bindless_slot = mVulkanRenderer.GetTextureBindlessSlot ( *std::get<1> ( sampler ).Get<Texture>() );
+                    break;
+                }
+            }
+            record.texture_refs[i][0] = bindless_slot;
+            record.texture_refs[i][1] = 0;
+        }
+        if ( !mMaterial->GetUniformBuffer().empty() )
+        {
+            // The factor block begins right after the texture references; copy
+            // through a byte pointer (GpuMaterial holds Vector4 members that are
+            // not trivially copyable, so a typed memcpy target is rejected).
+            const size_t factor_offset = sizeof ( record.texture_refs );
+            const size_t factor_bytes = sizeof ( GpuMaterial ) - factor_offset;
+            std::memcpy ( reinterpret_cast<uint8_t*> ( &record ) + factor_offset,
+                          mMaterial->GetUniformBuffer().data(),
+                          std::min ( mMaterial->GetUniformBuffer().size(), factor_bytes ) );
+        }
+        mBindlessMaterialIndex = mVulkanRenderer.RegisterBindlessMaterial ( record );
     }
 
     void VulkanMaterial::Finalize ()
     {
+        // Release the global material-buffer slot, then the descriptor pool.
+        mVulkanRenderer.UnregisterBindlessMaterial ( mBindlessMaterialIndex );
         // Finalize Descriptor Pool
         if ( mVkDescriptorPool != VK_NULL_HANDLE )
         {
@@ -243,6 +284,7 @@ namespace AeonGames
         std::swap ( mVkDescriptorPool, aVulkanMaterial.mVkDescriptorPool );
         std::swap ( mUniformDescriptorSet, aVulkanMaterial.mUniformDescriptorSet );
         std::swap ( mSamplerDescriptorSet, aVulkanMaterial.mSamplerDescriptorSet );
+        std::swap ( mBindlessMaterialIndex, aVulkanMaterial.mBindlessMaterialIndex );
     }
 
     void VulkanMaterial::Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aPipeline  ) const
@@ -265,5 +307,10 @@ namespace AeonGames
                                       1,
                                       &mSamplerDescriptorSet, 0, nullptr );
         }
+    }
+
+    uint32_t VulkanMaterial::GetBindlessMaterialIndex() const
+    {
+        return mBindlessMaterialIndex;
     }
 }

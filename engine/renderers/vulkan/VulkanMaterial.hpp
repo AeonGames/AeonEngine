@@ -43,6 +43,9 @@ namespace AeonGames
         ~VulkanMaterial();
         /// @brief Bind material descriptor sets to a command buffer for the given pipeline.
         void Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aVulkanPipeline ) const;
+        /// @brief Index of this material's record in the renderer's global
+        ///        material storage buffer (pushed per draw on the bindless path).
+        uint32_t GetBindlessMaterialIndex() const;
     private:
         VulkanRenderer& mVulkanRenderer;
         const Material* mMaterial{nullptr};
@@ -51,6 +54,9 @@ namespace AeonGames
         VkDescriptorSet mUniformDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorSet mSamplerDescriptorSet{VK_NULL_HANDLE};
         VulkanBuffer mUniformBuffer;
+        // Index of this material's record in the renderer's global material
+        // storage buffer; assigned at construction, released on destruction.
+        uint32_t mBindlessMaterialIndex{UINT32_MAX};
     };
 }
 #endif
