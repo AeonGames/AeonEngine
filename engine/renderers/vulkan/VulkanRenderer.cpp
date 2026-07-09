@@ -1636,20 +1636,35 @@ void main()
         depth_stencil.depthTestEnable = VK_FALSE;
         depth_stencil.depthWriteEnable = VK_FALSE;
 
-        VkPipelineColorBlendAttachmentState blend_attachment{};
-        blend_attachment.blendEnable = VK_TRUE;
-        blend_attachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        blend_attachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        blend_attachment.colorBlendOp = VK_BLEND_OP_ADD;
-        blend_attachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        blend_attachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        blend_attachment.alphaBlendOp = VK_BLEND_OP_ADD;
-        blend_attachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        // The overlay is composited in the window's main render pass, whose
+        // subpass has one HDR colour attachment plus the deferred-specular
+        // G-buffer attachments (3 colour attachments total). Vulkan requires a
+        // graphics pipeline's colour blend state to declare exactly as many
+        // attachments as the subpass it targets
+        // (VUID-VkGraphicsPipelineCreateInfo-renderPass-07609). The overlay is a
+        // 2D composite over the HDR colour only: attachment 0 alpha-blends the
+        // UI, while the G-buffer attachments are masked off (colorWriteMask 0)
+        // so the overlay never overwrites the normals/specular a later pass reads.
+        constexpr uint32_t main_pass_color_attachment_count = 3;
+        std::array<VkPipelineColorBlendAttachmentState, main_pass_color_attachment_count> blend_attachments{};
+        blend_attachments[0].blendEnable = VK_TRUE;
+        blend_attachments[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+        blend_attachments[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+        blend_attachments[0].colorBlendOp = VK_BLEND_OP_ADD;
+        blend_attachments[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+        blend_attachments[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+        blend_attachments[0].alphaBlendOp = VK_BLEND_OP_ADD;
+        blend_attachments[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+        for ( uint32_t a = 1; a < main_pass_color_attachment_count; ++a )
+        {
+            blend_attachments[a].blendEnable = VK_FALSE;
+            blend_attachments[a].colorWriteMask = 0;
+        }
 
         VkPipelineColorBlendStateCreateInfo color_blend{};
         color_blend.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        color_blend.attachmentCount = 1;
-        color_blend.pAttachments = &blend_attachment;
+        color_blend.attachmentCount = static_cast<uint32_t> ( blend_attachments.size() );
+        color_blend.pAttachments = blend_attachments.data();
 
         std::array<VkDynamicState, 2> dynamic_states{ VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR };
         VkPipelineDynamicStateCreateInfo dynamic_state{};
