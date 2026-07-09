@@ -69,10 +69,7 @@ namespace AeonGames
 
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId},
-        mShadowParams { aVulkanRenderer },
-        mSpotShadowParams { aVulkanRenderer },
         mSpotShadowDepthMatrices { aVulkanRenderer },
-        mPointShadowParams { aVulkanRenderer },
         mPointShadowDepthMatrices { aVulkanRenderer }
     {
         std::cout << LogLevel::Info << "Creating VulkanWindow." << std::endl;
@@ -85,6 +82,9 @@ namespace AeonGames
         mLights.reserve ( kFramesInFlight );
         mClusterParams.reserve ( kFramesInFlight );
         mGlobals.reserve ( kFramesInFlight );
+        mShadowParams.reserve ( kFramesInFlight );
+        mSpotShadowParams.reserve ( kFramesInFlight );
+        mPointShadowParams.reserve ( kFramesInFlight );
         for ( uint32_t i = 0; i < kFramesInFlight; ++i )
         {
             mMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 64_kb );
@@ -93,6 +93,9 @@ namespace AeonGames
             mLights.emplace_back ( mVulkanRenderer );
             mClusterParams.emplace_back ( mVulkanRenderer );
             mGlobals.emplace_back ( mVulkanRenderer );
+            mShadowParams.emplace_back ( mVulkanRenderer );
+            mSpotShadowParams.emplace_back ( mVulkanRenderer );
+            mPointShadowParams.emplace_back ( mVulkanRenderer );
         }
         try
         {
@@ -189,6 +192,7 @@ namespace AeonGames
         std::swap ( mVkShadowRenderPass, aVulkanWindow.mVkShadowRenderPass );
         std::swap ( mVkShadowFramebuffer, aVulkanWindow.mVkShadowFramebuffer );
         std::swap ( mShadowParamsDescriptorPool, aVulkanWindow.mShadowParamsDescriptorPool );
+        std::swap ( mShadowParamsDescriptorSets, aVulkanWindow.mShadowParamsDescriptorSets );
         std::swap ( mShadowParamsDescriptorSet, aVulkanWindow.mShadowParamsDescriptorSet );
         std::swap ( mShadowMapDescriptorPool, aVulkanWindow.mShadowMapDescriptorPool );
         std::swap ( mShadowMapDescriptorSet, aVulkanWindow.mShadowMapDescriptorSet );
@@ -201,6 +205,7 @@ namespace AeonGames
         std::swap ( mVkSpotShadowColorImageView, aVulkanWindow.mVkSpotShadowColorImageView );
         std::swap ( mVkSpotShadowFramebuffers, aVulkanWindow.mVkSpotShadowFramebuffers );
         std::swap ( mSpotShadowParamsDescriptorPool, aVulkanWindow.mSpotShadowParamsDescriptorPool );
+        std::swap ( mSpotShadowParamsDescriptorSets, aVulkanWindow.mSpotShadowParamsDescriptorSets );
         std::swap ( mSpotShadowParamsDescriptorSet, aVulkanWindow.mSpotShadowParamsDescriptorSet );
         std::swap ( mSpotShadowMapDescriptorPool, aVulkanWindow.mSpotShadowMapDescriptorPool );
         std::swap ( mSpotShadowMapDescriptorSet, aVulkanWindow.mSpotShadowMapDescriptorSet );
@@ -217,6 +222,7 @@ namespace AeonGames
         std::swap ( mVkPointShadowRenderPass, aVulkanWindow.mVkPointShadowRenderPass );
         std::swap ( mVkPointShadowFramebuffers, aVulkanWindow.mVkPointShadowFramebuffers );
         std::swap ( mPointShadowParamsDescriptorPool, aVulkanWindow.mPointShadowParamsDescriptorPool );
+        std::swap ( mPointShadowParamsDescriptorSets, aVulkanWindow.mPointShadowParamsDescriptorSets );
         std::swap ( mPointShadowParamsDescriptorSet, aVulkanWindow.mPointShadowParamsDescriptorSet );
         std::swap ( mPointShadowMapDescriptorPool, aVulkanWindow.mPointShadowMapDescriptorPool );
         std::swap ( mPointShadowMapDescriptorSet, aVulkanWindow.mPointShadowMapDescriptorSet );
@@ -1723,13 +1729,8 @@ namespace AeonGames
 
         // ShadowParams UBO (light view-projection + bias/PCF/enable), shared by
         // the shadow depth vertex shader (set 8) and the shading fragment shader.
+        // One per frame in flight.
         const GpuShadowParams empty_shadow_params{};
-        mShadowParams.Initialize (
-            sizeof ( GpuShadowParams ),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &empty_shadow_params );
-
         VkDescriptorSetLayoutCreateInfo shadow_params_layout_create_info{};
         shadow_params_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         shadow_params_layout_create_info.bindingCount = 1;
@@ -1740,20 +1741,29 @@ namespace AeonGames
         shadow_params_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
         shadow_params_layout_create_info.pBindings = &shadow_params_layout_binding;
 
-        mShadowParamsDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mShadowParamsDescriptorSet = CreateDescriptorSet ( device, mShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( shadow_params_layout_create_info ) );
-        VkDescriptorBufferInfo shadow_params_buffer_info{};
-        shadow_params_buffer_info.buffer = mShadowParams.GetBuffer();
-        shadow_params_buffer_info.offset = 0;
-        shadow_params_buffer_info.range = mShadowParams.GetSize();
-        VkWriteDescriptorSet shadow_params_write{};
-        shadow_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        shadow_params_write.dstSet = mShadowParamsDescriptorSet;
-        shadow_params_write.dstBinding = 0;
-        shadow_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        shadow_params_write.descriptorCount = 1;
-        shadow_params_write.pBufferInfo = &shadow_params_buffer_info;
-        vkUpdateDescriptorSets ( device, 1, &shadow_params_write, 0, nullptr );
+        mShadowParamsDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} ) );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mShadowParams[i].Initialize (
+                sizeof ( GpuShadowParams ),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                &empty_shadow_params );
+            mShadowParamsDescriptorSets[i] = CreateDescriptorSet ( device, mShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( shadow_params_layout_create_info ) );
+            VkDescriptorBufferInfo shadow_params_buffer_info{};
+            shadow_params_buffer_info.buffer = mShadowParams[i].GetBuffer();
+            shadow_params_buffer_info.offset = 0;
+            shadow_params_buffer_info.range = mShadowParams[i].GetSize();
+            VkWriteDescriptorSet shadow_params_write{};
+            shadow_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            shadow_params_write.dstSet = mShadowParamsDescriptorSets[i];
+            shadow_params_write.dstBinding = 0;
+            shadow_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            shadow_params_write.descriptorCount = 1;
+            shadow_params_write.pBufferInfo = &shadow_params_buffer_info;
+            vkUpdateDescriptorSets ( device, 1, &shadow_params_write, 0, nullptr );
+        }
+        mShadowParamsDescriptorSet = mShadowParamsDescriptorSets[0];
 
         // ShadowMap combined image sampler (set 9), sampled by the shading pass.
         VkDescriptorSetLayoutCreateInfo shadow_map_layout_create_info{};
@@ -1909,14 +1919,8 @@ namespace AeonGames
         }
 
         // Spot ShadowParams UBO (all caster matrices + positions), sampled by
-        // the shading fragment shader (set 10).
+        // the shading fragment shader (set 10). One per frame in flight.
         const GpuSpotShadowParams empty_spot_params{};
-        mSpotShadowParams.Initialize (
-            sizeof ( GpuSpotShadowParams ),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &empty_spot_params );
-
         VkDescriptorSetLayoutCreateInfo spot_params_layout_create_info{};
         spot_params_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         spot_params_layout_create_info.bindingCount = 1;
@@ -1927,20 +1931,29 @@ namespace AeonGames
         spot_params_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
         spot_params_layout_create_info.pBindings = &spot_params_layout_binding;
 
-        mSpotShadowParamsDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mSpotShadowParamsDescriptorSet = CreateDescriptorSet ( device, mSpotShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( spot_params_layout_create_info ) );
-        VkDescriptorBufferInfo spot_params_buffer_info{};
-        spot_params_buffer_info.buffer = mSpotShadowParams.GetBuffer();
-        spot_params_buffer_info.offset = 0;
-        spot_params_buffer_info.range = mSpotShadowParams.GetSize();
-        VkWriteDescriptorSet spot_params_write{};
-        spot_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        spot_params_write.dstSet = mSpotShadowParamsDescriptorSet;
-        spot_params_write.dstBinding = 0;
-        spot_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        spot_params_write.descriptorCount = 1;
-        spot_params_write.pBufferInfo = &spot_params_buffer_info;
-        vkUpdateDescriptorSets ( device, 1, &spot_params_write, 0, nullptr );
+        mSpotShadowParamsDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} ) );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mSpotShadowParams[i].Initialize (
+                sizeof ( GpuSpotShadowParams ),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                &empty_spot_params );
+            mSpotShadowParamsDescriptorSets[i] = CreateDescriptorSet ( device, mSpotShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( spot_params_layout_create_info ) );
+            VkDescriptorBufferInfo spot_params_buffer_info{};
+            spot_params_buffer_info.buffer = mSpotShadowParams[i].GetBuffer();
+            spot_params_buffer_info.offset = 0;
+            spot_params_buffer_info.range = mSpotShadowParams[i].GetSize();
+            VkWriteDescriptorSet spot_params_write{};
+            spot_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            spot_params_write.dstSet = mSpotShadowParamsDescriptorSets[i];
+            spot_params_write.dstBinding = 0;
+            spot_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            spot_params_write.descriptorCount = 1;
+            spot_params_write.pBufferInfo = &spot_params_buffer_info;
+            vkUpdateDescriptorSets ( device, 1, &spot_params_write, 0, nullptr );
+        }
+        mSpotShadowParamsDescriptorSet = mSpotShadowParamsDescriptorSets[0];
 
         // SpotShadowMap combined image sampler (set 11): the depth array sampled
         // with the same comparison sampler the directional map uses.
@@ -2045,7 +2058,10 @@ namespace AeonGames
         DestroyDescriptorPool ( device, mSpotShadowMapDescriptorPool );
         DestroyDescriptorPool ( device, mSpotShadowParamsDescriptorPool );
         mSpotShadowDepthMatrices.Finalize();
-        mSpotShadowParams.Finalize();
+        for ( VulkanBuffer& buffer : mSpotShadowParams )
+        {
+            buffer.Finalize();
+        }
         for ( uint32_t slot = 0; slot < MAX_SPOT_SHADOW_CASTERS; ++slot )
         {
             if ( mVkSpotShadowFramebuffers[slot] != VK_NULL_HANDLE )
@@ -2234,14 +2250,8 @@ namespace AeonGames
         }
 
         // Point ShadowParams UBO (all caster matrices + positions), sampled by
-        // the shading fragment shader (set 12).
+        // the shading fragment shader (set 12). One per frame in flight.
         const GpuPointShadowParams empty_point_params{};
-        mPointShadowParams.Initialize (
-            sizeof ( GpuPointShadowParams ),
-            VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-            &empty_point_params );
-
         VkDescriptorSetLayoutCreateInfo point_params_layout_create_info{};
         point_params_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
         point_params_layout_create_info.bindingCount = 1;
@@ -2252,20 +2262,29 @@ namespace AeonGames
         point_params_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
         point_params_layout_create_info.pBindings = &point_params_layout_binding;
 
-        mPointShadowParamsDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1}} );
-        mPointShadowParamsDescriptorSet = CreateDescriptorSet ( device, mPointShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( point_params_layout_create_info ) );
-        VkDescriptorBufferInfo point_params_buffer_info{};
-        point_params_buffer_info.buffer = mPointShadowParams.GetBuffer();
-        point_params_buffer_info.offset = 0;
-        point_params_buffer_info.range = mPointShadowParams.GetSize();
-        VkWriteDescriptorSet point_params_write{};
-        point_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        point_params_write.dstSet = mPointShadowParamsDescriptorSet;
-        point_params_write.dstBinding = 0;
-        point_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        point_params_write.descriptorCount = 1;
-        point_params_write.pBufferInfo = &point_params_buffer_info;
-        vkUpdateDescriptorSets ( device, 1, &point_params_write, 0, nullptr );
+        mPointShadowParamsDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1} ) );
+        for ( uint32_t i = 0; i < kFramesInFlight; ++i )
+        {
+            mPointShadowParams[i].Initialize (
+                sizeof ( GpuPointShadowParams ),
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                &empty_point_params );
+            mPointShadowParamsDescriptorSets[i] = CreateDescriptorSet ( device, mPointShadowParamsDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( point_params_layout_create_info ) );
+            VkDescriptorBufferInfo point_params_buffer_info{};
+            point_params_buffer_info.buffer = mPointShadowParams[i].GetBuffer();
+            point_params_buffer_info.offset = 0;
+            point_params_buffer_info.range = mPointShadowParams[i].GetSize();
+            VkWriteDescriptorSet point_params_write{};
+            point_params_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            point_params_write.dstSet = mPointShadowParamsDescriptorSets[i];
+            point_params_write.dstBinding = 0;
+            point_params_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            point_params_write.descriptorCount = 1;
+            point_params_write.pBufferInfo = &point_params_buffer_info;
+            vkUpdateDescriptorSets ( device, 1, &point_params_write, 0, nullptr );
+        }
+        mPointShadowParamsDescriptorSet = mPointShadowParamsDescriptorSets[0];
 
         // PointShadowMap combined image sampler (set 13).
         VkDescriptorSetLayoutCreateInfo point_map_layout_create_info{};
@@ -2365,7 +2384,10 @@ namespace AeonGames
         DestroyDescriptorPool ( device, mPointShadowMapDescriptorPool );
         DestroyDescriptorPool ( device, mPointShadowParamsDescriptorPool );
         mPointShadowDepthMatrices.Finalize();
-        mPointShadowParams.Finalize();
+        for ( VulkanBuffer& buffer : mPointShadowParams )
+        {
+            buffer.Finalize();
+        }
         for ( uint32_t caster = 0; caster < MAX_POINT_SHADOW_CASTERS; ++caster )
         {
             if ( mVkPointShadowFramebuffers[caster] != VK_NULL_HANDLE )
@@ -2412,7 +2434,10 @@ namespace AeonGames
         const VkDevice device = mVulkanRenderer.GetDevice();
         DestroyDescriptorPool ( device, mShadowMapDescriptorPool );
         DestroyDescriptorPool ( device, mShadowParamsDescriptorPool );
-        mShadowParams.Finalize();
+        for ( VulkanBuffer& buffer : mShadowParams )
+        {
+            buffer.Finalize();
+        }
         if ( mVkShadowFramebuffer != VK_NULL_HANDLE )
         {
             vkDestroyFramebuffer ( device, mVkShadowFramebuffer, nullptr );
@@ -2467,7 +2492,7 @@ namespace AeonGames
         shadow_params.params[1] = 0.0015f;
         shadow_params.params[2] = 1.0f;
         shadow_params.params[3] = 1.0f; // enabled
-        mShadowParams.WriteMemory ( 0, sizeof ( GpuShadowParams ), &shadow_params );
+        mShadowParams[mFrameIndex].WriteMemory ( 0, sizeof ( GpuShadowParams ), &shadow_params );
 
         // The main render pass was opened by BeginRender for the depth
         // pre-pass; close it so the fixed-size shadow pass can run.
@@ -2546,7 +2571,7 @@ namespace AeonGames
 
     void VulkanWindow::SetSpotShadowParams ( const GpuSpotShadowParams& aSpotShadowParams )
     {
-        mSpotShadowParams.WriteMemory ( 0, sizeof ( GpuSpotShadowParams ), &aSpotShadowParams );
+        mSpotShadowParams[mFrameIndex].WriteMemory ( 0, sizeof ( GpuSpotShadowParams ), &aSpotShadowParams );
     }
 
     void VulkanWindow::BeginSpotShadowPass ( uint32_t aSlot, const Matrix4x4& aLightViewProjection )
@@ -2639,7 +2664,7 @@ namespace AeonGames
     void VulkanWindow::SetPointShadowParams ( const GpuPointShadowParams& aPointShadowParams )
     {
         mPointShadowParamsCpu = aPointShadowParams;
-        mPointShadowParams.WriteMemory ( 0, sizeof ( GpuPointShadowParams ), &aPointShadowParams );
+        mPointShadowParams[mFrameIndex].WriteMemory ( 0, sizeof ( GpuPointShadowParams ), &aPointShadowParams );
     }
 
     void VulkanWindow::BeginPointShadowPass ( uint32_t aCaster )
@@ -2990,6 +3015,9 @@ namespace AeonGames
         mLightsDescriptorSet = mLightsDescriptorSets[mFrameIndex];
         mClusterParamsDescriptorSet = mClusterParamsDescriptorSets[mFrameIndex];
         mGlobalsDescriptorSet = mGlobalsDescriptorSets[mFrameIndex];
+        mShadowParamsDescriptorSet = mShadowParamsDescriptorSets[mFrameIndex];
+        mSpotShadowParamsDescriptorSet = mSpotShadowParamsDescriptorSets[mFrameIndex];
+        mPointShadowParamsDescriptorSet = mPointShadowParamsDescriptorSets[mFrameIndex];
         vkResetCommandPool ( mVulkanRenderer.GetDevice(), mVkCommandPools[mFrameIndex], 0 );
         if ( VkResult result = vkBeginCommandBuffer ( mVkCommandBuffer, &command_buffer_begin_info ) )
         {

@@ -303,17 +303,17 @@ namespace AeonGames
         std::vector<VulkanBuffer> mLights;
         std::vector<VulkanBuffer> mClusterParams;
         std::vector<VulkanBuffer> mGlobals;
-        VulkanBuffer mShadowParams;
+        std::vector<VulkanBuffer> mShadowParams;
         // Spot shadow params (all caster matrices + positions) sampled by the
         // shading pass, and the per-slot depth matrices read by the spot depth
         // passes (one aligned GpuShadowParams slot per caster).
-        VulkanBuffer mSpotShadowParams;
+        std::vector<VulkanBuffer> mSpotShadowParams;
         VulkanBuffer mSpotShadowDepthMatrices;
         // Point shadow params (six-per-caster matrices + caster positions/radii)
         // sampled by the shading pass, and the per-layer depth matrices read by
         // the point depth passes (one aligned GpuShadowParams slot per cube face
         // per caster).
-        VulkanBuffer mPointShadowParams;
+        std::vector<VulkanBuffer> mPointShadowParams;
         VulkanBuffer mPointShadowDepthMatrices;
         // Scratch buffer holding the frustum-culled subset of this frame's
         // lights; reused across frames so capacity is not reallocated.
@@ -398,6 +398,7 @@ namespace AeonGames
         VkRenderPass mVkShadowRenderPass{VK_NULL_HANDLE};
         VkFramebuffer mVkShadowFramebuffer{VK_NULL_HANDLE};
         VkDescriptorPool mShadowParamsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mShadowParamsDescriptorSets{};
         VkDescriptorSet mShadowParamsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mShadowMapDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mShadowMapDescriptorSet{VK_NULL_HANDLE};
@@ -419,6 +420,7 @@ namespace AeonGames
         VkImageView mVkSpotShadowColorImageView{VK_NULL_HANDLE};
         std::array<VkFramebuffer, MAX_SPOT_SHADOW_CASTERS> mVkSpotShadowFramebuffers{};
         VkDescriptorPool mSpotShadowParamsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mSpotShadowParamsDescriptorSets{};
         VkDescriptorSet mSpotShadowParamsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mSpotShadowMapDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mSpotShadowMapDescriptorSet{VK_NULL_HANDLE};
@@ -444,6 +446,7 @@ namespace AeonGames
         VkImageView mVkPointShadowColorImageView{VK_NULL_HANDLE};
         std::array<VkFramebuffer, MAX_POINT_SHADOW_CASTERS> mVkPointShadowFramebuffers{};
         VkDescriptorPool mPointShadowParamsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mPointShadowParamsDescriptorSets{};
         VkDescriptorSet mPointShadowParamsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mPointShadowMapDescriptorPool{VK_NULL_HANDLE};
         VkDescriptorSet mPointShadowMapDescriptorSet{VK_NULL_HANDLE};
