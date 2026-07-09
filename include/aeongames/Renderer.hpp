@@ -341,14 +341,11 @@ namespace AeonGames
          * surface has completed. Provided so callers can safely read back
          * GPU-written buffers, capture the framebuffer, or tear resources down
          * while frames are pipelined: with multiple frames in flight BeginFrame
-         * no longer implies the previous frame finished. The default is a no-op
-         * for backends that render fully synchronously.
+         * no longer implies the previous frame finished. Backends implement it
+         * with a full GPU drain (vkDeviceWaitIdle / glFinish).
          * @param aWindowId Platform dependent window handle.
          */
-        virtual void Finish ( void* aWindowId )
-        {
-            ( void ) aWindowId;
-        }
+        virtual void Finish ( void* aWindowId ) = 0;
         /** Issues a draw call for a mesh with the given pipeline and optional material.
          * @param aWindowId Platform dependent window handle.
          * @param aModelMatrix Model transformation matrix.

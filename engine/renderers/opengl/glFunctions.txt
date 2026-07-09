@@ -173,6 +173,10 @@ glTextureSubImage2D
 #endif
 glGetTextureLevelParameteriv
 glCopyNamedBufferSubData
+// GPU fence sync objects (GL 3.2) for per-frame-in-flight ring throttling
+glFenceSync
+glClientWaitSync
+glDeleteSync
 // Compute shaders
 glDispatchCompute
 glMemoryBarrier

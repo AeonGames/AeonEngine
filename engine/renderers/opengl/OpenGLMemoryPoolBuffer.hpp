@@ -18,6 +18,7 @@ limitations under the License.
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <array>
 #include <tuple>
 #include <initializer_list>
 #include "OpenGLFunctions.hpp"
@@ -51,7 +52,13 @@ namespace AeonGames
     private:
         const OpenGLRenderer&  mOpenGLRenderer;
         size_t mOffset{0};
-        OpenGLBuffer mUniformBuffer;
+        // Ring of distinct uniform buffer objects, one per in-flight frame (see
+        // AeonGames::kFramesInFlight), mirroring OpenGLStorageMemoryPoolBuffer:
+        // advancing to a different physical buffer each frame stops the next
+        // frame's writes racing the previous frames' still-in-flight draws (a
+        // write-after-read hazard the driver does not serialize).
+        std::array<OpenGLBuffer, kFramesInFlight> mUniformBuffers{};
+        size_t mCurrent{0};
     };
 }
 #endif

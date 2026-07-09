@@ -1125,6 +1125,18 @@ void main()
         }
         it->second.EndRender();
     }
+    void OpenGLRenderer::Finish ( void* aWindowId )
+    {
+        // Block until the GPU has completed every command issued for this window
+        // so the caller can safely read back GPU-written buffers or capture the
+        // surface (the per-frame fences only gate ring reuse, not read-back).
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.Finish();
+    }
     void OpenGLRenderer::SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass )
     {
         auto it = mWindowStore.find ( aWindowId );

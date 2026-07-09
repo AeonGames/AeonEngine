@@ -211,6 +211,8 @@ namespace AeonGames
         std::swap ( mSpotShadowFrameBuffer, aOpenGLWindow.mSpotShadowFrameBuffer );
         std::swap ( mPointShadowDepthTexture, aOpenGLWindow.mPointShadowDepthTexture );
         std::swap ( mPointShadowFrameBuffer, aOpenGLWindow.mPointShadowFrameBuffer );
+        std::swap ( mFrameFences, aOpenGLWindow.mFrameFences );
+        std::swap ( mFrameIndex, aOpenGLWindow.mFrameIndex );
     }
 
     OpenGLWindow::~OpenGLWindow()
@@ -218,6 +220,14 @@ namespace AeonGames
         if ( mWindowId != None )
         {
             mOpenGLRenderer.MakeCurrent();
+            for ( GLsync& fence : mFrameFences )
+            {
+                if ( fence != nullptr )
+                {
+                    glDeleteSync ( fence );
+                    fence = nullptr;
+                }
+            }
             mMemoryPoolBuffer.Finalize();
             mStorageMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
@@ -309,6 +319,8 @@ namespace AeonGames
         std::swap ( mSpotShadowFrameBuffer, aOpenGLWindow.mSpotShadowFrameBuffer );
         std::swap ( mPointShadowDepthTexture, aOpenGLWindow.mPointShadowDepthTexture );
         std::swap ( mPointShadowFrameBuffer, aOpenGLWindow.mPointShadowFrameBuffer );
+        std::swap ( mFrameFences, aOpenGLWindow.mFrameFences );
+        std::swap ( mFrameIndex, aOpenGLWindow.mFrameIndex );
     }
 
     OpenGLWindow::~OpenGLWindow()
@@ -316,6 +328,14 @@ namespace AeonGames
         if ( mWindowId != nullptr )
         {
             mOpenGLRenderer.MakeCurrent();
+            for ( GLsync& fence : mFrameFences )
+            {
+                if ( fence != nullptr )
+                {
+                    glDeleteSync ( fence );
+                    fence = nullptr;
+                }
+            }
             mMemoryPoolBuffer.Finalize();
             mStorageMemoryPoolBuffer.Finalize();
             mMatrices.Finalize();
@@ -1096,6 +1116,19 @@ namespace AeonGames
 #elif defined(__unix__)
         mOpenGLRenderer.MakeCurrent ( mWindowId );
 #endif
+        // Before this frame overwrites the ring-slot buffers it shares with the
+        // frame kFramesInFlight ago, wait for that frame's GPU work to finish so
+        // the persistent-mapped pool writes do not race its still-pending draws.
+        if ( mFrameFences[mFrameIndex] != nullptr )
+        {
+            GLenum wait_result = glClientWaitSync ( mFrameFences[mFrameIndex], GL_SYNC_FLUSH_COMMANDS_BIT, 1000000000ull );
+            while ( wait_result == GL_TIMEOUT_EXPIRED )
+            {
+                wait_result = glClientWaitSync ( mFrameFences[mFrameIndex], 0, 1000000000ull );
+            }
+            glDeleteSync ( mFrameFences[mFrameIndex] );
+            mFrameFences[mFrameIndex] = nullptr;
+        }
         mFrameBuffer.Bind();
     }
 
@@ -1240,7 +1273,22 @@ namespace AeonGames
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
         mStorageMemoryPoolBuffer.Reset();
+        // Fence this frame's GPU work so the frame that reuses this ring slot
+        // kFramesInFlight frames from now waits for it (see BeginFrame). The
+        // frame index advances in lockstep with the pools' internal rotation.
+        mFrameFences[mFrameIndex] = glFenceSync ( GL_SYNC_GPU_COMMANDS_COMPLETE, 0 );
+        mFrameIndex = ( mFrameIndex + 1 ) % kFramesInFlight;
         mFrameBegun = false;
+    }
+
+    void OpenGLWindow::Finish()
+    {
+#if defined(_WIN32)
+        mOpenGLRenderer.MakeCurrent ( mDeviceContext );
+#elif defined(__unix__)
+        mOpenGLRenderer.MakeCurrent ( mWindowId );
+#endif
+        glFinish();
     }
     void OpenGLWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
     {

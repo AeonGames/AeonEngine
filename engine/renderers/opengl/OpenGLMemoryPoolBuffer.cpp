@@ -38,22 +38,22 @@ namespace AeonGames
     }
 
     OpenGLMemoryPoolBuffer::OpenGLMemoryPoolBuffer ( const OpenGLRenderer&  aOpenGLRenderer, GLsizei aStackSize ) :
-        mOpenGLRenderer { aOpenGLRenderer },
-        mUniformBuffer { ( ( aStackSize - 1 ) | ( GetUniformBufferOffsetAlignment() - 1 ) ) + 1, GL_DYNAMIC_DRAW }
+        mOpenGLRenderer { aOpenGLRenderer }
     {
+        Initialize ( aStackSize );
     }
 
     OpenGLMemoryPoolBuffer::OpenGLMemoryPoolBuffer ( const OpenGLRenderer& aOpenGLRenderer ) :
-        mOpenGLRenderer { aOpenGLRenderer },
-        mUniformBuffer {}
+        mOpenGLRenderer { aOpenGLRenderer }
     {
     }
 
     OpenGLMemoryPoolBuffer::OpenGLMemoryPoolBuffer ( OpenGLMemoryPoolBuffer&& aOpenGLMemoryPoolBuffer ) :
         mOpenGLRenderer { aOpenGLMemoryPoolBuffer.mOpenGLRenderer },
-        mUniformBuffer { std::move ( aOpenGLMemoryPoolBuffer.mUniformBuffer ) }
+        mUniformBuffers { std::move ( aOpenGLMemoryPoolBuffer.mUniformBuffers ) }
     {
         std::swap ( mOffset, aOpenGLMemoryPoolBuffer.mOffset );
+        std::swap ( mCurrent, aOpenGLMemoryPoolBuffer.mCurrent );
     }
 
     OpenGLMemoryPoolBuffer::~OpenGLMemoryPoolBuffer()
@@ -65,7 +65,7 @@ namespace AeonGames
     {
         size_t offset = mOffset;
         mOffset += ( (  aSize - 1 ) | ( GetUniformBufferOffsetAlignment() - 1 ) ) + 1;
-        if ( mOffset > mUniformBuffer.GetSize() )
+        if ( mOffset > mUniformBuffers[mCurrent].GetSize() )
         {
             mOffset = offset;
             std::cout << LogLevel::Error << "Memory Pool Buffer cannot fulfill allocation request." << std::endl;
@@ -76,19 +76,30 @@ namespace AeonGames
 
     void OpenGLMemoryPoolBuffer::Reset()
     {
+        // Advance to the next physical buffer so the frame about to be recorded
+        // writes into uniforms no longer read by the previous frames' in-flight
+        // draws.
+        mCurrent = ( mCurrent + 1 ) % kFramesInFlight;
         mOffset = 0;
     }
     const Buffer& OpenGLMemoryPoolBuffer::GetBuffer() const
     {
-        return mUniformBuffer;
+        return mUniformBuffers[mCurrent];
     }
 
     void OpenGLMemoryPoolBuffer::Initialize ( GLsizei aStackSize )
     {
-        mUniformBuffer.Initialize ( ( ( aStackSize - 1 ) | ( GetUniformBufferOffsetAlignment() - 1 ) ) + 1, GL_DYNAMIC_DRAW );
+        const GLsizei aligned = ( ( aStackSize - 1 ) | ( GetUniformBufferOffsetAlignment() - 1 ) ) + 1;
+        for ( OpenGLBuffer& buffer : mUniformBuffers )
+        {
+            buffer.Initialize ( aligned, GL_DYNAMIC_DRAW );
+        }
     }
     void OpenGLMemoryPoolBuffer::Finalize()
     {
-        mUniformBuffer.Finalize();
+        for ( OpenGLBuffer& buffer : mUniformBuffers )
+        {
+            buffer.Finalize();
+        }
     }
 }

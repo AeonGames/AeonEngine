@@ -19,6 +19,7 @@ limitations under the License.
 #include <cstdint>
 #include <span>
 #include <vector>
+#include <array>
 #include <mutex>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -94,6 +95,9 @@ namespace AeonGames
         void EndPointShadowPass();
         /// @brief End the current frame and present.
         void EndRender();
+        /// @brief Block until the GPU has finished every command issued for this
+        ///        window (glFinish), so buffers can be safely read back.
+        void Finish();
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
@@ -325,6 +329,13 @@ namespace AeonGames
         // idempotent so the app can run a pre-render-pass compute phase
         // (e.g. skinning) before BeginRender().
         bool mFrameBegun{false};
+        // One GPU fence per frame in flight, inserted after a frame's draws and
+        // waited on before that ring slot's persistent-mapped pool buffers are
+        // reused kFramesInFlight frames later. Makes the storage/uniform ring
+        // reuse explicitly correct instead of relying on SwapBuffers throttling
+        // to keep the CPU less than kFramesInFlight frames ahead of the GPU.
+        std::array<GLsync, kFramesInFlight> mFrameFences{};
+        size_t mFrameIndex{0};
         // Drives ClusterParams.screen.w; enables active-cluster culling once
         // the mark stage has run this frame.
         bool mActiveCullEnabled{false};
