@@ -90,6 +90,7 @@ namespace AeonGames
             POINT_SHADOW_MAP  = "PointShadowMap"_crc32,  ///< Point shadow mapping: six-faces-per-caster depth array sampled with comparison (sampler2DArrayShadow).
             GLOBALS           = "Globals"_crc32,         ///< Per-frame scene-wide shading globals (ambient fill, future frame-wide values) (UBO).
             PREFILTERED_ENVIRONMENT = "PrefilteredEnvironment"_crc32, ///< Specular IBL: GGX-prefiltered environment equirect mip chain, window-owned global sampler (sampler2D).
+            BINDLESS          = "Bindless"_crc32,        ///< Bindless resources: global combined-image-sampler array (binding 0) + material storage buffer (binding 1), a renderer-owned set bound once per frame.
         };
 
         /** @brief Type alias for the number of components in a vertex attribute. */

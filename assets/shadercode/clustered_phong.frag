@@ -1,4 +1,7 @@
 #version 450
+#ifdef VULKAN
+#extension GL_EXT_nonuniform_qualifier : require
+#endif
 
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
@@ -11,20 +14,53 @@ uniform Matrices
       mat4 ViewMatrix;
 };
 
-// Metallic-roughness material factors (glTF-style). BaseColorFactor tints the
-// base-colour (diffuse) texture; MetallicFactor and RoughnessFactor scale the
-// sampled metallic/roughness maps (or stand alone when a material has none).
+// Metallic-roughness material inputs. On Vulkan the surface's textures and
+// factors come from one record in the global bindless material storage buffer,
+// selected by the per-draw MaterialIndex push constant; the DiffuseMap..
+// EmissiveMap and BaseColorFactor..EmissiveFactor names below are macros into
+// that record, so main() is backend-agnostic. On OpenGL they are the
+// traditional per-material uniform block + samplers (bindless parity lands in a
+// later step).
 #ifdef VULKAN
-layout(set = 1, binding = 0, std140)
+struct GpuMaterial
+{
+      uvec2 texture_refs[6]; // .x = slot into global_textures
+      vec4  base_color_factor;
+      float metallic_factor;
+      float roughness_factor;
+      float pad0;
+      float pad1;
+      vec4  emissive_factor;
+};
+layout(set = 2, binding = 0) uniform sampler2D global_textures[];
+layout(set = 2, binding = 1, std430) readonly buffer Materials
+{
+      GpuMaterial materials[];
+};
+layout(push_constant) uniform MaterialPushConstant
+{
+      layout(offset = 64) uint MaterialIndex;
+};
+#define MAT_TEX(i)      global_textures[nonuniformEXT(materials[MaterialIndex].texture_refs[i].x)]
+#define DiffuseMap      MAT_TEX(0)
+#define NormalMap       MAT_TEX(1)
+#define MetallicMap     MAT_TEX(2)
+#define RoughnessMap    MAT_TEX(3)
+#define OcclusionMap    MAT_TEX(4)
+#define EmissiveMap     MAT_TEX(5)
+#define BaseColorFactor materials[MaterialIndex].base_color_factor
+#define MetallicFactor  materials[MaterialIndex].metallic_factor
+#define RoughnessFactor materials[MaterialIndex].roughness_factor
+#define EmissiveFactor  materials[MaterialIndex].emissive_factor.xyz
 #else
 layout(binding = 1, std140)
-#endif
 uniform Material{
       vec4  BaseColorFactor;
       float MetallicFactor;
       float RoughnessFactor;
       vec3  EmissiveFactor;
 };
+#endif
 
 // Per-frame light list, mirrors include/aeongames/GpuLight.hpp.
 struct GpuLight {
@@ -86,62 +122,18 @@ readonly buffer LightIndexList
       uint light_index_list[];
 };
 
-#ifdef VULKAN
-layout(set = 2, binding = 0)
-#else
-layout(binding = 0)
+// Material textures. On Vulkan the DiffuseMap..EmissiveMap names are macros into
+// the global bindless texture array (declared above with the material record);
+// on OpenGL they are the traditional per-material samplers bound to texture
+// units 0..5 by the renderer.
+#ifndef VULKAN
+layout(binding = 0) uniform sampler2D DiffuseMap;
+layout(binding = 1) uniform sampler2D NormalMap;
+layout(binding = 2) uniform sampler2D MetallicMap;
+layout(binding = 3) uniform sampler2D RoughnessMap;
+layout(binding = 4) uniform sampler2D OcclusionMap;
+layout(binding = 5) uniform sampler2D EmissiveMap;
 #endif
-uniform sampler2D DiffuseMap;
-
-// Tangent-space normal map (canonical material sampler slot 1). It shares the
-// material "Samplers" descriptor set with DiffuseMap (set 2, binding 1), which
-// is the two-binding set VulkanMaterial builds. Materials without a normal map
-// bind the engine's flat (0,0,1) fallback texture, so sampling here is a no-op
-// after the TBN transform in main().
-#ifdef VULKAN
-layout(set = 2, binding = 1)
-#else
-layout(binding = 1)
-#endif
-uniform sampler2D NormalMap;
-
-// Metallic and roughness maps (canonical material sampler slots 2 and 3). Both
-// share the material "Samplers" descriptor set with DiffuseMap/NormalMap (set 2,
-// bindings 2 and 3). They are single-channel (value read from .r) and scale the
-// material's MetallicFactor / RoughnessFactor. Materials with no such map bind
-// the engine's white fallback, so the scalar factor is used unchanged.
-#ifdef VULKAN
-layout(set = 2, binding = 2)
-#else
-layout(binding = 2)
-#endif
-uniform sampler2D MetallicMap;
-
-#ifdef VULKAN
-layout(set = 2, binding = 3)
-#else
-layout(binding = 3)
-#endif
-uniform sampler2D RoughnessMap;
-
-// Ambient-occlusion (slot 4) and emissive (slot 5) maps, sharing the material
-// "Samplers" set (set 2, bindings 4 and 5). OcclusionMap.r scales the ambient
-// term; EmissiveMap.rgb (sRGB) times EmissiveFactor is added as self-illumination.
-// Both fall back to white, so occlusion defaults to 1 and emissive to the factor
-// (which defaults to zero -> no glow).
-#ifdef VULKAN
-layout(set = 2, binding = 4)
-#else
-layout(binding = 4)
-#endif
-uniform sampler2D OcclusionMap;
-
-#ifdef VULKAN
-layout(set = 2, binding = 5)
-#else
-layout(binding = 5)
-#endif
-uniform sampler2D EmissiveMap;
 
 // Directional shadow mapping. ShadowParams carries the sun's world-space
 // view-projection and filtering parameters; ShadowMap is the depth map sampled

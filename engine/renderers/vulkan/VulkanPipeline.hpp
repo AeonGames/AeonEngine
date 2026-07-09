@@ -63,6 +63,10 @@ namespace AeonGames
         const std::vector<VulkanDescriptorSetInfo>& GetDescriptorSetInfos() const;
         /// @brief Get the push constant range used for the model matrix.
         const VkPushConstantRange& GetPushConstantModelMatrix() const;
+        /// @brief Get the push constant range used for the bindless material
+        ///        index (fragment stage, fetched per draw to index the global
+        ///        material storage buffer). Zero size when the pipeline has none.
+        const VkPushConstantRange& GetPushConstantMaterialIndex() const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
         void ReflectColorAttachments ( SpvReflectShaderModule& module );
@@ -81,6 +85,7 @@ namespace AeonGames
         std::vector<VkVertexInputAttributeDescription> mVertexAttributes{};
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
         VkPushConstantRange mPushConstantModelMatrix{};
+        VkPushConstantRange mPushConstantMaterialIndex{};
     };
 }
 #endif

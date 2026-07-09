@@ -158,6 +158,7 @@ namespace AeonGames
         mVkComputePipelines.swap ( aVulkanPipeline.mVkComputePipelines );
         std::swap ( mVertexStride, aVulkanPipeline.mVertexStride );
         std::swap ( mPushConstantModelMatrix, aVulkanPipeline.mPushConstantModelMatrix );
+        std::swap ( mPushConstantMaterialIndex, aVulkanPipeline.mPushConstantMaterialIndex );
         mVertexAttributes.swap ( aVulkanPipeline.mVertexAttributes );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
     }
@@ -499,7 +500,13 @@ namespace AeonGames
                 std::cout << LogLevel::Error << "Set index out of bounds" << std::endl;
                 throw std::runtime_error ( "Set index out of bounds" );
             }
-            descriptor_set_layouts[i.set] = mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
+            // The bindless set binds the renderer's shared update-after-bind
+            // layout (runtime combined-image-sampler array + material storage
+            // buffer, with partially-bound/update-after-bind flags) rather than a
+            // plain reflected layout, so the global set is layout-compatible.
+            descriptor_set_layouts[i.set] = ( i.hash == Mesh::BindingLocations::BINDLESS )
+                                            ? mVulkanRenderer.GetBindlessDescriptorSetLayout()
+                                            : mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
             set_layout_count = std::max ( set_layout_count, i.set + 1 );
         }
         if ( set_layout_count > 0 )
@@ -525,8 +532,21 @@ namespace AeonGames
         pipeline_layout_create_info.pNext = nullptr;
         pipeline_layout_create_info.setLayoutCount = set_layout_count;
         pipeline_layout_create_info.pSetLayouts = set_layout_count ? descriptor_set_layouts.data() : nullptr;
-        pipeline_layout_create_info.pushConstantRangeCount = mPushConstantModelMatrix.offset == 0 && mPushConstantModelMatrix.size == 0 ? 0 : 1;
-        pipeline_layout_create_info.pPushConstantRanges = pipeline_layout_create_info.pushConstantRangeCount ? &mPushConstantModelMatrix : nullptr;
+        // Up to two push constant ranges: the vertex model matrix (skinned
+        // pipelines) and the fragment bindless material index. They occupy
+        // disjoint offsets and stages, so both can coexist.
+        std::array<VkPushConstantRange, 2> push_constant_ranges{};
+        uint32_t push_constant_range_count = 0;
+        if ( mPushConstantModelMatrix.size != 0 )
+        {
+            push_constant_ranges[push_constant_range_count++] = mPushConstantModelMatrix;
+        }
+        if ( mPushConstantMaterialIndex.size != 0 )
+        {
+            push_constant_ranges[push_constant_range_count++] = mPushConstantMaterialIndex;
+        }
+        pipeline_layout_create_info.pushConstantRangeCount = push_constant_range_count;
+        pipeline_layout_create_info.pPushConstantRanges = push_constant_range_count ? push_constant_ranges.data() : nullptr;
         if ( VkResult result = vkCreatePipelineLayout ( mVulkanRenderer.GetDevice(), &pipeline_layout_create_info, nullptr, &mVkPipelineLayout ) )
         {
             std::ostringstream stream;
@@ -813,6 +833,18 @@ namespace AeonGames
                 {
                     type_name = descriptor_set->bindings[0]->name;
                 }
+                // The global bindless resource set -- a runtime combined-image-
+                // sampler array named "global_textures" plus the material storage
+                // buffer -- is renderer-owned; tag it "Bindless" so the pipeline
+                // layout substitutes the renderer's update-after-bind layout and
+                // the shading pass binds the shared global set at this index.
+                if ( descriptor_set->binding_count >= 1 &&
+                     descriptor_set->bindings[0]->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
+                     descriptor_set->bindings[0]->name != nullptr &&
+                     strcmp ( descriptor_set->bindings[0]->name, "global_textures" ) == 0 )
+                {
+                    type_name = "Bindless";
+                }
                 uint32_t hash = crc32i ( type_name,
                                          strlen ( type_name ) );
 
@@ -913,6 +945,11 @@ namespace AeonGames
         return mPushConstantModelMatrix;
     }
 
+    const VkPushConstantRange& VulkanPipeline::GetPushConstantMaterialIndex() const
+    {
+        return mPushConstantMaterialIndex;
+    }
+
     void VulkanPipeline::ReflectPushConstants ( SpvReflectShaderModule& aModule, ShaderType aType )
     {
         // Get push constant block count
@@ -939,16 +976,35 @@ namespace AeonGames
             }
             for ( const auto& push_constant_block : push_constant_blocks )
             {
-                /* We'll keep it simple and just look for the model matrix push constant */
-                if ( push_constant_block->member_count == 1 && push_constant_block->members[0].name != nullptr &&
-                     strcmp ( push_constant_block->members[0].name, "ModelMatrix" ) == 0 )
+                // Capture the two push constants the engine drives per draw: the
+                // vertex model matrix and the fragment bindless material index.
+                // Use each member's own offset/size so they can share one block
+                // (or live in separate per-stage blocks) at disjoint offsets.
+                for ( uint32_t m = 0; m < push_constant_block->member_count; ++m )
                 {
-                    mPushConstantModelMatrix.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
-                    mPushConstantModelMatrix.offset = push_constant_block->offset;
-                    mPushConstantModelMatrix.size = push_constant_block->size;
-                    std::cout << LogLevel::Debug << "Model Matrix Push Constant Offset: " << mPushConstantModelMatrix.offset
-                              << " Size: " << mPushConstantModelMatrix.size
-                              << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
+                    const SpvReflectBlockVariable& member = push_constant_block->members[m];
+                    if ( member.name == nullptr )
+                    {
+                        continue;
+                    }
+                    if ( strcmp ( member.name, "ModelMatrix" ) == 0 )
+                    {
+                        mPushConstantModelMatrix.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                        mPushConstantModelMatrix.offset = member.offset;
+                        mPushConstantModelMatrix.size = member.size;
+                        std::cout << LogLevel::Debug << "Model Matrix Push Constant Offset: " << mPushConstantModelMatrix.offset
+                                  << " Size: " << mPushConstantModelMatrix.size
+                                  << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
+                    }
+                    else if ( strcmp ( member.name, "MaterialIndex" ) == 0 )
+                    {
+                        mPushConstantMaterialIndex.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                        mPushConstantMaterialIndex.offset = member.offset;
+                        mPushConstantMaterialIndex.size = member.size;
+                        std::cout << LogLevel::Debug << "Material Index Push Constant Offset: " << mPushConstantMaterialIndex.offset
+                                  << " Size: " << mPushConstantMaterialIndex.size
+                                  << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
+                    }
                 }
             }
         }

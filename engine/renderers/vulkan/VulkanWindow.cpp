@@ -3536,6 +3536,7 @@ namespace AeonGames
             Mesh::BindingLocations::SPOT_SHADOW_PARAMS, Mesh::BindingLocations::SPOT_SHADOW_MAP,
             Mesh::BindingLocations::POINT_SHADOW_PARAMS, Mesh::BindingLocations::POINT_SHADOW_MAP,
             Mesh::BindingLocations::PREFILTERED_ENVIRONMENT,
+            Mesh::BindingLocations::BINDLESS,
             Mesh::BindingLocations::MATERIAL, Mesh::BindingLocations::SAMPLERS,
             Mesh::BindingLocations::INSTANCE_MATRICES,
         } );
@@ -3581,6 +3582,10 @@ namespace AeonGames
         bind ( Mesh::BindingLocations::POINT_SHADOW_PARAMS, mPointShadowParamsDescriptorSet );
         bind ( Mesh::BindingLocations::POINT_SHADOW_MAP, mPointShadowMapDescriptorSet );
         bind ( Mesh::BindingLocations::PREFILTERED_ENVIRONMENT, mPrefilteredEnvDescriptorSet );
+        // The renderer-owned global bindless set (texture array + material
+        // storage buffer); bound at its reflected index when the pipeline is a
+        // bindless shading pipeline.
+        bind ( Mesh::BindingLocations::BINDLESS, mVulkanRenderer.GetBindlessDescriptorSet() );
     }
 
     void VulkanWindow::BindDepthPrePassSets ( const VulkanPipeline* aPipeline ) const
