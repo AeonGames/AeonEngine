@@ -180,24 +180,13 @@ glDeleteSync
 // Compute shaders
 glDispatchCompute
 glMemoryBarrier
-#if 0
-// We're no longer using
-// GL_ARB_bindless_texture
+// GL_ARB_bindless_texture: resident sampler handles are stored in the material
+// SSBO so shaders index textures without per-draw binds -- the OpenGL parity of
+// the Vulkan descriptor-indexing (bindless) path.
 glGetTextureHandleARB
 glGetTextureSamplerHandleARB
 glMakeTextureHandleResidentARB
 glMakeTextureHandleNonResidentARB
-glGetImageHandleARB
-glMakeImageHandleResidentARB
-glMakeImageHandleNonResidentARB
-glUniformHandleui64ARB
-glUniformHandleui64vARB
-glProgramUniformHandleui64ARB
-glProgramUniformHandleui64vARB
 glIsTextureHandleResidentARB
-glIsImageHandleResidentARB
-// Inherited from NV_vertex_attrib_integer_64bit:
-glVertexAttribL1ui64ARB
-glVertexAttribL1ui64vARB
-glGetVertexAttribLui64vARB
-#endif
+glUniformHandleui64ARB
+glProgramUniformHandleui64ARB
