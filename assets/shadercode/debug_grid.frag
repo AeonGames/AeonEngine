@@ -4,6 +4,8 @@ layout(location = 0) in vec3 NearPoint;
 layout(location = 1) in vec3 FarPoint;
 layout(location = 2) flat in vec3 CameraPosition;
 layout(location = 0) out vec4 FragColor;
+layout(location = 1) out vec4 GNormalRough;
+layout(location = 2) out vec4 GSpecWeight;
 
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
@@ -98,6 +100,10 @@ void main()
           discard;
       }
       FragColor = vec4 ( color, 1.0 );
+      // Empty G-buffer values so this pipeline matches the 3-attachment main
+      // render pass (VUID-07609); the grid has no meaningful normal/specular.
+      GNormalRough = vec4 ( 0.0, 0.0, 1.0, 0.0 );
+      GSpecWeight = vec4 ( 0.0 );
 
       // Write true scene depth so solid geometry occludes the grid. This
       // engine's projection emits [-1, 1] clip depth on both backends;
