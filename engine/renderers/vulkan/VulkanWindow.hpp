@@ -414,19 +414,19 @@ namespace AeonGames
         // with aligned slots; one descriptor set per slot binds its slot region
         // at the depth pipeline's ShadowParams slot, so each spot depth pass
         // reads its own matrix with no single-buffer write hazard.
-        VkImage mVkSpotShadowDepthImage{VK_NULL_HANDLE};
-        VkDeviceMemory mVkSpotShadowDepthImageMemory{VK_NULL_HANDLE};
-        VkImageView mVkSpotShadowDepthArrayView{VK_NULL_HANDLE};
-        std::array<VkImageView, MAX_SPOT_SHADOW_CASTERS> mVkSpotShadowDepthLayerViews{};
-        VkImage mVkSpotShadowColorImage{VK_NULL_HANDLE};
-        VkDeviceMemory mVkSpotShadowColorImageMemory{VK_NULL_HANDLE};
-        VkImageView mVkSpotShadowColorImageView{VK_NULL_HANDLE};
-        std::array<VkFramebuffer, MAX_SPOT_SHADOW_CASTERS> mVkSpotShadowFramebuffers{};
+        std::array<VkImage, kFramesInFlight> mVkSpotShadowDepthImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkSpotShadowDepthImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkSpotShadowDepthArrayView{};
+        std::array<std::array<VkImageView, MAX_SPOT_SHADOW_CASTERS>, kFramesInFlight> mVkSpotShadowDepthLayerViews{};
+        std::array<VkImage, kFramesInFlight> mVkSpotShadowColorImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkSpotShadowColorImageMemory{};
+        std::array<VkImageView, kFramesInFlight> mVkSpotShadowColorImageView{};
+        std::array<std::array<VkFramebuffer, MAX_SPOT_SHADOW_CASTERS>, kFramesInFlight> mVkSpotShadowFramebuffers{};
         VkDescriptorPool mSpotShadowParamsDescriptorPool{VK_NULL_HANDLE};
         std::array<VkDescriptorSet, kFramesInFlight> mSpotShadowParamsDescriptorSets{};
         VkDescriptorSet mSpotShadowParamsDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorPool mSpotShadowMapDescriptorPool{VK_NULL_HANDLE};
-        VkDescriptorSet mSpotShadowMapDescriptorSet{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mSpotShadowMapDescriptorSet{};
         VkDescriptorPool mSpotShadowDepthMatricesDescriptorPool{VK_NULL_HANDLE};
         std::array<std::array<VkDescriptorSet, MAX_SPOT_SHADOW_CASTERS>, kFramesInFlight> mSpotShadowDepthMatricesDescriptorSets{};
         VkDeviceSize mSpotShadowDepthMatrixStride{0};
