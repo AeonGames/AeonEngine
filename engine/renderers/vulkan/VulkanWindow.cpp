@@ -3763,27 +3763,41 @@ namespace AeonGames
         }
         const VulkanMesh* vulkan_mesh = mVulkanRenderer.GetVulkanMesh ( aMesh );
         vulkan_mesh->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
-        // Pooled static meshes share the geometry pool, so the draw offsets the
-        // vertex fetch by the mesh's base vertex and the index fetch by its first
-        // index; skinned and private meshes report zero and behave as before.
+        // The draw is issued indirectly: its command is written into the per-frame
+        // storage pool (which now carries INDIRECT usage) and submitted with
+        // vkCmdDraw*Indirect. Behaviour-neutral -- one command per draw -- but it
+        // establishes the indirect submission path that GPU-driven culling (which
+        // writes these commands on the GPU) builds on. Pooled static meshes offset
+        // the fetch by their base vertex / first index; skinned and private meshes
+        // report zero.
         if ( aMesh.GetIndexCount() )
         {
-            vkCmdDrawIndexed (
-                mVkCommandBuffer,
-                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                aInstanceCount,
-                vulkan_mesh->GetFirstIndex() + aVertexStart,
-                static_cast<int32_t> ( vulkan_mesh->GetBaseVertex() ),
-                aFirstInstance );
+            VkDrawIndexedIndirectCommand command{};
+            command.indexCount = ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount();
+            command.instanceCount = aInstanceCount;
+            command.firstIndex = vulkan_mesh->GetFirstIndex() + aVertexStart;
+            command.vertexOffset = static_cast<int32_t> ( vulkan_mesh->GetBaseVertex() );
+            command.firstInstance = aFirstInstance;
+            BufferAccessor indirect = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( sizeof ( command ) );
+            indirect.WriteMemory ( 0, sizeof ( command ), &command );
+            const VulkanStorageMemoryPoolBuffer* indirect_pool =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( indirect.GetMemoryPoolBuffer() );
+            VkBuffer indirect_buffer = reinterpret_cast<const VulkanBuffer&> ( indirect_pool->GetBuffer() ).GetBuffer();
+            vkCmdDrawIndexedIndirect ( mVkCommandBuffer, indirect_buffer, indirect.GetOffset(), 1, sizeof ( command ) );
         }
         else
         {
-            vkCmdDraw (
-                mVkCommandBuffer,
-                ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
-                aInstanceCount,
-                vulkan_mesh->GetBaseVertex() + aVertexStart,
-                aFirstInstance );
+            VkDrawIndirectCommand command{};
+            command.vertexCount = ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount();
+            command.instanceCount = aInstanceCount;
+            command.firstVertex = vulkan_mesh->GetBaseVertex() + aVertexStart;
+            command.firstInstance = aFirstInstance;
+            BufferAccessor indirect = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( sizeof ( command ) );
+            indirect.WriteMemory ( 0, sizeof ( command ), &command );
+            const VulkanStorageMemoryPoolBuffer* indirect_pool =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( indirect.GetMemoryPoolBuffer() );
+            VkBuffer indirect_buffer = reinterpret_cast<const VulkanBuffer&> ( indirect_pool->GetBuffer() ).GetBuffer();
+            vkCmdDrawIndirect ( mVkCommandBuffer, indirect_buffer, indirect.GetOffset(), 1, sizeof ( command ) );
         }
     }
 
