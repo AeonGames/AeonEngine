@@ -44,6 +44,10 @@ namespace AeonGames
         void Finalize();
         /// @brief Get the underlying Vulkan buffer handle.
         const VkBuffer& GetBuffer() const;
+        /// @brief Get the buffer's device address for buffer-reference (BDA)
+        ///        shader access. The buffer must have been created with
+        ///        VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT.
+        VkDeviceAddress GetDeviceAddress() const;
         /// @name Virtual functions
         ///@{
         void WriteMemory ( const size_t aOffset, const size_t aSize, const void *aData = nullptr ) const final;

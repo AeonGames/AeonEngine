@@ -76,6 +76,14 @@ namespace AeonGames
         return mBuffer;
     }
 
+    VkDeviceAddress VulkanBuffer::GetDeviceAddress() const
+    {
+        VkBufferDeviceAddressInfo buffer_device_address_info{};
+        buffer_device_address_info.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO;
+        buffer_device_address_info.buffer = mBuffer;
+        return vkGetBufferDeviceAddress ( mVulkanRenderer.GetDevice(), &buffer_device_address_info );
+    }
+
     void VulkanBuffer::WriteMemory ( const size_t aOffset, const size_t aSize, const void * aData ) const
     {
         if ( aData )
@@ -158,9 +166,16 @@ namespace AeonGames
         VkMemoryRequirements memory_requirements;
         vkGetBufferMemoryRequirements ( mVulkanRenderer.GetDevice(), mBuffer, &memory_requirements );
 
+        VkMemoryAllocateFlagsInfo memory_allocate_flags_info{};
+        memory_allocate_flags_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_FLAGS_INFO;
+        memory_allocate_flags_info.flags = VK_MEMORY_ALLOCATE_DEVICE_ADDRESS_BIT;
+
         VkMemoryAllocateInfo memory_allocate_info{};
         memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        memory_allocate_info.pNext = nullptr;
+        // Buffers meant for buffer-device-address (buffer_reference) access must
+        // allocate their backing memory with the device-address flag, otherwise
+        // vkGetBufferDeviceAddress is invalid.
+        memory_allocate_info.pNext = ( mUsage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT ) ? &memory_allocate_flags_info : nullptr;
         memory_allocate_info.allocationSize = memory_requirements.size;
         memory_allocate_info.memoryTypeIndex = mVulkanRenderer.GetMemoryTypeIndex ( mProperties );
 

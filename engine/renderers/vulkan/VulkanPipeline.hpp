@@ -67,6 +67,11 @@ namespace AeonGames
         ///        index (fragment stage, fetched per draw to index the global
         ///        material storage buffer). Zero size when the pipeline has none.
         const VkPushConstantRange& GetPushConstantMaterialIndex() const;
+        /// @brief Get the push constant range used for the material storage
+        ///        buffer device address (fragment stage), pushed per draw so the
+        ///        shader reads material records as a buffer_reference (BDA).
+        ///        Zero size when the pipeline has none.
+        const VkPushConstantRange& GetPushConstantMaterialBuffer() const;
     private:
         void ReflectAttributes ( SpvReflectShaderModule& module );
         void ReflectColorAttachments ( SpvReflectShaderModule& module );
@@ -86,6 +91,7 @@ namespace AeonGames
         std::vector<VulkanDescriptorSetInfo> mDescriptorSets{};
         VkPushConstantRange mPushConstantModelMatrix{};
         VkPushConstantRange mPushConstantMaterialIndex{};
+        VkPushConstantRange mPushConstantMaterialBuffer{};
     };
 }
 #endif

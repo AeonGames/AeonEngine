@@ -316,6 +316,17 @@ namespace AeonGames
                                  material_index.stageFlags, material_index.offset, material_index.size,
                                  &mBindlessMaterialIndex );
         }
+        // Push the material storage buffer's device address so the fragment
+        // shader reaches the records as a buffer_reference (BDA). The address is
+        // constant, but pushed per draw alongside the index. Inert for pipelines
+        // without the material-buffer push constant.
+        if ( const VkPushConstantRange& material_buffer = aPipeline.GetPushConstantMaterialBuffer(); material_buffer.size != 0 )
+        {
+            VkDeviceAddress material_buffer_address = mVulkanRenderer.GetMaterialStorageBufferDeviceAddress();
+            vkCmdPushConstants ( aVkCommandBuffer, aPipeline.GetPipelineLayout(),
+                                 material_buffer.stageFlags, material_buffer.offset, material_buffer.size,
+                                 &material_buffer_address );
+        }
     }
 
     uint32_t VulkanMaterial::GetBindlessMaterialIndex() const

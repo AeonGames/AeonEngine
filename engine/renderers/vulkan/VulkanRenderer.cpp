@@ -960,32 +960,28 @@ namespace AeonGames
 
         // Global material storage buffer: one GpuMaterial record per material,
         // fetched per draw by a material index. Host-visible + coherent so the
-        // records can be written directly when materials load.
+        // records can be written directly when materials load. Created with
+        // SHADER_DEVICE_ADDRESS usage so the shader reads it as a buffer_reference
+        // (BDA) through a per-draw pointer instead of a descriptor.
         mMaterialStorageBuffer.Initialize (
             static_cast<VkDeviceSize> ( mBindlessMaterialCapacity ) * sizeof ( GpuMaterial ),
-            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT,
             VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
             nullptr );
 
-        // Descriptor set 0: binding 0 = the combined-image-sampler array
+        // Descriptor set: a single binding 0 = the combined-image-sampler array
         // (bindless textures; update-after-bind + partially bound so slots are
-        // written lazily as textures load), binding 1 = the material storage
-        // buffer (written once here, so it is not update-after-bind -- storage
-        // buffer update-after-bind is not among the enabled features).
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings{};
+        // written lazily as textures load). The material storage buffer is no
+        // longer a descriptor here -- it is reached by buffer device address.
+        std::array<VkDescriptorSetLayoutBinding, 1> bindings{};
         bindings[0].binding = 0;
         bindings[0].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         bindings[0].descriptorCount = mBindlessTextureCapacity;
         bindings[0].stageFlags = VK_SHADER_STAGE_ALL;
-        bindings[1].binding = 1;
-        bindings[1].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        bindings[1].descriptorCount = 1;
-        bindings[1].stageFlags = VK_SHADER_STAGE_ALL;
-        std::array<VkDescriptorBindingFlags, 2> binding_flags
+        std::array<VkDescriptorBindingFlags, 1> binding_flags
         {
             {
-                VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT,
-                0
+                VK_DESCRIPTOR_BINDING_PARTIALLY_BOUND_BIT | VK_DESCRIPTOR_BINDING_UPDATE_AFTER_BIND_BIT
             }
         };
         VkDescriptorSetLayoutBindingFlagsCreateInfo binding_flags_info{};
@@ -1006,11 +1002,10 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
 
-        std::array<VkDescriptorPoolSize, 2> pool_sizes
+        std::array<VkDescriptorPoolSize, 1> pool_sizes
         {
             {
-                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, mBindlessTextureCapacity },
-                { VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1 }
+                { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, mBindlessTextureCapacity }
             }
         };
         VkDescriptorPoolCreateInfo pool_info{};
@@ -1039,19 +1034,6 @@ namespace AeonGames
             std::cout << LogLevel::Error << stream.str() << std::endl;
             throw std::runtime_error ( stream.str().c_str() );
         }
-
-        // Point binding 1 at the material storage buffer (written once; the
-        // records inside it are updated as materials load).
-        VkDescriptorBufferInfo material_buffer_info{ mMaterialStorageBuffer.GetBuffer(), 0, VK_WHOLE_SIZE };
-        VkWriteDescriptorSet material_write{};
-        material_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-        material_write.dstSet = mVkBindlessDescriptorSet;
-        material_write.dstBinding = 1;
-        material_write.dstArrayElement = 0;
-        material_write.descriptorCount = 1;
-        material_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-        material_write.pBufferInfo = &material_buffer_info;
-        vkUpdateDescriptorSets ( mVkDevice, 1, &material_write, 0, nullptr );
 
         std::cout << LogLevel::Debug << "Bindless texture array capacity: " << mBindlessTextureCapacity
                   << ", material records: " << mBindlessMaterialCapacity << std::endl;
@@ -1164,6 +1146,11 @@ namespace AeonGames
         {
             mBindlessMaterialFreeSlots.push_back ( aIndex );
         }
+    }
+
+    VkDeviceAddress VulkanRenderer::GetMaterialStorageBufferDeviceAddress() const
+    {
+        return mMaterialStorageBuffer.GetDeviceAddress();
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const

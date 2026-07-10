@@ -159,6 +159,7 @@ namespace AeonGames
         std::swap ( mVertexStride, aVulkanPipeline.mVertexStride );
         std::swap ( mPushConstantModelMatrix, aVulkanPipeline.mPushConstantModelMatrix );
         std::swap ( mPushConstantMaterialIndex, aVulkanPipeline.mPushConstantMaterialIndex );
+        std::swap ( mPushConstantMaterialBuffer, aVulkanPipeline.mPushConstantMaterialBuffer );
         mVertexAttributes.swap ( aVulkanPipeline.mVertexAttributes );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
     }
@@ -501,9 +502,10 @@ namespace AeonGames
                 throw std::runtime_error ( "Set index out of bounds" );
             }
             // The bindless set binds the renderer's shared update-after-bind
-            // layout (runtime combined-image-sampler array + material storage
-            // buffer, with partially-bound/update-after-bind flags) rather than a
-            // plain reflected layout, so the global set is layout-compatible.
+            // layout (a runtime combined-image-sampler array with
+            // partially-bound/update-after-bind flags) rather than a plain
+            // reflected layout, so the global set is layout-compatible. The
+            // material records are reached by buffer device address, not here.
             descriptor_set_layouts[i.set] = ( i.hash == Mesh::BindingLocations::BINDLESS )
                                             ? mVulkanRenderer.GetBindlessDescriptorSetLayout()
                                             : mVulkanRenderer.GetDescriptorSetLayout ( i.descriptor_set_layout_create_info );
@@ -533,17 +535,36 @@ namespace AeonGames
         pipeline_layout_create_info.setLayoutCount = set_layout_count;
         pipeline_layout_create_info.pSetLayouts = set_layout_count ? descriptor_set_layouts.data() : nullptr;
         // Up to two push constant ranges: the vertex model matrix (skinned
-        // pipelines) and the fragment bindless material index. They occupy
-        // disjoint offsets and stages, so both can coexist.
+        // pipelines) and the fragment material data. The fragment material index
+        // and the fragment material-buffer device address share one range --
+        // Vulkan forbids two ranges that include the same stage -- so they are
+        // merged into a single fragment range spanning both members.
         std::array<VkPushConstantRange, 2> push_constant_ranges{};
         uint32_t push_constant_range_count = 0;
         if ( mPushConstantModelMatrix.size != 0 )
         {
             push_constant_ranges[push_constant_range_count++] = mPushConstantModelMatrix;
         }
-        if ( mPushConstantMaterialIndex.size != 0 )
+        if ( mPushConstantMaterialIndex.size != 0 || mPushConstantMaterialBuffer.size != 0 )
         {
-            push_constant_ranges[push_constant_range_count++] = mPushConstantMaterialIndex;
+            VkPushConstantRange fragment_range{};
+            uint32_t begin = UINT32_MAX;
+            uint32_t end = 0;
+            if ( mPushConstantMaterialIndex.size != 0 )
+            {
+                fragment_range.stageFlags |= mPushConstantMaterialIndex.stageFlags;
+                begin = std::min ( begin, mPushConstantMaterialIndex.offset );
+                end = std::max ( end, mPushConstantMaterialIndex.offset + mPushConstantMaterialIndex.size );
+            }
+            if ( mPushConstantMaterialBuffer.size != 0 )
+            {
+                fragment_range.stageFlags |= mPushConstantMaterialBuffer.stageFlags;
+                begin = std::min ( begin, mPushConstantMaterialBuffer.offset );
+                end = std::max ( end, mPushConstantMaterialBuffer.offset + mPushConstantMaterialBuffer.size );
+            }
+            fragment_range.offset = begin;
+            fragment_range.size = end - begin;
+            push_constant_ranges[push_constant_range_count++] = fragment_range;
         }
         pipeline_layout_create_info.pushConstantRangeCount = push_constant_range_count;
         pipeline_layout_create_info.pPushConstantRanges = push_constant_range_count ? push_constant_ranges.data() : nullptr;
@@ -834,10 +855,11 @@ namespace AeonGames
                     type_name = descriptor_set->bindings[0]->name;
                 }
                 // The global bindless resource set -- a runtime combined-image-
-                // sampler array named "global_textures" plus the material storage
-                // buffer -- is renderer-owned; tag it "Bindless" so the pipeline
-                // layout substitutes the renderer's update-after-bind layout and
-                // the shading pass binds the shared global set at this index.
+                // sampler array named "global_textures" -- is renderer-owned; tag
+                // it "Bindless" so the pipeline layout substitutes the renderer's
+                // update-after-bind layout and the shading pass binds the shared
+                // global set at this index. (Material records live in a separate
+                // buffer-device-address buffer, not in this set.)
                 if ( descriptor_set->binding_count >= 1 &&
                      descriptor_set->bindings[0]->descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
                      descriptor_set->bindings[0]->name != nullptr &&
@@ -950,6 +972,11 @@ namespace AeonGames
         return mPushConstantMaterialIndex;
     }
 
+    const VkPushConstantRange& VulkanPipeline::GetPushConstantMaterialBuffer() const
+    {
+        return mPushConstantMaterialBuffer;
+    }
+
     void VulkanPipeline::ReflectPushConstants ( SpvReflectShaderModule& aModule, ShaderType aType )
     {
         // Get push constant block count
@@ -1003,6 +1030,15 @@ namespace AeonGames
                         mPushConstantMaterialIndex.size = member.size;
                         std::cout << LogLevel::Debug << "Material Index Push Constant Offset: " << mPushConstantMaterialIndex.offset
                                   << " Size: " << mPushConstantMaterialIndex.size
+                                  << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
+                    }
+                    else if ( strcmp ( member.name, "Materials" ) == 0 )
+                    {
+                        mPushConstantMaterialBuffer.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
+                        mPushConstantMaterialBuffer.offset = member.offset;
+                        mPushConstantMaterialBuffer.size = member.size;
+                        std::cout << LogLevel::Debug << "Material Buffer Push Constant Offset: " << mPushConstantMaterialBuffer.offset
+                                  << " Size: " << mPushConstantMaterialBuffer.size
                                   << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
                     }
                 }

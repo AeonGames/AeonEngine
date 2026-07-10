@@ -116,6 +116,10 @@ namespace AeonGames
         uint32_t RegisterBindlessMaterial ( const GpuMaterial& aGpuMaterial ) const;
         /// @brief Release a global material-buffer index for reuse.
         void UnregisterBindlessMaterial ( uint32_t aIndex ) const;
+        /// @brief GPU device address of the global material storage buffer,
+        ///        pushed per draw so the fragment shader reads material records
+        ///        as a buffer_reference (BDA) rather than a descriptor.
+        VkDeviceAddress GetMaterialStorageBufferDeviceAddress() const;
         /// @brief The global bindless descriptor set (combined-image-sampler
         ///        array), bound once per frame by the shading passes.
         VkDescriptorSet GetBindlessDescriptorSet() const;

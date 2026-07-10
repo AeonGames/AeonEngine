@@ -1,6 +1,7 @@
 #version 450
 #ifdef VULKAN
 #extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_buffer_reference : require
 #else
 #extension GL_ARB_bindless_texture : require
 #endif
@@ -36,15 +37,20 @@ struct GpuMaterial
 };
 #ifdef VULKAN
 layout(set = 2, binding = 0) uniform sampler2D global_textures[];
-layout(set = 2, binding = 1, std430) readonly buffer Materials
+// Material records reached by buffer device address (BDA): the push constant
+// carries a 64-bit pointer to the global material storage buffer, so the shader
+// dereferences it directly instead of binding the buffer as a descriptor.
+layout(buffer_reference, std430, buffer_reference_align = 16) readonly buffer MaterialRef
 {
-      GpuMaterial materials[];
+      GpuMaterial data[];
 };
 layout(push_constant) uniform MaterialPushConstant
 {
       layout(offset = 64) uint MaterialIndex;
+      layout(offset = 72) MaterialRef Materials;
 };
-#define MAT_TEX(i)      global_textures[nonuniformEXT(materials[MaterialIndex].texture_refs[i].x)]
+#define MAT_REC         Materials.data[MaterialIndex]
+#define MAT_TEX(i)      global_textures[nonuniformEXT(MAT_REC.texture_refs[i].x)]
 #else
 // Global material storage buffer (block name "Bindless" -> Mesh::BINDLESS, the
 // hash OpenGLMaterial::Bind looks up to detect a bindless pipeline and bind this
@@ -55,7 +61,8 @@ layout(binding = 4, std430) readonly buffer Bindless
       GpuMaterial materials[];
 };
 layout(location = 0) uniform uint MaterialIndex;
-#define MAT_TEX(i)      sampler2D(materials[MaterialIndex].texture_refs[i])
+#define MAT_REC         materials[MaterialIndex]
+#define MAT_TEX(i)      sampler2D(MAT_REC.texture_refs[i])
 #endif
 #define DiffuseMap      MAT_TEX(0)
 #define NormalMap       MAT_TEX(1)
@@ -63,10 +70,10 @@ layout(location = 0) uniform uint MaterialIndex;
 #define RoughnessMap    MAT_TEX(3)
 #define OcclusionMap    MAT_TEX(4)
 #define EmissiveMap     MAT_TEX(5)
-#define BaseColorFactor materials[MaterialIndex].base_color_factor
-#define MetallicFactor  materials[MaterialIndex].metallic_factor
-#define RoughnessFactor materials[MaterialIndex].roughness_factor
-#define EmissiveFactor  materials[MaterialIndex].emissive_factor.xyz
+#define BaseColorFactor MAT_REC.base_color_factor
+#define MetallicFactor  MAT_REC.metallic_factor
+#define RoughnessFactor MAT_REC.roughness_factor
+#define EmissiveFactor  MAT_REC.emissive_factor.xyz
 
 // Per-frame light list, mirrors include/aeongames/GpuLight.hpp.
 struct GpuLight {
