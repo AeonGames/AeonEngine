@@ -35,6 +35,17 @@ limitations under the License.
 #include <chrono>
 #include "Window.h"
 
+#ifdef _WIN32
+// Prefer the discrete GPU on hybrid-graphics laptops (NVIDIA Optimus / AMD
+// PowerXpress). The GPU drivers only honor these exported symbols when they live
+// in the executable's own export table, not in a linked DLL, so each executable
+// must define them itself.
+extern "C" {
+    __declspec ( dllexport ) unsigned long NvOptimusEnablement = 1;
+    __declspec ( dllexport ) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 /** Convert a WinMain command line (lpCmdLine) into a regular argc,argv pair.
  * @param aCmdLine Windows API WinMain format command line.
  * @return tuple containing a vector of char* (std::get<0>) and a string

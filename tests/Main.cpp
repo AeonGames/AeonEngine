@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -25,6 +25,15 @@ limitations under the License.
 #pragma warning( pop )
 #endif
 #include "aeongames/AeonEngine.hpp"
+#ifdef _WIN32
+// Prefer the discrete GPU on hybrid-graphics laptops (NVIDIA Optimus / AMD
+// PowerXpress); the drivers only honor these symbols in the executable's own
+// export table, not in a linked DLL.
+extern "C" {
+    __declspec ( dllexport ) unsigned long NvOptimusEnablement = 1;
+    __declspec ( dllexport ) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
 int main ( int argc, char **argv )
 {
     testing::InitGoogleTest ( &argc, argv );

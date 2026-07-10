@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2019,2022,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2019,2022,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,6 +21,16 @@ limitations under the License.
 #include "MainWindow.h"
 #include "WorldEditor.h"
 #include "aeongames/AeonEngine.hpp"
+
+#ifdef _WIN32
+// Prefer the discrete GPU on hybrid-graphics laptops (NVIDIA Optimus / AMD
+// PowerXpress); the drivers only honor these symbols in the executable's own
+// export table, not in a linked DLL.
+extern "C" {
+    __declspec ( dllexport ) unsigned long NvOptimusEnablement = 1;
+    __declspec ( dllexport ) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
 
 #ifdef _MSC_VER
 #include <tlhelp32.h>

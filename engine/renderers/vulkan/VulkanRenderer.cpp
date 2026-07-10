@@ -448,8 +448,22 @@ namespace AeonGames
             std::vector<VkPhysicalDevice> physical_device_list ( physical_device_count );
             vkEnumeratePhysicalDevices ( mVkInstance, &physical_device_count, physical_device_list.data() );
 
+            // Prefer a discrete GPU (e.g. the NVIDIA half of a hybrid-graphics
+            // laptop) over an integrated one; fall back to the first enumerated
+            // device when none reports itself as discrete.
             mVkPhysicalDevice = physical_device_list[0];
+            for ( const VkPhysicalDevice& candidate : physical_device_list )
+            {
+                VkPhysicalDeviceProperties candidate_properties;
+                vkGetPhysicalDeviceProperties ( candidate, &candidate_properties );
+                if ( candidate_properties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU )
+                {
+                    mVkPhysicalDevice = candidate;
+                    break;
+                }
+            }
             vkGetPhysicalDeviceProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceProperties );
+            std::cout << LogLevel::Info << "Vulkan physical device: " << mVkPhysicalDeviceProperties.deviceName << std::endl;
             std::cout << LogLevel::Debug << "minUniformBufferOffsetAlignment: " << mVkPhysicalDeviceProperties.limits.minUniformBufferOffsetAlignment << std::endl;
             std::cout << LogLevel::Debug << "maxUniformBufferRange: " << mVkPhysicalDeviceProperties.limits.maxUniformBufferRange << std::endl;
             vkGetPhysicalDeviceMemoryProperties ( mVkPhysicalDevice, &mVkPhysicalDeviceMemoryProperties );

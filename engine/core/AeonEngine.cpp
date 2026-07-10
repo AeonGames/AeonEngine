@@ -56,12 +56,6 @@ limitations under the License.
 #include <X11/Xlib.h>
 #include <X11/X.h>
 #endif
-#ifdef _WIN32
-extern "C" {
-    __declspec ( dllexport ) DWORD NvOptimusEnablement{1};
-    __declspec ( dllexport ) int AmdPowerXpressRequestHighPerformance{1};
-}
-#endif
 
 namespace AeonGames
 {
