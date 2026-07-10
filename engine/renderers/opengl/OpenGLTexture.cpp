@@ -46,9 +46,9 @@ namespace AeonGames
                        ( aTexture.GetType() == Texture::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : ( aTexture.GetType() == Texture::Type::UNSIGNED_SHORT ) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT_8_8_8_8_REV,
                        aTexture.GetPixels().data() );
         OPENGL_CHECK_ERROR_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
         OPENGL_CHECK_ERROR_THROW;
-        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, 0 );
         OPENGL_CHECK_ERROR_THROW;
