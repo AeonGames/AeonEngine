@@ -3761,15 +3761,19 @@ namespace AeonGames
         {
             mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
         }
-        mVulkanRenderer.GetVulkanMesh ( aMesh )->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
+        const VulkanMesh* vulkan_mesh = mVulkanRenderer.GetVulkanMesh ( aMesh );
+        vulkan_mesh->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
+        // Pooled static meshes share the geometry pool, so the draw offsets the
+        // vertex fetch by the mesh's base vertex and the index fetch by its first
+        // index; skinned and private meshes report zero and behave as before.
         if ( aMesh.GetIndexCount() )
         {
             vkCmdDrawIndexed (
                 mVkCommandBuffer,
                 ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
                 aInstanceCount,
-                aVertexStart,
-                0,
+                vulkan_mesh->GetFirstIndex() + aVertexStart,
+                static_cast<int32_t> ( vulkan_mesh->GetBaseVertex() ),
                 aFirstInstance );
         }
         else
@@ -3778,7 +3782,7 @@ namespace AeonGames
                 mVkCommandBuffer,
                 ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(),
                 aInstanceCount,
-                aVertexStart,
+                vulkan_mesh->GetBaseVertex() + aVertexStart,
                 aFirstInstance );
         }
     }

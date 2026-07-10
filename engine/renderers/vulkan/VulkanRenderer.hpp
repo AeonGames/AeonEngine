@@ -120,6 +120,26 @@ namespace AeonGames
         ///        pushed per draw so the fragment shader reads material records
         ///        as a buffer_reference (BDA) rather than a descriptor.
         VkDeviceAddress GetMaterialStorageBufferDeviceAddress() const;
+        /// @brief Result of registering a mesh into the shared geometry pool:
+        ///        the base vertex (in stride units) and first index (uint32
+        ///        units) to hand to the draw call.
+        struct GeometryAllocation
+        {
+            uint32_t mBaseVertex;
+            uint32_t mFirstIndex;
+        };
+        /// @brief Upload a static (non-skinned) mesh's vertices and uint32
+        ///        indices into the shared per-stride vertex pool and the shared
+        ///        index pool, returning the base vertex (stride units) and first
+        ///        index (uint32 units) for the draw. Foundation for GPU-driven
+        ///        indirect drawing: many meshes share one bindable buffer pair.
+        GeometryAllocation RegisterMeshGeometry ( uint32_t aStride, const void* aVertexData,
+                VkDeviceSize aVertexBytes, const uint32_t* aIndexData, uint32_t aIndexCount ) const;
+        /// @brief The shared vertex pool buffer for a given vertex stride, bound
+        ///        as vertex input for pooled static meshes of that stride.
+        const VkBuffer& GetGeometryVertexBuffer ( uint32_t aStride ) const;
+        /// @brief The shared uint32 index pool buffer, bound for pooled meshes.
+        const VkBuffer& GetGeometryIndexBuffer() const;
         /// @brief The global bindless descriptor set (combined-image-sampler
         ///        array), bound once per frame by the shading passes.
         VkDescriptorSet GetBindlessDescriptorSet() const;
@@ -267,6 +287,36 @@ namespace AeonGames
         uint32_t mBindlessMaterialCapacity{ 0 };
         mutable uint32_t mBindlessMaterialHighWater{ 0 };
         mutable std::vector<uint32_t> mBindlessMaterialFreeSlots{};
+        // Shared geometry pool for static (non-skinned) meshes: one growable
+        // DEVICE_LOCAL vertex buffer per vertex stride plus one growable uint32
+        // index buffer. Meshes register their geometry once at load and are drawn
+        // from these shared buffers via base-vertex/first-index offsets -- the
+        // foundation for GPU-driven indirect draws (many meshes, one bindable
+        // buffer pair). Skinned meshes keep their own buffers because their
+        // vertices are re-posed each frame into a separate compute-written buffer.
+        struct GeometryArena
+        {
+            std::unique_ptr<VulkanBuffer> mBuffer{};
+            VkDeviceSize mUsed{ 0 };
+            VkDeviceSize mCapacity{ 0 };
+        };
+        mutable std::unordered_map<uint32_t, GeometryArena> mGeometryVertexArenas{};
+        mutable GeometryArena mGeometryIndexArena{};
+        // Arena buffers replaced by a larger one during growth. They may still be
+        // bound to an in-flight command buffer (meshes load lazily while a frame
+        // records), so freeing them immediately would invalidate that command
+        // buffer. They are kept alive here -- their data was copied into the new
+        // buffer -- and released together at shutdown. Growth is geometric and
+        // stops once the scene's meshes are resident, so this stays bounded.
+        mutable std::vector<std::unique_ptr<VulkanBuffer>> mRetiredGeometryBuffers{};
+        /// @brief Ensure an arena buffer holds @p aRequired bytes, reallocating
+        ///        and GPU-copying the existing contents when it must grow. Only
+        ///        called at mesh-load time (never mid-frame), so no descriptor or
+        ///        bind references the arena while it is reallocated.
+        void EnsureArenaCapacity ( GeometryArena& aArena, VkDeviceSize aRequired,
+                                   VkBufferUsageFlags aUsage ) const;
+        /// @brief Destroy the shared geometry pool buffers.
+        void FinalizeGeometry();
         mutable const VulkanPipeline* mBoundPipeline{nullptr};
         uint32_t mQueueFamilyIndex{};
         std::vector<const char*> mInstanceLayerNames{};

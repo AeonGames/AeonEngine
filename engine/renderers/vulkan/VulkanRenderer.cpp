@@ -105,6 +105,7 @@ namespace AeonGames
         mMaterialStore.clear();
         mPipelineStore.clear();
         mMeshStore.clear();
+        FinalizeGeometry();
         for ( auto& i : mVkDescriptorSetLayouts )
         {
             vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
@@ -1151,6 +1152,89 @@ namespace AeonGames
     VkDeviceAddress VulkanRenderer::GetMaterialStorageBufferDeviceAddress() const
     {
         return mMaterialStorageBuffer.GetDeviceAddress();
+    }
+
+    void VulkanRenderer::EnsureArenaCapacity ( GeometryArena& aArena, VkDeviceSize aRequired, VkBufferUsageFlags aUsage ) const
+    {
+        if ( aArena.mBuffer && aArena.mCapacity >= aRequired )
+        {
+            return;
+        }
+        // Grow geometrically (at least double, at least the required size) so a
+        // scene's meshes amortise to a handful of reallocations. 16 MiB start.
+        constexpr VkDeviceSize kInitialCapacity{ 16u * 1024u * 1024u };
+        VkDeviceSize new_capacity{ aArena.mCapacity ? aArena.mCapacity * 2 : kInitialCapacity };
+        while ( new_capacity < aRequired )
+        {
+            new_capacity *= 2;
+        }
+        auto new_buffer = std::make_unique<VulkanBuffer> ( *this, new_capacity, aUsage, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+        if ( aArena.mBuffer && aArena.mUsed > 0 )
+        {
+            // Copy the live contents into the larger buffer. Runs only at mesh
+            // load; EndSingleTimeCommands waits for the copy to finish.
+            VkCommandBuffer command_buffer = BeginSingleTimeCommands();
+            VkBufferCopy copy_region{ 0, 0, aArena.mUsed };
+            vkCmdCopyBuffer ( command_buffer, aArena.mBuffer->GetBuffer(), new_buffer->GetBuffer(), 1, &copy_region );
+            EndSingleTimeCommands ( command_buffer );
+        }
+        // Retire the old buffer rather than destroying it: a frame that is still
+        // recording may have bound it, and freeing it now would invalidate that
+        // command buffer. Its data already lives in the new buffer.
+        if ( aArena.mBuffer )
+        {
+            mRetiredGeometryBuffers.push_back ( std::move ( aArena.mBuffer ) );
+        }
+        aArena.mBuffer = std::move ( new_buffer );
+        aArena.mCapacity = new_capacity;
+    }
+
+    VulkanRenderer::GeometryAllocation VulkanRenderer::RegisterMeshGeometry ( uint32_t aStride, const void* aVertexData,
+            VkDeviceSize aVertexBytes, const uint32_t* aIndexData, uint32_t aIndexCount ) const
+    {
+        GeometryAllocation allocation{ 0, 0 };
+        if ( aStride != 0 && aVertexBytes != 0 && aVertexData != nullptr )
+        {
+            // One arena per stride: mUsed stays a multiple of the stride (each
+            // mesh contributes vertexCount*stride bytes), so base_vertex is exact.
+            GeometryArena& arena = mGeometryVertexArenas[aStride];
+            EnsureArenaCapacity ( arena, arena.mUsed + aVertexBytes,
+                                  VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT );
+            arena.mBuffer->WriteMemory ( arena.mUsed, aVertexBytes, aVertexData );
+            allocation.mBaseVertex = static_cast<uint32_t> ( arena.mUsed / aStride );
+            arena.mUsed += aVertexBytes;
+        }
+        if ( aIndexCount != 0 && aIndexData != nullptr )
+        {
+            const VkDeviceSize index_bytes{ static_cast<VkDeviceSize> ( aIndexCount ) * sizeof ( uint32_t ) };
+            EnsureArenaCapacity ( mGeometryIndexArena, mGeometryIndexArena.mUsed + index_bytes,
+                                  VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT |
+                                  VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT );
+            mGeometryIndexArena.mBuffer->WriteMemory ( mGeometryIndexArena.mUsed, index_bytes, aIndexData );
+            allocation.mFirstIndex = static_cast<uint32_t> ( mGeometryIndexArena.mUsed / sizeof ( uint32_t ) );
+            mGeometryIndexArena.mUsed += index_bytes;
+        }
+        return allocation;
+    }
+
+    const VkBuffer& VulkanRenderer::GetGeometryVertexBuffer ( uint32_t aStride ) const
+    {
+        return mGeometryVertexArenas.at ( aStride ).mBuffer->GetBuffer();
+    }
+
+    const VkBuffer& VulkanRenderer::GetGeometryIndexBuffer() const
+    {
+        return mGeometryIndexArena.mBuffer->GetBuffer();
+    }
+
+    void VulkanRenderer::FinalizeGeometry()
+    {
+        mGeometryVertexArenas.clear();
+        mGeometryIndexArena.mBuffer.reset();
+        mGeometryIndexArena.mUsed = 0;
+        mGeometryIndexArena.mCapacity = 0;
+        mRetiredGeometryBuffers.clear();
     }
 
     const VkDescriptorSetLayout& VulkanRenderer::GetDescriptorSetLayout ( const VkDescriptorSetLayoutCreateInfo& aDescriptorSetLayoutCreateInfo ) const

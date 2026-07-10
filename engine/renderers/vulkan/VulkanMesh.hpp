@@ -37,6 +37,14 @@ namespace AeonGames
         VulkanMesh& operator= ( VulkanMesh&& aVulkanMesh ) = delete;
         /// @brief Bind the mesh vertex and index buffers to a command buffer.
         void Bind ( VkCommandBuffer aVkCommandBuffer, VkBuffer aSkinnedVertexBuffer = VK_NULL_HANDLE, VkDeviceSize aSkinnedVertexOffset = 0 ) const;
+        /** @brief First vertex offset to pass to the draw call. Non-zero for
+         * pooled static meshes (their position in the shared per-stride vertex
+         * pool); zero for skinned meshes drawn from their own buffer. */
+        uint32_t GetBaseVertex() const;
+        /** @brief First index offset (uint32 units) to pass to indexed draws.
+         * Non-zero for pooled static meshes (their position in the shared index
+         * pool); zero for meshes drawn from their own index buffer. */
+        uint32_t GetFirstIndex() const;
         /** @brief Get the descriptor set that exposes the static vertex buffer as
          * a storage buffer (SSBO), for binding as @c SourceVertices in compute
          * skinning. Bound with a zero dynamic offset; range covers the vertex
@@ -47,6 +55,15 @@ namespace AeonGames
         void FinalizeSourceVerticesDescriptor();
         const VulkanRenderer& mVulkanRenderer;
         const Mesh* mMesh{nullptr};
+        // Skinned meshes (those with per-vertex weights) keep their own buffer so
+        // the compute skinning pass can read their rest-pose vertices as an SSBO
+        // and the draw can bind either rest-pose or the posed output. Static
+        // meshes leave this empty and live in the renderer's shared geometry
+        // pool instead, addressed by mBaseVertex / mFirstIndex.
+        bool mPooled{ false };
+        uint32_t mStride{ 0 };
+        uint32_t mBaseVertex{ 0 };
+        uint32_t mFirstIndex{ 0 };
         VulkanBuffer mMeshBuffer;
         VkDescriptorPool mSourceVerticesDescriptorPool{ VK_NULL_HANDLE };
         VkDescriptorSetLayout mSourceVerticesDescriptorSetLayout{ VK_NULL_HANDLE };

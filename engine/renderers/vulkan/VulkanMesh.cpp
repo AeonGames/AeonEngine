@@ -35,6 +35,67 @@ namespace AeonGames
     VulkanMesh::VulkanMesh ( const VulkanRenderer& aVulkanRenderer, const Mesh& aMesh ) :
         mVulkanRenderer {aVulkanRenderer}, mMesh{&aMesh}, mMeshBuffer { mVulkanRenderer }
     {
+        // A mesh carrying per-vertex weights may be re-posed by the compute
+        // skinning pass, which reads its rest-pose vertices as an SSBO
+        // (SourceVertices) and writes a separate output buffer the draw binds.
+        // Such meshes keep their own buffer. Weightless (static) meshes never
+        // skin, so they join the renderer's shared geometry pool -- the
+        // foundation for GPU-driven indirect drawing.
+        bool has_weights = false;
+        for ( const auto& attribute : aMesh.GetAttributes() )
+        {
+            if ( std::get<0> ( attribute ) == Mesh::WEIGHT_INDEX || std::get<0> ( attribute ) == Mesh::WEIGHT_VALUE )
+            {
+                has_weights = true;
+                break;
+            }
+        }
+        mStride = static_cast<uint32_t> ( aMesh.GetStride() );
+        mPooled = !has_weights;
+
+        if ( mPooled )
+        {
+            // Normalise indices to uint32 for the single shared index pool.
+            std::vector<uint32_t> indices{};
+            const uint32_t index_count = aMesh.GetIndexCount();
+            if ( index_count )
+            {
+                indices.resize ( index_count );
+                const uint8_t* source = aMesh.GetIndexBuffer().data();
+                switch ( aMesh.GetIndexSize() )
+                {
+                case 1:
+                    for ( uint32_t i = 0; i < index_count; ++i )
+                    {
+                        indices[i] = source[i];
+                    }
+                    break;
+                case 2:
+                    for ( uint32_t i = 0; i < index_count; ++i )
+                    {
+                        indices[i] = reinterpret_cast<const uint16_t*> ( source ) [i];
+                    }
+                    break;
+                case 4:
+                    std::memcpy ( indices.data(), source, static_cast<size_t> ( index_count ) * sizeof ( uint32_t ) );
+                    break;
+                default:
+                    break;
+                }
+            }
+            const VulkanRenderer::GeometryAllocation allocation = mVulkanRenderer.RegisterMeshGeometry (
+                    mStride,
+                    aMesh.GetVertexCount() ? aMesh.GetVertexBuffer().data() : nullptr,
+                    aMesh.GetVertexBuffer().size(),
+                    index_count ? indices.data() : nullptr,
+                    index_count );
+            mBaseVertex = allocation.mBaseVertex;
+            mFirstIndex = allocation.mFirstIndex;
+            return;
+        }
+
+        // Skinned (weighted) mesh: private buffer holding rest-pose vertices then
+        // indices, unchanged from before the geometry pool.
         const VkDeviceSize buffer_size{ aMesh.GetVertexBuffer().size() + ( aMesh.GetIndexBuffer().size() * ( aMesh.GetIndexSize() == 1 ? 2 : 1 ) ) };
         const VkBufferUsageFlags buffer_usage {static_cast<VkBufferUsageFlags> ( ( aMesh.GetVertexCount() ? VK_BUFFER_USAGE_VERTEX_BUFFER_BIT : 0 ) | ( aMesh.GetIndexCount() ? VK_BUFFER_USAGE_INDEX_BUFFER_BIT : 0 ) ) };
 
@@ -137,7 +198,12 @@ namespace AeonGames
 
     VulkanMesh::VulkanMesh ( VulkanMesh&& aVulkanMesh ) :
         mVulkanRenderer{aVulkanMesh.mVulkanRenderer},
-        mMesh{aVulkanMesh.mMesh}, mMeshBuffer{std::move ( aVulkanMesh.mMeshBuffer ) }
+        mMesh{aVulkanMesh.mMesh},
+        mPooled{aVulkanMesh.mPooled},
+        mStride{aVulkanMesh.mStride},
+        mBaseVertex{aVulkanMesh.mBaseVertex},
+        mFirstIndex{aVulkanMesh.mFirstIndex},
+        mMeshBuffer{std::move ( aVulkanMesh.mMeshBuffer ) }
     {
         std::swap ( mSourceVerticesDescriptorPool, aVulkanMesh.mSourceVerticesDescriptorPool );
         std::swap ( mSourceVerticesDescriptorSetLayout, aVulkanMesh.mSourceVerticesDescriptorSetLayout );
@@ -162,23 +228,53 @@ namespace AeonGames
 
     void VulkanMesh::Bind ( VkCommandBuffer aVkCommandBuffer, VkBuffer aSkinnedVertexBuffer, VkDeviceSize aSkinnedVertexOffset ) const
     {
-        // When a pre-skinned vertex buffer is supplied, bind it as the vertex
-        // input in place of the mesh's rest-pose vertices. The index buffer is
-        // still sourced from the mesh's own buffer.
+        const VkDeviceSize zero_offset = 0;
         if ( aSkinnedVertexBuffer != VK_NULL_HANDLE )
         {
+            // Pre-skinned vertices produced by the compute pass replace the
+            // rest-pose vertex input; the index buffer still comes from this
+            // (weighted, private) mesh's own buffer.
             vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &aSkinnedVertexBuffer, &aSkinnedVertexOffset );
+            if ( mMesh->GetIndexCount() )
+            {
+                vkCmdBindIndexBuffer ( aVkCommandBuffer,
+                                       mMeshBuffer.GetBuffer(), mMesh->GetVertexBuffer().size(),
+                                       GetIndexType ( mMesh ) );
+            }
+        }
+        else if ( mPooled )
+        {
+            // Static mesh drawn from the renderer's shared geometry pool; the
+            // draw's base-vertex / first-index select this mesh's region.
+            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mVulkanRenderer.GetGeometryVertexBuffer ( mStride ), &zero_offset );
+            if ( mMesh->GetIndexCount() )
+            {
+                vkCmdBindIndexBuffer ( aVkCommandBuffer,
+                                       mVulkanRenderer.GetGeometryIndexBuffer(), 0,
+                                       VK_INDEX_TYPE_UINT32 );
+            }
         }
         else
         {
-            const VkDeviceSize offset = 0;
-            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mMeshBuffer.GetBuffer(), &offset );
+            // Weighted mesh drawn at rest pose (e.g. a shadow pass) from its own
+            // buffer.
+            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mMeshBuffer.GetBuffer(), &zero_offset );
+            if ( mMesh->GetIndexCount() )
+            {
+                vkCmdBindIndexBuffer ( aVkCommandBuffer,
+                                       mMeshBuffer.GetBuffer(), mMesh->GetVertexBuffer().size(),
+                                       GetIndexType ( mMesh ) );
+            }
         }
-        if ( mMesh->GetIndexCount() )
-        {
-            vkCmdBindIndexBuffer ( aVkCommandBuffer,
-                                   mMeshBuffer.GetBuffer(), mMesh->GetVertexBuffer().size(),
-                                   GetIndexType ( mMesh ) );
-        }
+    }
+
+    uint32_t VulkanMesh::GetBaseVertex() const
+    {
+        return mBaseVertex;
+    }
+
+    uint32_t VulkanMesh::GetFirstIndex() const
+    {
+        return mFirstIndex;
     }
 }
