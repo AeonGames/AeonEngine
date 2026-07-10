@@ -1,6 +1,8 @@
 #version 450
 #ifdef VULKAN
 #extension GL_EXT_nonuniform_qualifier : require
+#else
+#extension GL_ARB_bindless_texture : require
 #endif
 
 #ifdef VULKAN
@@ -14,17 +16,17 @@ uniform Matrices
       mat4 ViewMatrix;
 };
 
-// Metallic-roughness material inputs. On Vulkan the surface's textures and
-// factors come from one record in the global bindless material storage buffer,
-// selected by the per-draw MaterialIndex push constant; the DiffuseMap..
-// EmissiveMap and BaseColorFactor..EmissiveFactor names below are macros into
-// that record, so main() is backend-agnostic. On OpenGL they are the
-// traditional per-material uniform block + samplers (bindless parity lands in a
-// later step).
-#ifdef VULKAN
+// Metallic-roughness material inputs. On both backends the surface's textures
+// and factors come from one record in the global bindless material storage
+// buffer, selected by the per-draw MaterialIndex (a push constant on Vulkan, a
+// default-block uniform on OpenGL). The DiffuseMap..EmissiveMap and
+// BaseColorFactor..EmissiveFactor names below are macros into that record, so
+// main() is backend-agnostic: Vulkan indexes a global combined-image-sampler
+// array, OpenGL constructs a sampler2D from the record's resident ARB_bindless
+// texture handle.
 struct GpuMaterial
 {
-      uvec2 texture_refs[6]; // .x = slot into global_textures
+      uvec2 texture_refs[6]; // Vulkan: .x = slot into global_textures. OpenGL: resident sampler handle.
       vec4  base_color_factor;
       float metallic_factor;
       float roughness_factor;
@@ -32,6 +34,7 @@ struct GpuMaterial
       float pad1;
       vec4  emissive_factor;
 };
+#ifdef VULKAN
 layout(set = 2, binding = 0) uniform sampler2D global_textures[];
 layout(set = 2, binding = 1, std430) readonly buffer Materials
 {
@@ -42,6 +45,18 @@ layout(push_constant) uniform MaterialPushConstant
       layout(offset = 64) uint MaterialIndex;
 };
 #define MAT_TEX(i)      global_textures[nonuniformEXT(materials[MaterialIndex].texture_refs[i].x)]
+#else
+// Global material storage buffer (block name "Bindless" -> Mesh::BINDLESS, the
+// hash OpenGLMaterial::Bind looks up to detect a bindless pipeline and bind this
+// renderer-owned SSBO). texture_refs entries are resident ARB_bindless_texture
+// handles the macro below turns straight into a sampler2D.
+layout(binding = 4, std430) readonly buffer Bindless
+{
+      GpuMaterial materials[];
+};
+layout(location = 0) uniform uint MaterialIndex;
+#define MAT_TEX(i)      sampler2D(materials[MaterialIndex].texture_refs[i])
+#endif
 #define DiffuseMap      MAT_TEX(0)
 #define NormalMap       MAT_TEX(1)
 #define MetallicMap     MAT_TEX(2)
@@ -52,15 +67,6 @@ layout(push_constant) uniform MaterialPushConstant
 #define MetallicFactor  materials[MaterialIndex].metallic_factor
 #define RoughnessFactor materials[MaterialIndex].roughness_factor
 #define EmissiveFactor  materials[MaterialIndex].emissive_factor.xyz
-#else
-layout(binding = 1, std140)
-uniform Material{
-      vec4  BaseColorFactor;
-      float MetallicFactor;
-      float RoughnessFactor;
-      vec3  EmissiveFactor;
-};
-#endif
 
 // Per-frame light list, mirrors include/aeongames/GpuLight.hpp.
 struct GpuLight {
@@ -122,18 +128,9 @@ readonly buffer LightIndexList
       uint light_index_list[];
 };
 
-// Material textures. On Vulkan the DiffuseMap..EmissiveMap names are macros into
-// the global bindless texture array (declared above with the material record);
-// on OpenGL they are the traditional per-material samplers bound to texture
-// units 0..5 by the renderer.
-#ifndef VULKAN
-layout(binding = 0) uniform sampler2D DiffuseMap;
-layout(binding = 1) uniform sampler2D NormalMap;
-layout(binding = 2) uniform sampler2D MetallicMap;
-layout(binding = 3) uniform sampler2D RoughnessMap;
-layout(binding = 4) uniform sampler2D OcclusionMap;
-layout(binding = 5) uniform sampler2D EmissiveMap;
-#endif
+// Material textures (DiffuseMap..EmissiveMap) are macros defined with the
+// material record above: on Vulkan they index the global bindless texture array,
+// on OpenGL they construct a sampler2D from the record's resident texture handle.
 
 // Directional shadow mapping. ShadowParams carries the sun's world-space
 // view-projection and filtering parameters; ShadowMap is the depth map sampled

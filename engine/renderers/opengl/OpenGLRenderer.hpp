@@ -22,6 +22,7 @@ limitations under the License.
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Transform.hpp"
 #include "aeongames/Matrix4x4.hpp"
+#include "aeongames/GpuMaterial.hpp"
 #include "OpenGLFunctions.hpp"
 #include "OpenGLBuffer.hpp"
 #include "OpenGLMesh.hpp"
@@ -107,6 +108,21 @@ namespace AeonGames
         void UnloadTexture ( const Texture& aTexture ) final;
         /// @brief Get the OpenGL texture identifier for a loaded texture.
         GLuint GetTextureId ( const Texture& aTexture );
+        /// @brief Get the resident GL_ARB_bindless_texture handle for a loaded
+        ///        texture, loading it on demand. Zero when the bindless path is
+        ///        unavailable.
+        GLuint64 GetTextureHandle ( const Texture& aTexture );
+        /// @brief True when the GL_ARB_bindless_texture path is active; gates the
+        ///        resident-handle / global material SSBO rendering path.
+        bool HasBindlessTexture() const;
+        /// @brief Write a material record into the global bindless material SSBO
+        ///        and return its index (selected per draw by the MaterialIndex
+        ///        uniform to pick the record).
+        uint32_t RegisterBindlessMaterial ( const GpuMaterial& aMaterial );
+        /// @brief Release a bindless material index for reuse.
+        void UnregisterBindlessMaterial ( uint32_t aIndex );
+        /// @brief Get the global bindless material storage buffer object.
+        GLuint GetMaterialStorageBufferId() const;
 
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
@@ -183,6 +199,9 @@ namespace AeonGames
         void InitializeOverlay();
         /// @brief Release overlay shader program and quad buffer.
         void FinalizeOverlay();
+        /// @brief Allocate the global bindless material storage buffer when the
+        ///        GL_ARB_bindless_texture path is available.
+        void InitializeBindlessMaterials();
         /// @brief Probe and log the GL version and the extensions the bindless /
         ///        GPU-driven path depends on; records the capability flags below.
         void LogCapabilities();
@@ -206,6 +225,16 @@ namespace AeonGames
         bool mHasBindlessTexture{false};
         bool mHasIndirectParameters{false};
         bool mHasComputeShader{false};
+        ///@}
+        /// @name Global bindless material storage
+        /// Renderer-owned SSBO of GpuMaterial records, bound once per bindless
+        /// draw; each material writes its record here at load time and keeps the
+        /// returned index, which the per-draw MaterialIndex uniform selects.
+        ///@{
+        OpenGLBuffer mMaterialStorageBuffer{};
+        uint32_t mBindlessMaterialCapacity{};
+        uint32_t mBindlessMaterialHighWater{};
+        std::vector<uint32_t> mBindlessMaterialFreeSlots{};
         ///@}
         /** \addtogroup OverlayFunctionality Overlay functionality.
          * Both the shader program and the buffer describing the window/screen quad are

@@ -34,10 +34,15 @@ namespace AeonGames
         ~OpenGLTexture();
         /// @brief Get the OpenGL texture object identifier.
         GLuint GetTextureId() const;
+        /// @brief Get the resident GL_ARB_bindless_texture handle, or 0 when the
+        ///        renderer's bindless path is unavailable. Stored in each
+        ///        material record as a uvec2 the shader turns into a sampler2D.
+        GLuint64 GetHandle() const;
     private:
         OpenGLRenderer& mOpenGLRenderer;
         const Texture* mTexture{};
         GLuint mTextureId{};
+        GLuint64 mHandle{};
     };
 }
 #endif

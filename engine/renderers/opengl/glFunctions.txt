@@ -169,6 +169,9 @@ glNamedBufferStorage
 glMapNamedBuffer
 glMapNamedBufferRange
 glUnmapNamedBuffer
+glCreateTextures
+glTextureStorage2D
+glTextureParameteri
 glTextureSubImage2D
 #endif
 glGetTextureLevelParameteriv
@@ -190,3 +193,4 @@ glMakeTextureHandleNonResidentARB
 glIsTextureHandleResidentARB
 glUniformHandleui64ARB
 glProgramUniformHandleui64ARB
+glProgramUniform1ui

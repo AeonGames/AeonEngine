@@ -225,6 +225,7 @@ void main()
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
         InitializeOverlay();
+        InitializeBindlessMaterials();
         AttachWindow ( static_cast<HWND> ( aWindow ) );
     }
 
@@ -253,6 +254,7 @@ void main()
         mTextureStore.clear();
         mMeshStore.clear();
         mMaterialStore.clear();
+        mMaterialStorageBuffer.Finalize();
         mPipelineStore.clear();
         wglMakeCurrent ( nullptr, nullptr );
         if ( wglDeleteContext ( static_cast<HGLRC> ( mOpenGLContext ) ) != TRUE )
@@ -383,6 +385,7 @@ void main()
         glGenVertexArrays ( 1, &mVertexArrayObject );
         glBindVertexArray ( mVertexArrayObject );
         InitializeOverlay();
+        InitializeBindlessMaterials();
 
         AttachWindow ( aWindow );
         ++mRendererCount;
@@ -402,6 +405,7 @@ void main()
         mTextureStore.clear();
         mMeshStore.clear();
         mMaterialStore.clear();
+        mMaterialStorageBuffer.Finalize();
         mPipelineStore.clear();
         if ( mOpenGLContext != None )
         {
@@ -888,6 +892,69 @@ void main()
             it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         }
         return it->second.GetTextureId();
+    }
+
+    GLuint64 OpenGLRenderer::GetTextureHandle ( const Texture& aTexture )
+    {
+        auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( it == mTextureStore.end() )
+        {
+            LoadTexture ( aTexture );
+            it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        }
+        return it->second.GetHandle();
+    }
+
+    bool OpenGLRenderer::HasBindlessTexture() const
+    {
+        return mHasBindlessTexture;
+    }
+
+    void OpenGLRenderer::InitializeBindlessMaterials()
+    {
+        if ( !mHasBindlessTexture )
+        {
+            return;
+        }
+        // Capacity mirrors the Vulkan global material storage buffer (4096
+        // records). Records are written on material load and read per draw,
+        // selected by the MaterialIndex uniform.
+        mBindlessMaterialCapacity = 4096;
+        mMaterialStorageBuffer.Initialize ( static_cast<GLsizei> ( mBindlessMaterialCapacity * sizeof ( GpuMaterial ) ), GL_DYNAMIC_DRAW, nullptr );
+    }
+
+    uint32_t OpenGLRenderer::RegisterBindlessMaterial ( const GpuMaterial& aMaterial )
+    {
+        uint32_t index;
+        if ( !mBindlessMaterialFreeSlots.empty() )
+        {
+            index = mBindlessMaterialFreeSlots.back();
+            mBindlessMaterialFreeSlots.pop_back();
+        }
+        else
+        {
+            if ( mBindlessMaterialHighWater >= mBindlessMaterialCapacity )
+            {
+                throw std::runtime_error ( "OpenGLRenderer: bindless material capacity exceeded." );
+            }
+            index = mBindlessMaterialHighWater++;
+        }
+        mMaterialStorageBuffer.WriteMemory ( index * sizeof ( GpuMaterial ), sizeof ( GpuMaterial ), &aMaterial );
+        return index;
+    }
+
+    void OpenGLRenderer::UnregisterBindlessMaterial ( uint32_t aIndex )
+    {
+        if ( aIndex == UINT32_MAX )
+        {
+            return;
+        }
+        mBindlessMaterialFreeSlots.push_back ( aIndex );
+    }
+
+    GLuint OpenGLRenderer::GetMaterialStorageBufferId() const
+    {
+        return mMaterialStorageBuffer.GetBufferId();
     }
 
     GLuint OpenGLRenderer::GetVertexArrayObject() const

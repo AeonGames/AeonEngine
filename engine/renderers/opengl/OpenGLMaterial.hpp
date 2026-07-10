@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_OPENGLMATERIAL_HPP
 #define AEONGAMES_OPENGLMATERIAL_HPP
+#include <cstdint>
 #include "OpenGLBuffer.hpp"
 
 namespace AeonGames
@@ -38,10 +39,15 @@ namespace AeonGames
         /// @param aPipeline The pipeline to use for binding.
         /// @note Not super happy about this API, might change it later.
         void Bind ( const OpenGLPipeline& aPipeline ) const;
+        /// @brief Get this material's index into the renderer's global bindless
+        ///        material storage buffer, or UINT32_MAX when the bindless path
+        ///        is unavailable.
+        uint32_t GetBindlessMaterialIndex() const;
     private:
         OpenGLRenderer& mOpenGLRenderer;
         const Material* mMaterial;
         OpenGLBuffer mUniformBuffer{};
+        uint32_t mBindlessMaterialIndex{UINT32_MAX};
     };
 }
 #endif

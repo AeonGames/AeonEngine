@@ -26,6 +26,7 @@ namespace AeonGames
     {
         std::swap ( mTexture, aOpenGLTexture.mTexture );
         std::swap ( mTextureId, aOpenGLTexture.mTextureId );
+        std::swap ( mHandle, aOpenGLTexture.mHandle );
     }
 
     OpenGLTexture::OpenGLTexture ( OpenGLRenderer& aOpenGLRenderer, const Texture& aTexture ) :
@@ -33,27 +34,11 @@ namespace AeonGames
     {
         glGenTextures ( 1, &mTextureId );
         OPENGL_CHECK_ERROR_THROW;
-
-        if ( glIsTexture ( mTextureId ) )
-        {
-            GLint w, h;
-            glGetTextureLevelParameteriv ( mTextureId, 0, GL_TEXTURE_WIDTH, &w );
-            glGetTextureLevelParameteriv ( mTextureId, 0, GL_TEXTURE_HEIGHT, &h );
-            if ( aTexture.GetWidth() == static_cast<uint32_t> ( w ) && aTexture.GetHeight() == static_cast<uint32_t> ( h ) )
-            {
-                glTextureSubImage2D ( mTextureId, 0, 0, 0, aTexture.GetWidth(), aTexture.GetHeight(),
-                                      ( aTexture.GetFormat() == Texture::Format::RGB ) ? GL_RGB : ( aTexture.GetFormat() == Texture::Format::BGRA ) ? GL_BGRA : GL_RGBA,
-                                      ( aTexture.GetType() == Texture::Type::UNSIGNED_BYTE ) ? GL_UNSIGNED_BYTE : ( aTexture.GetType() == Texture::Type::UNSIGNED_SHORT ) ? GL_UNSIGNED_SHORT : GL_UNSIGNED_INT_8_8_8_8_REV,
-                                      aTexture.GetPixels().data() );
-                return;
-            }
-        }
-
         glBindTexture ( GL_TEXTURE_2D, mTextureId );
         OPENGL_CHECK_ERROR_THROW;
         glTexImage2D ( GL_TEXTURE_2D,
                        0,
-                       ( aTexture.GetFormat() == Texture::Format::RGB ) ? GL_RGB : GL_RGBA, ///<@todo decide if this should be a separate variable
+                       ( aTexture.GetFormat() == Texture::Format::RGB ) ? GL_RGB : GL_RGBA,
                        aTexture.GetWidth(),
                        aTexture.GetHeight(),
                        0,
@@ -67,10 +52,28 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, 0 );
         OPENGL_CHECK_ERROR_THROW;
+
+        // Bindless: acquire a resident texture handle so materials can sample this
+        // texture by handle (stored as a uvec2 in the global material SSBO)
+        // instead of binding it to a texture unit. Acquiring a handle freezes the
+        // texture's sampler state and image data, so it must run only after the
+        // texture is fully populated above.
+        if ( mOpenGLRenderer.HasBindlessTexture() )
+        {
+            mHandle = glGetTextureHandleARB ( mTextureId );
+            OPENGL_CHECK_ERROR_THROW;
+            glMakeTextureHandleResidentARB ( mHandle );
+            OPENGL_CHECK_ERROR_THROW;
+        }
     }
 
     OpenGLTexture::~OpenGLTexture()
     {
+        if ( mHandle != 0 && glIsTextureHandleResidentARB ( mHandle ) )
+        {
+            glMakeTextureHandleNonResidentARB ( mHandle );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
         if ( glIsTexture ( mTextureId ) == GL_TRUE )
         {
             glDeleteTextures ( 1, &mTextureId );
@@ -82,5 +85,10 @@ namespace AeonGames
     GLuint OpenGLTexture::GetTextureId() const
     {
         return mTextureId;
+    }
+
+    GLuint64 OpenGLTexture::GetHandle() const
+    {
+        return mHandle;
     }
 }
