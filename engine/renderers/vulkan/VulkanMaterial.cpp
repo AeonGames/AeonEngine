@@ -307,18 +307,10 @@ namespace AeonGames
                                       1,
                                       &mSamplerDescriptorSet, 0, nullptr );
         }
-        // Bindless path: push this material's index so the fragment shader can
-        // fetch its factors and texture slots from the global material buffer.
-        // Inert for pipelines without the material-index push constant.
-        if ( const VkPushConstantRange& material_index = aPipeline.GetPushConstantMaterialIndex(); material_index.size != 0 )
-        {
-            vkCmdPushConstants ( aVkCommandBuffer, aPipeline.GetPipelineLayout(),
-                                 material_index.stageFlags, material_index.offset, material_index.size,
-                                 &mBindlessMaterialIndex );
-        }
         // Push the material storage buffer's device address so the fragment
         // shader reaches the records as a buffer_reference (BDA). The address is
-        // constant, but pushed per draw alongside the index. Inert for pipelines
+        // constant across the frame; the per-instance material index is delivered
+        // separately through the InstanceMaterials buffer. Inert for pipelines
         // without the material-buffer push constant.
         if ( const VkPushConstantRange& material_buffer = aPipeline.GetPushConstantMaterialBuffer(); material_buffer.size != 0 )
         {

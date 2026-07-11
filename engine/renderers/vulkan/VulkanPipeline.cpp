@@ -158,7 +158,6 @@ namespace AeonGames
         mVkComputePipelines.swap ( aVulkanPipeline.mVkComputePipelines );
         std::swap ( mVertexStride, aVulkanPipeline.mVertexStride );
         std::swap ( mPushConstantModelMatrix, aVulkanPipeline.mPushConstantModelMatrix );
-        std::swap ( mPushConstantMaterialIndex, aVulkanPipeline.mPushConstantMaterialIndex );
         std::swap ( mPushConstantMaterialBuffer, aVulkanPipeline.mPushConstantMaterialBuffer );
         mVertexAttributes.swap ( aVulkanPipeline.mVertexAttributes );
         mDescriptorSets.swap ( aVulkanPipeline.mDescriptorSets );
@@ -535,36 +534,17 @@ namespace AeonGames
         pipeline_layout_create_info.setLayoutCount = set_layout_count;
         pipeline_layout_create_info.pSetLayouts = set_layout_count ? descriptor_set_layouts.data() : nullptr;
         // Up to two push constant ranges: the vertex model matrix (skinned
-        // pipelines) and the fragment material data. The fragment material index
-        // and the fragment material-buffer device address share one range --
-        // Vulkan forbids two ranges that include the same stage -- so they are
-        // merged into a single fragment range spanning both members.
+        // pipelines) and the fragment material storage buffer device address
+        // (bindless materials). They occupy disjoint stages, so both can coexist.
         std::array<VkPushConstantRange, 2> push_constant_ranges{};
         uint32_t push_constant_range_count = 0;
         if ( mPushConstantModelMatrix.size != 0 )
         {
             push_constant_ranges[push_constant_range_count++] = mPushConstantModelMatrix;
         }
-        if ( mPushConstantMaterialIndex.size != 0 || mPushConstantMaterialBuffer.size != 0 )
+        if ( mPushConstantMaterialBuffer.size != 0 )
         {
-            VkPushConstantRange fragment_range{};
-            uint32_t begin = UINT32_MAX;
-            uint32_t end = 0;
-            if ( mPushConstantMaterialIndex.size != 0 )
-            {
-                fragment_range.stageFlags |= mPushConstantMaterialIndex.stageFlags;
-                begin = std::min ( begin, mPushConstantMaterialIndex.offset );
-                end = std::max ( end, mPushConstantMaterialIndex.offset + mPushConstantMaterialIndex.size );
-            }
-            if ( mPushConstantMaterialBuffer.size != 0 )
-            {
-                fragment_range.stageFlags |= mPushConstantMaterialBuffer.stageFlags;
-                begin = std::min ( begin, mPushConstantMaterialBuffer.offset );
-                end = std::max ( end, mPushConstantMaterialBuffer.offset + mPushConstantMaterialBuffer.size );
-            }
-            fragment_range.offset = begin;
-            fragment_range.size = end - begin;
-            push_constant_ranges[push_constant_range_count++] = fragment_range;
+            push_constant_ranges[push_constant_range_count++] = mPushConstantMaterialBuffer;
         }
         pipeline_layout_create_info.pushConstantRangeCount = push_constant_range_count;
         pipeline_layout_create_info.pPushConstantRanges = push_constant_range_count ? push_constant_ranges.data() : nullptr;
@@ -967,11 +947,6 @@ namespace AeonGames
         return mPushConstantModelMatrix;
     }
 
-    const VkPushConstantRange& VulkanPipeline::GetPushConstantMaterialIndex() const
-    {
-        return mPushConstantMaterialIndex;
-    }
-
     const VkPushConstantRange& VulkanPipeline::GetPushConstantMaterialBuffer() const
     {
         return mPushConstantMaterialBuffer;
@@ -1003,10 +978,10 @@ namespace AeonGames
             }
             for ( const auto& push_constant_block : push_constant_blocks )
             {
-                // Capture the two push constants the engine drives per draw: the
-                // vertex model matrix and the fragment bindless material index.
-                // Use each member's own offset/size so they can share one block
-                // (or live in separate per-stage blocks) at disjoint offsets.
+                // Capture the push constants the engine drives per draw: the
+                // vertex model matrix and the fragment material storage buffer
+                // device address. Use each member's own offset/size so they can
+                // share one block (or live in separate per-stage blocks).
                 for ( uint32_t m = 0; m < push_constant_block->member_count; ++m )
                 {
                     const SpvReflectBlockVariable& member = push_constant_block->members[m];
@@ -1021,15 +996,6 @@ namespace AeonGames
                         mPushConstantModelMatrix.size = member.size;
                         std::cout << LogLevel::Debug << "Model Matrix Push Constant Offset: " << mPushConstantModelMatrix.offset
                                   << " Size: " << mPushConstantModelMatrix.size
-                                  << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
-                    }
-                    else if ( strcmp ( member.name, "MaterialIndex" ) == 0 )
-                    {
-                        mPushConstantMaterialIndex.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
-                        mPushConstantMaterialIndex.offset = member.offset;
-                        mPushConstantMaterialIndex.size = member.size;
-                        std::cout << LogLevel::Debug << "Material Index Push Constant Offset: " << mPushConstantMaterialIndex.offset
-                                  << " Size: " << mPushConstantMaterialIndex.size
                                   << " Shader Type: " << ShaderTypeToString.at ( aType ) << std::endl;
                     }
                     else if ( strcmp ( member.name, "Materials" ) == 0 )
