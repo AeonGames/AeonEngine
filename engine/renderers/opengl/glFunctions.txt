@@ -126,6 +126,10 @@ glDrawElementsInstancedBaseInstance
 // Base-vertex indexed instancing (GL 4.2): draws a pooled static mesh from the
 // shared geometry buffers, offsetting into them by base vertex + first index.
 glDrawElementsInstancedBaseVertexBaseInstance
+// Indirect multi-draw (GL 4.3 / ARB_multi_draw_indirect): one call issues every
+// pooled draw of a pipeline group from a GPU command buffer -- the GPU-driven
+// merge. Each command carries its own base vertex + base instance.
+glMultiDrawElementsIndirect
 glGenRenderbuffers
 glBindRenderbuffer
 glRenderbufferStorage

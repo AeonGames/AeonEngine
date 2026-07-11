@@ -1,5 +1,12 @@
 #version 450
 
+#ifndef VULKAN
+// gl_BaseInstanceARB lets a single shared instance buffer back an indirect
+// multi-draw: each sub-draw's base instance selects its slice. Vulkan folds the
+// base instance into gl_InstanceIndex automatically.
+#extension GL_ARB_shader_draw_parameters : require
+#endif
+
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
 #else
@@ -26,7 +33,7 @@ readonly buffer InstanceMatrices
 #ifdef VULKAN
 #define MODEL_MATRIX InstanceModelMatrices[gl_InstanceIndex]
 #else
-#define MODEL_MATRIX InstanceModelMatrices[gl_InstanceID]
+#define MODEL_MATRIX InstanceModelMatrices[gl_BaseInstanceARB + gl_InstanceID]
 #endif
 
 // Per-instance bindless material index: written parallel to the model matrices
@@ -90,6 +97,6 @@ void main()
 #ifdef VULKAN
       vMaterialIndex = InstanceMaterialIndices[gl_InstanceIndex];
 #else
-      vMaterialIndex = InstanceMaterialIndices[gl_InstanceID];
+      vMaterialIndex = InstanceMaterialIndices[gl_BaseInstanceARB + gl_InstanceID];
 #endif
 }
