@@ -233,7 +233,19 @@ layout(binding = 3, std140)
 uniform Globals
 {
       vec4 ambient;
-      vec4 sh[9];
+      // Order-2 SH coefficients. Declared as nine named vec4 rather than a
+      // vec4[9] array: the NVIDIA GL compiler miscompiles reads of a vec4 array
+      // member in this std140 block, dropping the R and B channels (a green-only
+      // tint). The memory layout is identical to Vector4 sh[9] on the CPU side.
+      vec4 sh0;
+      vec4 sh1;
+      vec4 sh2;
+      vec4 sh3;
+      vec4 sh4;
+      vec4 sh5;
+      vec4 sh6;
+      vec4 sh7;
+      vec4 sh8;
 };
 
 layout(location = 0) in vec3 tnorm;
@@ -562,13 +574,13 @@ vec3 sh_irradiance ( vec3 n )
       const float A0 = 3.14159265;   // pi
       const float A1 = 2.09439510;   // 2pi/3
       const float A2 = 0.78539816;   // pi/4
-      vec3 E = A0 * 0.282095 * sh[0].rgb;
-      E += A1 * 0.488603 * ( sh[1].rgb * n.y + sh[2].rgb * n.z + sh[3].rgb * n.x );
-      E += A2 * ( sh[4].rgb * 1.092548 * n.x * n.y
-                + sh[5].rgb * 1.092548 * n.y * n.z
-                + sh[6].rgb * 0.315392 * ( 3.0 * n.z * n.z - 1.0 )
-                + sh[7].rgb * 1.092548 * n.x * n.z
-                + sh[8].rgb * 0.546274 * ( n.x * n.x - n.y * n.y ) );
+      vec3 E = A0 * 0.282095 * sh0.rgb;
+      E += A1 * 0.488603 * ( sh1.rgb * n.y + sh2.rgb * n.z + sh3.rgb * n.x );
+      E += A2 * ( sh4.rgb * 1.092548 * n.x * n.y
+                + sh5.rgb * 1.092548 * n.y * n.z
+                + sh6.rgb * 0.315392 * ( 3.0 * n.z * n.z - 1.0 )
+                + sh7.rgb * 1.092548 * n.x * n.z
+                + sh8.rgb * 0.546274 * ( n.x * n.x - n.y * n.y ) );
       return max ( E, vec3 ( 0.0 ) );
 }
 
