@@ -29,10 +29,6 @@ limitations under the License.
 
 namespace AeonGames
 {
-    // Matches "layout(location = 0) uniform uint MaterialIndex;" in the OpenGL
-    // bindless branch of clustered_phong.frag.
-    static constexpr GLint kMaterialIndexUniformLocation = 0;
-
     OpenGLMaterial::OpenGLMaterial ( OpenGLRenderer& aOpenGLRenderer, const Material& aMaterial ) :
         mOpenGLRenderer{aOpenGLRenderer},
         mMaterial{&aMaterial},
@@ -137,16 +133,17 @@ namespace AeonGames
     {
         // Bindless pipelines (those declaring the global material storage block)
         // read this material's factors and textures from one SSBO record: bind
-        // that renderer-owned buffer and set the per-draw record index. The legacy
-        // per-sampler / Material-UBO binding below is a no-op for such pipelines
-        // (they reflect neither the material samplers nor the Material block) and
-        // still drives the non-bindless pipelines (solid colour, debug grid).
+        // that renderer-owned buffer. The per-instance record index is delivered
+        // through the InstanceMaterials storage buffer (written by the draw path
+        // parallel to the model matrices), not a per-draw uniform, so a single
+        // indirect multi-draw can shade meshes with different materials. The
+        // legacy per-sampler / Material-UBO binding below is a no-op for such
+        // pipelines and still drives the non-bindless pipelines (solid colour,
+        // debug grid).
         if ( const OpenGLUniformBlock * material_block = aPipeline.GetStorageBlock ( Mesh::BINDLESS );
              material_block != nullptr && mBindlessMaterialIndex != UINT32_MAX )
         {
             glBindBufferBase ( GL_SHADER_STORAGE_BUFFER, material_block->binding, mOpenGLRenderer.GetMaterialStorageBufferId() );
-            OPENGL_CHECK_ERROR_THROW;
-            glProgramUniform1ui ( static_cast<GLuint> ( aPipeline.GetProgramId() ), kMaterialIndexUniformLocation, mBindlessMaterialIndex );
             OPENGL_CHECK_ERROR_THROW;
         }
 

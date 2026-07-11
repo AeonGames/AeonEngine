@@ -448,6 +448,11 @@ namespace AeonGames
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass && aMaterial != nullptr )
         {
             mOpenGLRenderer.SetMaterial ( *aMaterial );
+            // Deliver the material's bindless record index per-instance (one copy
+            // per model matrix) so the shading shader selects it by gl_InstanceID,
+            // parallel to BindObjectMatrices.
+            BindInstanceMaterials ( mOpenGLRenderer.GetMaterialBindlessIndex ( *aMaterial ),
+                                    static_cast<uint32_t> ( aModelMatrices.size() ) );
         }
         // aFirstInstance is forwarded as the base instance so a single per-frame
         // instance buffer can hold every batch and each draw selects its slice;
@@ -558,6 +563,22 @@ namespace AeonGames
         BufferAccessor object_matrices = mStorageMemoryPoolBuffer.Allocate ( size );
         object_matrices.WriteMemory ( 0, size, aMatrices.data() );
         mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATRICES, object_matrices );
+    }
+
+    void OpenGLWindow::BindInstanceMaterials ( uint32_t aMaterialIndex, uint32_t aCount ) const
+    {
+        if ( aCount == 0 )
+        {
+            return;
+        }
+        // A material-sorted batch shares one record index; fill the reused
+        // scratch with that index (grows once, then amortises) and upload it
+        // parallel to the model matrices.
+        mInstanceMaterials.assign ( aCount, aMaterialIndex );
+        const size_t size = static_cast<size_t> ( aCount ) * sizeof ( uint32_t );
+        BufferAccessor instance_materials = mStorageMemoryPoolBuffer.Allocate ( size );
+        instance_materials.WriteMemory ( 0, size, mInstanceMaterials.data() );
+        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATERIALS, instance_materials );
     }
 
     BufferAccessor OpenGLWindow::AllocateSingleFrameUniformMemory ( size_t aSize )

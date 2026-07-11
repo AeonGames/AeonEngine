@@ -747,6 +747,17 @@ void main()
         it->second.Bind ( *mCurrentPipeline );
     }
 
+    uint32_t OpenGLRenderer::GetMaterialBindlessIndex ( const Material& aMaterial )
+    {
+        auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
+        if ( it == mMaterialStore.end() )
+        {
+            LoadMaterial ( aMaterial );
+            it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
+        }
+        return ( it != mMaterialStore.end() ) ? it->second.GetBindlessMaterialIndex() : UINT32_MAX;
+    }
+
     void OpenGLRenderer::BindStorageBuffer ( uint32_t aBinding, const BufferAccessor& aBuffer ) const
     {
         if ( mCurrentPipeline == nullptr )

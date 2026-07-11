@@ -66,8 +66,11 @@ layout(binding = 4, std430) readonly buffer Bindless
 {
       GpuMaterial materials[];
 };
-layout(location = 0) uniform uint MaterialIndex;
-#define MATERIAL_INDEX  MaterialIndex
+// The per-instance material index arrives as a flat varying the vertex shader
+// read from the InstanceMaterials buffer (parallel to the model matrices), so a
+// single indirect multi-draw can shade meshes with different materials.
+layout(location = 5) flat in uint vMaterialIndex;
+#define MATERIAL_INDEX  vMaterialIndex
 #define MAT_REC         materials[MATERIAL_INDEX]
 #define MAT_TEX(i)      sampler2D(MAT_REC.texture_refs[i])
 #endif

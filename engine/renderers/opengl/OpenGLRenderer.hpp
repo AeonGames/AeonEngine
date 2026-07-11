@@ -124,6 +124,11 @@ namespace AeonGames
         void UnregisterBindlessMaterial ( uint32_t aIndex );
         /// @brief Get the global bindless material storage buffer object.
         GLuint GetMaterialStorageBufferId() const;
+        /// @brief Resolve a material to its global bindless material record index,
+        ///        loading it on demand. The draw path writes this per-instance
+        ///        into the InstanceMaterials buffer so the shading shader selects
+        ///        the record (parallel to the per-instance model matrices).
+        uint32_t GetMaterialBindlessIndex ( const Material& aMaterial );
         /// @brief Result of registering a mesh into the shared geometry pool:
         ///        the base vertex (in stride units) and first index (uint32
         ///        units) handed to the draw call.

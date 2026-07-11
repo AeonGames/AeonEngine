@@ -209,6 +209,13 @@ namespace AeonGames
         ///        vertex shaders index it by gl_InstanceID, so a single draw
         ///        covers the whole batch.
         void BindObjectMatrices ( std::span<const Matrix4x4> aMatrices ) const;
+        /// @brief Upload @p aCount copies of a per-instance bindless material
+        ///        index into a transient storage buffer and bind it at
+        ///        INSTANCE_MATERIALS, parallel to BindObjectMatrices. The shading
+        ///        vertex shader reads it by gl_InstanceID and forwards it to the
+        ///        fragment shader, so a material-sorted batch shades correctly
+        ///        (and a later indirect multi-draw can mix materials).
+        void BindInstanceMaterials ( uint32_t aMaterialIndex, uint32_t aCount ) const;
         /// @brief Bind the engine-owned state for a Shading-pass draw (matrices,
         ///        lights, clustering, globals, shadow params + textures). Shared
         ///        by Render and RenderInstanced so the set has one definition.
@@ -341,6 +348,9 @@ namespace AeonGames
         bool mActiveCullEnabled{false};
         uint32_t mViewportWidth{0};
         uint32_t mViewportHeight{0};
+        // Reused scratch holding one bindless material index per instance for
+        // BindInstanceMaterials; grows once then amortises (no per-draw alloc).
+        mutable std::vector<uint32_t> mInstanceMaterials{};
     };
 }
 #endif
