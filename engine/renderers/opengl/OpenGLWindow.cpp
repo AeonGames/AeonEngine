@@ -39,6 +39,7 @@ limitations under the License.
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <fstream>
 
 namespace AeonGames
 {
@@ -1216,6 +1217,64 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
+    namespace
+    {
+        // Opt-in framebuffer capture for OpenGL verification. When the environment
+        // variable AEON_GL_SCREENSHOT_FRAME names a frame index, that frame's final
+        // (tonemapped, sRGB-encoded) back buffer is written as a binary PPM into
+        // AEON_GL_SCREENSHOT_DIR (default "."). The OpenGL backend has no equivalent
+        // of the Vulkan LUNARG screenshot layer and desktop capture is unreliable,
+        // so this reads the pixels straight from GL -- immune to window occlusion.
+        // Zero cost when the variable is unset.
+        void MaybeCaptureBackbuffer()
+        {
+            static uint64_t frame_counter = 0;
+            const uint64_t current_frame = frame_counter++;
+            const char* frame_env = std::getenv ( "AEON_GL_SCREENSHOT_FRAME" );
+            if ( frame_env == nullptr )
+            {
+                return;
+            }
+            if ( current_frame != std::strtoull ( frame_env, nullptr, 10 ) )
+            {
+                return;
+            }
+            GLint viewport[4] {};
+            glGetIntegerv ( GL_VIEWPORT, viewport );
+            const GLint width = viewport[2];
+            const GLint height = viewport[3];
+            if ( width <= 0 || height <= 0 )
+            {
+                return;
+            }
+            const size_t row_bytes = static_cast<size_t> ( width ) * 3;
+            std::vector<uint8_t> pixels ( row_bytes * static_cast<size_t> ( height ) );
+            glPixelStorei ( GL_PACK_ALIGNMENT, 1 );
+            glReadBuffer ( GL_BACK );
+            glReadPixels ( 0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE, pixels.data() );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            const char* dir_env = std::getenv ( "AEON_GL_SCREENSHOT_DIR" );
+            std::string path { ( dir_env != nullptr ) ? dir_env : "." };
+            path += "/";
+            path += std::to_string ( current_frame );
+            path += ".ppm";
+            std::ofstream file ( path, std::ios::binary );
+            if ( !file )
+            {
+                std::cout << LogLevel::Error << "Could not open OpenGL screenshot path: " << path << std::endl;
+                return;
+            }
+            file << "P6\n" << width << " " << height << "\n255\n";
+            // GL reads bottom-to-top; PPM stores top-to-bottom, so emit rows reversed.
+            for ( GLint y = height - 1; y >= 0; --y )
+            {
+                file.write ( reinterpret_cast<const char*> ( pixels.data() + static_cast<size_t> ( y ) * row_bytes ),
+                             static_cast<std::streamsize> ( row_bytes ) );
+            }
+            std::cout << LogLevel::Info << "Wrote OpenGL screenshot: " << path << " (" << width << "x" << height << ")" << std::endl;
+        }
+    }
+
     void OpenGLWindow::EndRender()
     {
         // Draw the skybox into the still-bound HDR target before resolving it:
@@ -1291,6 +1350,7 @@ namespace AeonGames
         glDrawArrays ( GL_TRIANGLE_FAN, 0, 4 );
         OPENGL_CHECK_ERROR_NO_THROW;
 #endif
+        MaybeCaptureBackbuffer();
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
         mStorageMemoryPoolBuffer.Reset();
