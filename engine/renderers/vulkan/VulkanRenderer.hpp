@@ -334,6 +334,11 @@ namespace AeonGames
         // across batches so SubmitRenderQueue only allocates when a batch grows
         // beyond any previously seen size.
         std::vector<Matrix4x4> mInstanceTransforms{};
+        // Scratch buffers holding one super-batch's per-instance meshes and
+        // materials (pooled items of one pipeline), reused across batches, for
+        // the merged indirect multi-draw path.
+        std::vector<const Mesh*> mSuperBatchMeshes{};
+        std::vector<const Material*> mSuperBatchMaterials{};
         // Fallback textures for each canonical material sampler slot
         // (kMaterialSamplerSlots), bound when a material omits that sampler
         // (e.g. an untextured material drawn with a diffuse-map shader, or a

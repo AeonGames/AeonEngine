@@ -130,6 +130,14 @@ namespace AeonGames
                                uint32_t aVertexStart = 0,
                                uint32_t aVertexCount = 0xffffffff,
                                RenderPass aRenderPass = RenderPass::Shading ) const;
+        /** @brief Draw a run of pooled static meshes that share a pipeline as one
+         *  indirect multi-draw: all transforms and material indices go into
+         *  shared per-instance buffers, and each distinct mesh becomes one
+         *  VkDrawIndexedIndirectCommand submitted by a single
+         *  vkCmdDrawIndexedIndirect. */
+        void RenderMultiBatch ( const Pipeline& aPipeline, std::span<const Matrix4x4> aTransforms,
+                                std::span<const Mesh* const> aMeshes, std::span<const Material* const> aMaterials,
+                                RenderPass aRenderPass ) const;
         /** @brief Dispatch the compute stage of a pipeline.
          *  @param aPipeline Pipeline whose compute stage to dispatch.
          *  @param aGroupCountX Number of workgroups in X.
@@ -258,7 +266,7 @@ namespace AeonGames
         ///        vertex shader forwards the index (by gl_InstanceIndex) to the
         ///        fragment shader, so one indirect draw can shade meshes with
         ///        different materials. Inert for pipelines without the set.
-        void BindInstanceMaterials ( const VulkanPipeline* aPipeline, uint32_t aMaterialIndex, uint32_t aCount ) const;
+        void BindInstanceMaterials ( const VulkanPipeline* aPipeline, std::span<const uint32_t> aMaterialIndices ) const;
         /// @brief Bind the engine-owned descriptor sets for a Shading-pass draw
         ///        (matrices, lights, clustering, globals, shadows). Excludes the
         ///        per-draw material and object-matrix sets. Shared by Render and
@@ -302,6 +310,9 @@ namespace AeonGames
         // Scratch reused by BindInstanceMaterials to stage one batch's
         // per-instance bindless material indices before uploading them.
         mutable std::vector<uint32_t> mInstanceMaterialIndices{};
+        // Scratch reused by RenderMultiBatch to build one super-batch's indirect
+        // draw commands before uploading them.
+        mutable std::vector<VkDrawIndexedIndirectCommand> mIndirectCommands{};
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         // Per-frame-in-flight rings of the core per-frame uniform/storage

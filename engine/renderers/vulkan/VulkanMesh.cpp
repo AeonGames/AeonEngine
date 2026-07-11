@@ -277,4 +277,9 @@ namespace AeonGames
     {
         return mFirstIndex;
     }
+
+    bool VulkanMesh::IsPooled() const
+    {
+        return mPooled;
+    }
 }

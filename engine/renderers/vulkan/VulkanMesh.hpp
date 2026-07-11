@@ -45,6 +45,10 @@ namespace AeonGames
          * Non-zero for pooled static meshes (their position in the shared index
          * pool); zero for meshes drawn from their own index buffer. */
         uint32_t GetFirstIndex() const;
+        /** @brief True when this mesh lives in the renderer's shared geometry
+         * pool (a weightless static mesh), so several such meshes of one
+         * pipeline can be merged into a single indirect multi-draw. */
+        bool IsPooled() const;
         /** @brief Get the descriptor set that exposes the static vertex buffer as
          * a storage buffer (SSBO), for binding as @c SourceVertices in compute
          * skinning. Bound with a zero dynamic offset; range covers the vertex

@@ -567,6 +567,7 @@ namespace AeonGames
         const RequiredFeature required_features[]
         {
             { supported_features2.features.multiDrawIndirect, "multiDrawIndirect" },
+            { supported_features2.features.drawIndirectFirstInstance, "drawIndirectFirstInstance" },
             { supported_vulkan11_features.shaderDrawParameters, "shaderDrawParameters" },
             { supported_vulkan12_features.descriptorIndexing, "descriptorIndexing" },
             { supported_vulkan12_features.shaderSampledImageArrayNonUniformIndexing, "shaderSampledImageArrayNonUniformIndexing" },
@@ -656,6 +657,9 @@ namespace AeonGames
         enabled_features.independentBlend = VK_TRUE;
         // multiDrawIndirect backs the GPU-driven multi-draw path.
         enabled_features.multiDrawIndirect = VK_TRUE;
+        // drawIndirectFirstInstance lets each merged indirect command carry a
+        // non-zero firstInstance so it indexes the shared per-instance buffers.
+        enabled_features.drawIndirectFirstInstance = VK_TRUE;
         device_create_info.pEnabledFeatures = &enabled_features;
 
         /// @todo Grab best device rather than first one
@@ -1575,44 +1579,53 @@ namespace AeonGames
         {
             return;
         }
-        VulkanWindow& aWindow = it->second;
-        aScene.ForEachRenderBatch ( [this, &aWindow, aRenderPass] ( std::span<const RenderItem> aBatch )
+        VulkanWindow& window = it->second;
+        // Pooled static meshes (weightless, indexed) that share a pipeline are
+        // merged into one indirect multi-draw. Skinned, private (weighted) or
+        // non-indexed items draw individually. The queue is sorted by (pipeline,
+        // material, mesh), so a pipeline's poolable items -- and within them each
+        // mesh's instances -- are already contiguous.
+        const std::vector<RenderItem>& queue = aScene.GetRenderQueue();
+        const size_t count = queue.size();
+        size_t i = 0;
+        while ( i < count )
         {
-            const RenderItem& head = aBatch.front();
-            if ( aBatch.size() == 1 )
+            const RenderItem& head = queue[i];
+            const bool head_poolable = head.mSkinnedVertices == nullptr &&
+                                       head.mMesh->GetIndexCount() != 0 &&
+                                       GetVulkanMesh ( *head.mMesh )->IsPooled();
+            if ( !head_poolable )
             {
-                aWindow.Render (
-                    head.mTransform,
-                    *head.mMesh,
-                    *head.mPipeline,
-                    head.mMaterial,
-                    Topology::TRIANGLE_LIST,
-                    0,
-                    0xffffffff,
-                    1,
-                    0,
-                    head.mSkinnedVertices,
-                    aRenderPass );
-                return;
+                window.Render ( head.mTransform, *head.mMesh, *head.mPipeline, head.mMaterial,
+                                Topology::TRIANGLE_LIST, 0, 0xffffffff, 1, 0, head.mSkinnedVertices, aRenderPass );
+                ++i;
+                continue;
             }
-            // Gather the batch's transforms contiguously for one instanced draw.
-            // mInstanceTransforms is reused so this only allocates when a batch
-            // grows beyond any previously seen size.
+            size_t j = i + 1;
+            while ( j < count )
+            {
+                const RenderItem& item = queue[j];
+                if ( item.mPipeline != head.mPipeline ||
+                     item.mSkinnedVertices != nullptr ||
+                     item.mMesh->GetIndexCount() == 0 ||
+                     !GetVulkanMesh ( *item.mMesh )->IsPooled() )
+                {
+                    break;
+                }
+                ++j;
+            }
             mInstanceTransforms.clear();
-            for ( const RenderItem& item : aBatch )
+            mSuperBatchMeshes.clear();
+            mSuperBatchMaterials.clear();
+            for ( size_t k = i; k < j; ++k )
             {
-                mInstanceTransforms.push_back ( item.mTransform );
+                mInstanceTransforms.push_back ( queue[k].mTransform );
+                mSuperBatchMeshes.push_back ( queue[k].mMesh );
+                mSuperBatchMaterials.push_back ( queue[k].mMaterial );
             }
-            aWindow.RenderInstanced (
-                mInstanceTransforms,
-                *head.mMesh,
-                *head.mPipeline,
-                head.mMaterial,
-                Topology::TRIANGLE_LIST,
-                0,
-                0xffffffff,
-                aRenderPass );
-        } );
+            window.RenderMultiBatch ( *head.mPipeline, mInstanceTransforms, mSuperBatchMeshes, mSuperBatchMaterials, aRenderPass );
+            i = j;
+        }
     }
     bool VulkanRenderer::IsValidWindow ( void* aWindowId ) const
     {

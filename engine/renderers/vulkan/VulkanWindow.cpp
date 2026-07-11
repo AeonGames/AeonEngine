@@ -3674,21 +3674,19 @@ namespace AeonGames
                                   &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
     }
 
-    void VulkanWindow::BindInstanceMaterials ( const VulkanPipeline* aPipeline, uint32_t aMaterialIndex, uint32_t aCount ) const
+    void VulkanWindow::BindInstanceMaterials ( const VulkanPipeline* aPipeline, std::span<const uint32_t> aMaterialIndices ) const
     {
         uint32_t set_index = aPipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::INSTANCE_MATERIALS );
-        if ( set_index == std::numeric_limits<uint32_t>::max() )
+        if ( set_index == std::numeric_limits<uint32_t>::max() || aMaterialIndices.empty() )
         {
             return;
         }
-        // One material index per instance (all equal for a single-material batch;
-        // a later step merges batches so they can differ). Staged in a reused
-        // scratch, then uploaded to a transient per-draw storage allocation with
-        // its own descriptor set and a zero dynamic offset, like BindObjectMatrices.
-        mInstanceMaterialIndices.assign ( aCount, aMaterialIndex );
-        const size_t size = static_cast<size_t> ( aCount ) * sizeof ( uint32_t );
+        // One bindless material index per instance, uploaded to a transient
+        // per-draw storage allocation with its own descriptor set and a zero
+        // dynamic offset, like BindObjectMatrices.
+        const size_t size = aMaterialIndices.size() * sizeof ( uint32_t );
         BufferAccessor instance_materials = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( size );
-        instance_materials.WriteMemory ( 0, size, mInstanceMaterialIndices.data() );
+        instance_materials.WriteMemory ( 0, size, aMaterialIndices.data() );
         const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
             reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( instance_materials.GetMemoryPoolBuffer() );
         size_t offset = instance_materials.GetOffset();
@@ -3699,6 +3697,104 @@ namespace AeonGames
                                   set_index,
                                   1,
                                   &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
+    }
+
+    void VulkanWindow::RenderMultiBatch ( const Pipeline& aPipeline, std::span<const Matrix4x4> aTransforms,
+                                          std::span<const Mesh* const> aMeshes, std::span<const Material* const> aMaterials,
+                                          RenderPass aRenderPass ) const
+    {
+        if ( aMeshes.empty() )
+        {
+            return;
+        }
+        // Same pass-pipeline selection as RenderCommon: the shadow / depth-pre
+        // passes substitute the renderer's shadow-depth / cluster-mark pipeline.
+        const VulkanPipeline* pipeline = nullptr;
+        switch ( aRenderPass )
+        {
+        case RenderPass::ShadowPass:
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
+            break;
+        case RenderPass::DepthPrePass:
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
+            break;
+        default:
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+            break;
+        }
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
+        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( Topology::TRIANGLE_LIST ) );
+        switch ( aRenderPass )
+        {
+        case RenderPass::ShadowPass:
+            BindShadowPassSets ( pipeline );
+            break;
+        case RenderPass::DepthPrePass:
+            BindDepthPrePassSets ( pipeline );
+            break;
+        default:
+            BindShadingPassSets ( pipeline );
+            break;
+        }
+        // Every instance's model matrix goes into one shared InstanceMatrices
+        // allocation; each command's firstInstance selects its slice.
+        BindObjectMatrices ( pipeline, aTransforms );
+        // Shading pass: push the (constant) material storage buffer address once,
+        // then upload the per-instance bindless material indices the fragment
+        // shader reads through the flat varying.
+        if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass )
+        {
+            if ( const VkPushConstantRange& material_buffer = pipeline->GetPushConstantMaterialBuffer(); material_buffer.size != 0 )
+            {
+                VkDeviceAddress material_buffer_address = mVulkanRenderer.GetMaterialStorageBufferDeviceAddress();
+                vkCmdPushConstants ( mVkCommandBuffer, pipeline->GetPipelineLayout(),
+                                     material_buffer.stageFlags, material_buffer.offset, material_buffer.size,
+                                     &material_buffer_address );
+            }
+            mInstanceMaterialIndices.clear();
+            mInstanceMaterialIndices.reserve ( aMaterials.size() );
+            for ( const Material * material : aMaterials )
+            {
+                mInstanceMaterialIndices.push_back ( material != nullptr ? mVulkanRenderer.GetVulkanMaterial ( *material )->GetBindlessMaterialIndex() : 0u );
+            }
+            BindInstanceMaterials ( pipeline, mInstanceMaterialIndices );
+        }
+        // Every mesh here is pooled and shares the pipeline's vertex stride, so
+        // binding one pooled mesh binds the shared vertex + index pool buffers for
+        // all of them; each command's base vertex / first index picks its mesh.
+        mVulkanRenderer.GetVulkanMesh ( *aMeshes.front() )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
+        // One indirect command per distinct mesh; consecutive equal meshes (the
+        // queue keeps them adjacent) share a command with instanceCount = run.
+        mIndirectCommands.clear();
+        uint32_t instance_base = 0;
+        size_t i = 0;
+        while ( i < aMeshes.size() )
+        {
+            const Mesh* mesh = aMeshes[i];
+            uint32_t run = 1;
+            while ( i + run < aMeshes.size() && aMeshes[i + run] == mesh )
+            {
+                ++run;
+            }
+            const VulkanMesh* vulkan_mesh = mVulkanRenderer.GetVulkanMesh ( *mesh );
+            VkDrawIndexedIndirectCommand command{};
+            command.indexCount = mesh->GetIndexCount();
+            command.instanceCount = run;
+            command.firstIndex = vulkan_mesh->GetFirstIndex();
+            command.vertexOffset = static_cast<int32_t> ( vulkan_mesh->GetBaseVertex() );
+            command.firstInstance = instance_base;
+            mIndirectCommands.push_back ( command );
+            instance_base += run;
+            i += run;
+        }
+        const size_t commands_size = mIndirectCommands.size() * sizeof ( VkDrawIndexedIndirectCommand );
+        BufferAccessor indirect = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( commands_size );
+        indirect.WriteMemory ( 0, commands_size, mIndirectCommands.data() );
+        const VulkanStorageMemoryPoolBuffer* indirect_pool =
+            reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( indirect.GetMemoryPoolBuffer() );
+        VkBuffer indirect_buffer = reinterpret_cast<const VulkanBuffer&> ( indirect_pool->GetBuffer() ).GetBuffer();
+        vkCmdDrawIndexedIndirect ( mVkCommandBuffer, indirect_buffer, indirect.GetOffset(),
+                                   static_cast<uint32_t> ( mIndirectCommands.size() ), sizeof ( VkDrawIndexedIndirectCommand ) );
     }
 
     void VulkanWindow::RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
@@ -3793,7 +3889,8 @@ namespace AeonGames
             // material-index push constant): one entry per instance so the
             // shading vertex shader can forward it by gl_InstanceIndex, matching
             // the object-matrix buffer's instance count.
-            BindInstanceMaterials ( pipeline, vulkan_material->GetBindlessMaterialIndex(), static_cast<uint32_t> ( aModelMatrices.size() ) );
+            mInstanceMaterialIndices.assign ( aModelMatrices.size(), vulkan_material->GetBindlessMaterialIndex() );
+            BindInstanceMaterials ( pipeline, mInstanceMaterialIndices );
         }
         const VulkanMesh* vulkan_mesh = mVulkanRenderer.GetVulkanMesh ( aMesh );
         vulkan_mesh->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );
