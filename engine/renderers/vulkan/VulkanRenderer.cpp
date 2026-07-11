@@ -1580,6 +1580,13 @@ namespace AeonGames
             return;
         }
         VulkanWindow& window = it->second;
+        if ( aRenderPass == RenderPass::Shading )
+        {
+            // The shading render pass begins here (moved out of EndDepthPrePass /
+            // BeginRender) so a GPU cull-compute step can run just before it,
+            // outside any render pass. EndRender closes it.
+            window.BeginRenderPass();
+        }
         // Pooled static meshes (weightless, indexed) that share a pipeline are
         // merged into one indirect multi-draw. Skinned, private (weighted) or
         // non-indexed items draw individually. The queue is sorted by (pipeline,

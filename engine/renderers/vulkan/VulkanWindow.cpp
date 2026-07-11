@@ -3248,7 +3248,6 @@ namespace AeonGames
                 std::memset ( grid, 0, CLUSTER_COUNT * sizeof ( GpuLightGridCell ) );
                 mFrameLightGrid.Unmap();
             }
-            BeginRenderPass();
         }
     }
 
@@ -3264,9 +3263,8 @@ namespace AeonGames
         {
             DispatchLightCull ( *aComputePipeline );
         }
-        // Begin the main color pass; the application's second geometry
-        // traversal shades normally using the now-populated light grid.
-        BeginRenderPass();
+        // The shading render pass is begun later by SubmitRenderQueue(Shading),
+        // so a GPU cull-compute can run here (outside any render pass) first.
     }
 
     void VulkanWindow::DispatchClusterBuild ( const Pipeline& aComputePipeline )
