@@ -23,6 +23,8 @@ limitations under the License.
 #include "OpenGLFunctions.hpp"
 #include "aeongames/Platform.hpp"
 #include "aeongames/Mesh.hpp"
+#include "aeongames/AABB.hpp"
+#include "aeongames/Vector3.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/Material.hpp"
 #include "aeongames/Texture.hpp"
@@ -1334,6 +1336,66 @@ void main()
                                    aItem.mMesh->GetIndexCount() != 0 &&
                                    mesh != nullptr && mesh->IsPooled();
                         };
+        if ( aRenderPass == RenderPass::Shading )
+        {
+            // GPU-driven shading: frustum-cull each pooled pipeline group on the
+            // GPU, then draw the compacted commands with glMultiDrawElements
+            // IndirectCount. Skinned / private / non-indexed items draw
+            // individually afterwards.
+            size_t i = 0;
+            while ( i < count )
+            {
+                if ( !poolable ( queue[i] ) )
+                {
+                    ++i;
+                    continue;
+                }
+                const RenderItem& head = queue[i];
+                size_t j = i + 1;
+                while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) )
+                {
+                    ++j;
+                }
+                mCullInstances.clear();
+                mCullInstances.reserve ( j - i );
+                for ( size_t k = i; k < j; ++k )
+                {
+                    const RenderItem& item = queue[k];
+                    const OpenGLMesh* gl_mesh = GetOpenGLMesh ( *item.mMesh );
+                    const AABB& aabb = item.mMesh->GetAABB();
+                    const Vector3& center = aabb.GetCenter();
+                    const Vector3& radii = aabb.GetRadii();
+                    GpuCullInstance instance{};
+                    instance.mModel = item.mTransform;
+                    instance.mCenter[0] = center.GetX();
+                    instance.mCenter[1] = center.GetY();
+                    instance.mCenter[2] = center.GetZ();
+                    instance.mRadii[0] = radii.GetX();
+                    instance.mRadii[1] = radii.GetY();
+                    instance.mRadii[2] = radii.GetZ();
+                    instance.mDraw[0] = item.mMesh->GetIndexCount();
+                    instance.mDraw[1] = gl_mesh->GetFirstIndex();
+                    instance.mDraw[2] = gl_mesh->GetBaseVertex();
+                    instance.mDraw[3] = item.mMaterial ? GetMaterialBindlessIndex ( *item.mMaterial ) : 0u;
+                    mCullInstances.push_back ( instance );
+                }
+                aWindow.CullShadingBatch ( *head.mPipeline, *head.mMesh, mCullInstances );
+                i = j;
+            }
+            aWindow.BarrierComputeToIndirect();
+            aWindow.DrawCulledShadingBatches();
+            for ( size_t k = 0; k < count; ++k )
+            {
+                const RenderItem& item = queue[k];
+                if ( poolable ( item ) )
+                {
+                    continue;
+                }
+                aWindow.Render ( item.mTransform, *item.mMesh, *item.mPipeline, item.mMaterial,
+                                 Topology::TRIANGLE_LIST, 0, 0xffffffff, 1, 0, item.mSkinnedVertices, aRenderPass );
+            }
+            return;
+        }
         // The queue is sorted by (pipeline, material, mesh) so poolable runs --
         // and within them each mesh's instances -- are contiguous. Each pooled
         // pipeline group becomes one glMultiDrawElementsIndirect; skinned /

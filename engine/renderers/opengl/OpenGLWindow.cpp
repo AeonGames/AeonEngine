@@ -604,6 +604,91 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
+    void OpenGLWindow::CullShadingBatch ( const Pipeline& aShadingPipeline, const Mesh& aRepresentativeMesh,
+                                          std::span<const GpuCullInstance> aInstances )
+    {
+        if ( aInstances.empty() )
+        {
+            return;
+        }
+        if ( !mCullLoaded )
+        {
+            mCullPipeline.LoadFromFile ( "shaders/cull" );
+            mCullLoaded = true;
+        }
+        const uint32_t count = static_cast<uint32_t> ( aInstances.size() );
+        // Candidate instances (input) plus the four compacted outputs. The output
+        // model / material arrays are the shading pass's InstanceMatrices /
+        // InstanceMaterials, indexed by gl_BaseInstanceARB = a command's base instance.
+        BufferAccessor cull_instances = mStorageMemoryPoolBuffer.Allocate ( count * sizeof ( GpuCullInstance ) );
+        cull_instances.WriteMemory ( 0, count * sizeof ( GpuCullInstance ), aInstances.data() );
+        BufferAccessor commands = mStorageMemoryPoolBuffer.Allocate ( count * sizeof ( DrawElementsIndirectCommand ) );
+        BufferAccessor draw_count = mStorageMemoryPoolBuffer.Allocate ( sizeof ( uint32_t ) );
+        BufferAccessor models = mStorageMemoryPoolBuffer.Allocate ( static_cast<size_t> ( count ) * sizeof ( float ) * 16 );
+        BufferAccessor materials = mStorageMemoryPoolBuffer.Allocate ( count * sizeof ( uint32_t ) );
+        const uint32_t zero = 0;
+        draw_count.WriteMemory ( 0, sizeof ( uint32_t ), &zero );
+        const StorageBufferBinding bindings[]
+        {
+            { Mesh::BindingLocations::CULL_INSTANCES, &cull_instances },
+            { Mesh::BindingLocations::DRAW_COMMANDS, &commands },
+            { Mesh::BindingLocations::DRAW_COUNT, &draw_count },
+            { Mesh::BindingLocations::INSTANCE_MATRICES, &models },
+            { Mesh::BindingLocations::INSTANCE_MATERIALS, &materials },
+        };
+        // One thread per candidate; local_size_x = 64.
+        Dispatch ( mCullPipeline, ( count + 63u ) / 64u, 1, 1, bindings, 0 );
+        mCulledShadingBatches.push_back ( CulledShadingBatch
+        {
+            &aShadingPipeline, &aRepresentativeMesh, commands, draw_count, models, materials, count
+        } );
+    }
+
+    void OpenGLWindow::BarrierComputeToIndirect() const
+    {
+        // The cull compute wrote the draw-command list + count (read by the
+        // indirect-draw stage from GL_DRAW_INDIRECT_BUFFER / GL_PARAMETER_BUFFER,
+        // both covered by GL_COMMAND_BARRIER_BIT) and the compacted model /
+        // material arrays (read by the vertex stage as SSBOs). Make all of it
+        // visible before the shading draws.
+        glMemoryBarrier ( GL_COMMAND_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::DrawCulledShadingBatches()
+    {
+        for ( const CulledShadingBatch& batch : mCulledShadingBatches )
+        {
+            mOpenGLRenderer.BindPipeline ( *batch.mPipeline );
+            BindShadingPassState();
+            // The cull compaction wrote these as the shading InstanceMatrices /
+            // InstanceMaterials arrays, indexed by gl_BaseInstanceARB + gl_InstanceID.
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATRICES, batch.mModels );
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATERIALS, batch.mMaterials );
+            mOpenGLRenderer.BindMaterialStorageBuffer();
+            // All meshes in the batch are pooled and share the stride, so binding
+            // one binds the shared vertex + index pool buffers for all.
+            mOpenGLRenderer.BindMesh ( *batch.mRepresentativeMesh );
+            const OpenGLBuffer& commands_buffer =
+                reinterpret_cast<const OpenGLBuffer&> ( batch.mCommands.GetMemoryPoolBuffer()->GetBuffer() );
+            const OpenGLBuffer& count_buffer =
+                reinterpret_cast<const OpenGLBuffer&> ( batch.mCount.GetMemoryPoolBuffer()->GetBuffer() );
+            glBindBuffer ( GL_DRAW_INDIRECT_BUFFER, commands_buffer.GetBufferId() );
+            glBindBuffer ( GL_PARAMETER_BUFFER, count_buffer.GetBufferId() );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            glMultiDrawElementsIndirectCount ( GL_TRIANGLES, GL_UNSIGNED_INT,
+                                               reinterpret_cast<const void*> ( static_cast<uintptr_t> ( batch.mCommands.GetOffset() ) ),
+                                               static_cast<GLintptr> ( batch.mCount.GetOffset() ),
+                                               static_cast<GLsizei> ( batch.mMaxDraws ),
+                                               sizeof ( DrawElementsIndirectCommand ) );
+            OPENGL_CHECK_ERROR_NO_THROW;
+        }
+        glBindBuffer ( GL_DRAW_INDIRECT_BUFFER, 0 );
+        glBindBuffer ( GL_PARAMETER_BUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        mCulledShadingBatches.clear();
+    }
+
     void OpenGLWindow::BindShadingPassState() const
     {
         mOpenGLRenderer.SetMatrices ( mMatrices );

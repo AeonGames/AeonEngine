@@ -326,6 +326,9 @@ namespace AeonGames
         /// (consecutive same-pipeline pooled items) for one indirect multi-draw.
         std::vector<const Mesh*> mSuperBatchMeshes{};
         std::vector<const Material*> mSuperBatchMaterials{};
+        /// Reused scratch of per-instance cull inputs for the GPU frustum cull
+        /// (shading pass); one GpuCullInstance per pooled candidate.
+        std::vector<GpuCullInstance> mCullInstances{};
     private:
         static std::atomic<size_t> mRendererCount;
 #if defined(__unix__)

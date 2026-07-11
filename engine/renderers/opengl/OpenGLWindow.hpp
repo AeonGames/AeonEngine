@@ -42,6 +42,17 @@ namespace AeonGames
 {
     class Buffer;
     class OpenGLRenderer;
+    /// @brief One candidate instance for GPU frustum culling; matches the
+    ///        GpuCullInstance layout in cull.comp (112 bytes): model matrix,
+    ///        local-space AABB (center + half-extents in .xyz) and packed draw
+    ///        parameters (index count, first index, base vertex, material index).
+    struct GpuCullInstance
+    {
+        Matrix4x4 mModel;
+        float mCenter[4];
+        float mRadii[4];
+        uint32_t mDraw[4];
+    };
     /** @brief OpenGL per-window rendering context and state. */
     class OpenGLWindow
     {
@@ -132,6 +143,19 @@ namespace AeonGames
                                 std::span<const Mesh* const> aMeshes,
                                 std::span<const Material* const> aMaterials,
                                 RenderPass aRenderPass ) const;
+        /// @brief Dispatch the GPU frustum cull for one pooled shading batch:
+        ///        the compute compacts the visible instances into a draw-command
+        ///        list + count and parallel model / material arrays, recorded for
+        ///        DrawCulledShadingBatches. Runs before the draws so the whole
+        ///        pipeline group is culled first, then drawn.
+        void CullShadingBatch ( const Pipeline& aShadingPipeline, const Mesh& aRepresentativeMesh,
+                                std::span<const GpuCullInstance> aInstances );
+        /// @brief Barrier making the cull compute's command / count / model /
+        ///        material writes visible to the indirect draw and vertex stages.
+        void BarrierComputeToIndirect() const;
+        /// @brief Draw every culled shading batch with glMultiDrawElementsIndirect
+        ///        Count, sourcing the surviving-draw count from the GPU.
+        void DrawCulledShadingBatches();
         /** @brief Dispatch the compute stage of a pipeline.
          *  @param aPipeline Pipeline whose compute stage to dispatch.
          *  @param aGroupCountX Number of workgroups in X.
@@ -375,6 +399,23 @@ namespace AeonGames
         };
         // Reused scratch of indirect commands for RenderMultiBatch (amortised).
         mutable std::vector<DrawElementsIndirectCommand> mIndirectCommands{};
+        // Renderer-owned GPU frustum-cull compute pipeline, loaded lazily the
+        // first time a pooled shading batch is culled.
+        Pipeline mCullPipeline{};
+        bool mCullLoaded{false};
+        // One pooled shading batch whose draw commands were generated on the GPU
+        // by the cull compute; drawn with glMultiDrawElementsIndirectCount.
+        struct CulledShadingBatch
+        {
+            const Pipeline* mPipeline;
+            const Mesh* mRepresentativeMesh;
+            BufferAccessor mCommands;
+            BufferAccessor mCount;
+            BufferAccessor mModels;
+            BufferAccessor mMaterials;
+            uint32_t mMaxDraws;
+        };
+        std::vector<CulledShadingBatch> mCulledShadingBatches{};
     };
 }
 #endif

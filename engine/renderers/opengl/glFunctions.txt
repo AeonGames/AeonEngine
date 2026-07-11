@@ -130,6 +130,10 @@ glDrawElementsInstancedBaseVertexBaseInstance
 // pooled draw of a pipeline group from a GPU command buffer -- the GPU-driven
 // merge. Each command carries its own base vertex + base instance.
 glMultiDrawElementsIndirect
+// Indirect multi-draw with a GPU-sourced draw count (GL 4.6 / ARB_indirect_
+// parameters): the visible-draw count comes from a parameter buffer the cull
+// compute wrote, so the CPU never learns how many draws survived culling.
+glMultiDrawElementsIndirectCount
 glGenRenderbuffers
 glBindRenderbuffer
 glRenderbufferStorage
