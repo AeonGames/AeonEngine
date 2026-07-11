@@ -3795,6 +3795,112 @@ namespace AeonGames
                                    static_cast<uint32_t> ( mIndirectCommands.size() ), sizeof ( VkDrawIndexedIndirectCommand ) );
     }
 
+    static_assert ( sizeof ( GpuCullInstance ) == 112, "GpuCullInstance must match the std430 cull.comp layout" );
+
+    void VulkanWindow::BindStoragePoolDescriptor ( const VulkanPipeline* aPipeline, uint32_t aBindingLocation, const BufferAccessor& aBuffer ) const
+    {
+        uint32_t set_index = aPipeline->GetDescriptorSetIndex ( aBindingLocation );
+        if ( set_index == std::numeric_limits<uint32_t>::max() )
+        {
+            return;
+        }
+        const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+            reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aBuffer.GetMemoryPoolBuffer() );
+        size_t offset = aBuffer.GetOffset();
+        uint32_t dynamic_offset = 0;
+        vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  aPipeline->GetPipelineLayout(), set_index, 1,
+                                  &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
+    }
+
+    void VulkanWindow::CullShadingBatch ( const Pipeline& aShadingPipeline, const Mesh& aRepresentativeMesh, std::span<const GpuCullInstance> aInstances )
+    {
+        if ( aInstances.empty() )
+        {
+            return;
+        }
+        if ( !mCullLoaded )
+        {
+            mCullPipeline.LoadFromFile ( "shaders/cull" );
+            mCullLoaded = true;
+        }
+        const uint32_t count = static_cast<uint32_t> ( aInstances.size() );
+        // Candidate instances (input) plus the four compacted outputs. The output
+        // model / material arrays are the shading pass's InstanceMatrices /
+        // InstanceMaterials, indexed by gl_InstanceIndex = a command's firstInstance.
+        BufferAccessor cull_instances = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( count * sizeof ( GpuCullInstance ) );
+        cull_instances.WriteMemory ( 0, count * sizeof ( GpuCullInstance ), aInstances.data() );
+        BufferAccessor commands = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( count * sizeof ( VkDrawIndexedIndirectCommand ) );
+        BufferAccessor draw_count = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( sizeof ( uint32_t ) );
+        BufferAccessor models = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( static_cast<size_t> ( count ) * sizeof ( float ) * 16 );
+        BufferAccessor materials = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( count * sizeof ( uint32_t ) );
+        const uint32_t zero = 0;
+        draw_count.WriteMemory ( 0, sizeof ( uint32_t ), &zero );
+        const StorageBufferBinding bindings[]
+        {
+            { Mesh::BindingLocations::CULL_INSTANCES, &cull_instances },
+            { Mesh::BindingLocations::DRAW_COMMANDS, &commands },
+            { Mesh::BindingLocations::DRAW_COUNT, &draw_count },
+            { Mesh::BindingLocations::INSTANCE_MATRICES, &models },
+            { Mesh::BindingLocations::INSTANCE_MATERIALS, &materials },
+        };
+        Dispatch ( mCullPipeline, ( count + 63u ) / 64u, 1, 1, bindings, 0 );
+        mCulledShadingBatches.push_back ( CulledShadingBatch
+        {
+            mVulkanRenderer.GetVulkanPipeline ( aShadingPipeline ),
+                           &aRepresentativeMesh, commands, draw_count, models, materials, count
+        } );
+    }
+
+    void VulkanWindow::BarrierComputeToIndirect() const
+    {
+        // The cull compute wrote the draw-command list + count (read by the
+        // indirect-draw stage) and the compacted model / material arrays (read by
+        // the vertex stage). Make all of it visible before the shading pass.
+        VkMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_MEMORY_BARRIER;
+        barrier.srcAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_INDIRECT_COMMAND_READ_BIT | VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                               VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT | VK_PIPELINE_STAGE_VERTEX_SHADER_BIT,
+                               0, 1, &barrier, 0, nullptr, 0, nullptr );
+    }
+
+    void VulkanWindow::DrawCulledShadingBatches()
+    {
+        for ( const CulledShadingBatch& batch : mCulledShadingBatches )
+        {
+            vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, batch.mPipeline->GetVkPipeline() );
+            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( Topology::TRIANGLE_LIST ) );
+            BindShadingPassSets ( batch.mPipeline );
+            // The cull compaction wrote these as the shading InstanceMatrices /
+            // InstanceMaterials arrays, indexed by gl_InstanceIndex.
+            BindStoragePoolDescriptor ( batch.mPipeline, Mesh::BindingLocations::INSTANCE_MATRICES, batch.mModels );
+            BindStoragePoolDescriptor ( batch.mPipeline, Mesh::BindingLocations::INSTANCE_MATERIALS, batch.mMaterials );
+            if ( const VkPushConstantRange& material_buffer = batch.mPipeline->GetPushConstantMaterialBuffer(); material_buffer.size != 0 )
+            {
+                VkDeviceAddress material_buffer_address = mVulkanRenderer.GetMaterialStorageBufferDeviceAddress();
+                vkCmdPushConstants ( mVkCommandBuffer, batch.mPipeline->GetPipelineLayout(),
+                                     material_buffer.stageFlags, material_buffer.offset, material_buffer.size,
+                                     &material_buffer_address );
+            }
+            // All meshes in the batch are pooled and share the stride, so binding
+            // one binds the shared vertex + index pool buffers for all.
+            mVulkanRenderer.GetVulkanMesh ( *batch.mRepresentativeMesh )->Bind ( mVkCommandBuffer, VK_NULL_HANDLE, 0 );
+            const VulkanStorageMemoryPoolBuffer* commands_pool =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( batch.mCommands.GetMemoryPoolBuffer() );
+            VkBuffer commands_buffer = reinterpret_cast<const VulkanBuffer&> ( commands_pool->GetBuffer() ).GetBuffer();
+            const VulkanStorageMemoryPoolBuffer* count_pool =
+                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( batch.mCount.GetMemoryPoolBuffer() );
+            VkBuffer count_buffer = reinterpret_cast<const VulkanBuffer&> ( count_pool->GetBuffer() ).GetBuffer();
+            vkCmdDrawIndexedIndirectCount ( mVkCommandBuffer, commands_buffer, batch.mCommands.GetOffset(),
+                                            count_buffer, batch.mCount.GetOffset(), batch.mMaxDraws,
+                                            sizeof ( VkDrawIndexedIndirectCommand ) );
+        }
+        mCulledShadingBatches.clear();
+    }
+
     void VulkanWindow::RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
                                       const Mesh& aMesh,
                                       const Pipeline& aPipeline,

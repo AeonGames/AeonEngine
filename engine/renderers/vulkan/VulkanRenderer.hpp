@@ -339,6 +339,8 @@ namespace AeonGames
         // the merged indirect multi-draw path.
         std::vector<const Mesh*> mSuperBatchMeshes{};
         std::vector<const Material*> mSuperBatchMaterials{};
+        // Scratch buffer holding one pooled shading group's GPU cull candidates.
+        std::vector<GpuCullInstance> mCullInstances{};
         // Fallback textures for each canonical material sampler slot
         // (kMaterialSamplerSlots), bound when a material omits that sampler
         // (e.g. an untextured material drawn with a diffuse-map shader, or a

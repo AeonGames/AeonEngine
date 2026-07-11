@@ -18,6 +18,7 @@ set(PIPELINES
     "clustered_phong|vert=static_mesh.vert|frag=clustered_phong.frag"
     "cluster_build|comp=cluster_build.comp"
     "light_cull|comp=light_cull.comp"
+    "cull|comp=cull.comp"
     "cluster_mark|vert=cluster_mark.vert|frag=cluster_mark.frag"
     "lighting|comp=lighting.0.comp|comp=lighting.1.comp"
     "skinning|comp=skinning.comp"

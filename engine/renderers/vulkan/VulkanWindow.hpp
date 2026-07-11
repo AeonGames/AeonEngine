@@ -40,6 +40,17 @@ namespace AeonGames
     class Pipeline;
     class BufferAccessor;
     class VulkanRenderer;
+    /// @brief One GPU-driven culling candidate, mirroring the std430
+    ///        GpuCullInstance in cull.comp (112 bytes): model matrix, local-space
+    ///        AABB (center + half-extents in .xyz) and packed draw parameters
+    ///        (index count, first index, base vertex, material index).
+    struct GpuCullInstance
+    {
+        Matrix4x4 mModel;
+        float mCenter[4];
+        float mRadii[4];
+        uint32_t mDraw[4];
+    };
     /** @brief Vulkan per-window swapchain, render pass, and rendering state. */
     class VulkanWindow
     {
@@ -138,6 +149,21 @@ namespace AeonGames
         void RenderMultiBatch ( const Pipeline& aPipeline, std::span<const Matrix4x4> aTransforms,
                                 std::span<const Mesh* const> aMeshes, std::span<const Material* const> aMaterials,
                                 RenderPass aRenderPass ) const;
+        /// @brief Run the GPU frustum-cull compute for one pooled shading batch:
+        ///        upload the candidate instances, dispatch cull.comp, and record
+        ///        the compacted command / count / model / material buffers for a
+        ///        later vkCmdDrawIndexedIndirectCount. Must run outside a render
+        ///        pass; loads the cull pipeline on first use.
+        void CullShadingBatch ( const Pipeline& aShadingPipeline, const Mesh& aRepresentativeMesh,
+                                std::span<const GpuCullInstance> aInstances );
+        /// @brief Barrier the cull compute's writes so the shading pass's indirect
+        ///        draws and vertex reads observe them. Call after the cull
+        ///        dispatches, before beginning the shading render pass.
+        void BarrierComputeToIndirect() const;
+        /// @brief Draw every batch recorded by CullShadingBatch with
+        ///        vkCmdDrawIndexedIndirectCount, then clear the list. Call inside
+        ///        the shading render pass.
+        void DrawCulledShadingBatches();
         /** @brief Dispatch the compute stage of a pipeline.
          *  @param aPipeline Pipeline whose compute stage to dispatch.
          *  @param aGroupCountX Number of workgroups in X.
@@ -347,6 +373,28 @@ namespace AeonGames
         // lazily the first frame clustering runs.
         Pipeline mClusterMarkPipeline{};
         bool mClusterMarkLoaded{false};
+        // Renderer-owned GPU frustum-cull compute pipeline, loaded lazily the
+        // first time a pooled shading batch is culled.
+        Pipeline mCullPipeline{};
+        bool mCullLoaded{false};
+        // One pooled shading batch whose draw commands were generated on the GPU
+        // by the cull compute; drawn with vkCmdDrawIndexedIndirectCount.
+        struct CulledShadingBatch
+        {
+            const VulkanPipeline* mPipeline;
+            const Mesh* mRepresentativeMesh;
+            BufferAccessor mCommands;
+            BufferAccessor mCount;
+            BufferAccessor mModels;
+            BufferAccessor mMaterials;
+            uint32_t mMaxDraws;
+        };
+        std::vector<CulledShadingBatch> mCulledShadingBatches{};
+        // Bind an existing storage-pool allocation as a dynamic SSBO at a binding
+        // location, if the pipeline declares it (zero dynamic offset; the
+        // allocation's own descriptor set covers exactly its range).
+        void BindStoragePoolDescriptor ( const VulkanPipeline* aPipeline, uint32_t aBindingLocation,
+                                         const BufferAccessor& aBuffer ) const;
         // Renderer-owned directional-shadow depth pipeline, loaded lazily the
         // first frame a shadow caster is present.
         Pipeline mShadowDepthPipeline{};

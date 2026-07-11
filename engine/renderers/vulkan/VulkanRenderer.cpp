@@ -1580,28 +1580,88 @@ namespace AeonGames
             return;
         }
         VulkanWindow& window = it->second;
-        if ( aRenderPass == RenderPass::Shading )
-        {
-            // The shading render pass begins here (moved out of EndDepthPrePass /
-            // BeginRender) so a GPU cull-compute step can run just before it,
-            // outside any render pass. EndRender closes it.
-            window.BeginRenderPass();
-        }
-        // Pooled static meshes (weightless, indexed) that share a pipeline are
-        // merged into one indirect multi-draw. Skinned, private (weighted) or
-        // non-indexed items draw individually. The queue is sorted by (pipeline,
-        // material, mesh), so a pipeline's poolable items -- and within them each
-        // mesh's instances -- are already contiguous.
         const std::vector<RenderItem>& queue = aScene.GetRenderQueue();
         const size_t count = queue.size();
+        // A "poolable" item is a weightless, indexed static mesh living in the
+        // shared geometry pool; poolable items sharing a pipeline draw together.
+        auto poolable = [this] ( const RenderItem & aItem ) -> bool
+        {
+            return aItem.mSkinnedVertices == nullptr &&
+            aItem.mMesh->GetIndexCount() != 0 &&
+            GetVulkanMesh ( *aItem.mMesh )->IsPooled();
+        };
+
+        if ( aRenderPass == RenderPass::Shading )
+        {
+            // GPU-driven shading: frustum-cull each pooled pipeline group on the
+            // GPU (outside any render pass), then begin the shading pass and draw
+            // the compacted commands with vkCmdDrawIndexedIndirectCount. Skinned /
+            // private / non-indexed items draw individually afterwards.
+            size_t i = 0;
+            while ( i < count )
+            {
+                if ( !poolable ( queue[i] ) )
+                {
+                    ++i;
+                    continue;
+                }
+                const RenderItem& head = queue[i];
+                size_t j = i + 1;
+                while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) )
+                {
+                    ++j;
+                }
+                mCullInstances.clear();
+                mCullInstances.reserve ( j - i );
+                for ( size_t k = i; k < j; ++k )
+                {
+                    const RenderItem& item = queue[k];
+                    const VulkanMesh* vulkan_mesh = GetVulkanMesh ( *item.mMesh );
+                    const AABB& aabb = item.mMesh->GetAABB();
+                    const Vector3& center = aabb.GetCenter();
+                    const Vector3& radii = aabb.GetRadii();
+                    GpuCullInstance instance{};
+                    instance.mModel = item.mTransform;
+                    instance.mCenter[0] = center.GetX();
+                    instance.mCenter[1] = center.GetY();
+                    instance.mCenter[2] = center.GetZ();
+                    instance.mRadii[0] = radii.GetX();
+                    instance.mRadii[1] = radii.GetY();
+                    instance.mRadii[2] = radii.GetZ();
+                    instance.mDraw[0] = item.mMesh->GetIndexCount();
+                    instance.mDraw[1] = vulkan_mesh->GetFirstIndex();
+                    instance.mDraw[2] = vulkan_mesh->GetBaseVertex();
+                    instance.mDraw[3] = item.mMaterial ? GetVulkanMaterial ( *item.mMaterial )->GetBindlessMaterialIndex() : 0u;
+                    mCullInstances.push_back ( instance );
+                }
+                window.CullShadingBatch ( *head.mPipeline, *head.mMesh, mCullInstances );
+                i = j;
+            }
+            window.BarrierComputeToIndirect();
+            window.BeginRenderPass();
+            window.DrawCulledShadingBatches();
+            for ( size_t k = 0; k < count; ++k )
+            {
+                const RenderItem& item = queue[k];
+                if ( poolable ( item ) )
+                {
+                    continue;
+                }
+                window.Render ( item.mTransform, *item.mMesh, *item.mPipeline, item.mMaterial,
+                                Topology::TRIANGLE_LIST, 0, 0xffffffff, 1, 0, item.mSkinnedVertices, aRenderPass );
+            }
+            return;
+        }
+
+        // Shadow / depth passes: CPU-built indirect multi-draw for pooled groups
+        // plus individual draws for skinned / private / non-indexed items. The
+        // queue is sorted by (pipeline, material, mesh) so poolable runs -- and
+        // within them each mesh's instances -- are contiguous.
         size_t i = 0;
         while ( i < count )
         {
             const RenderItem& head = queue[i];
-            const bool head_poolable = head.mSkinnedVertices == nullptr &&
-                                       head.mMesh->GetIndexCount() != 0 &&
-                                       GetVulkanMesh ( *head.mMesh )->IsPooled();
-            if ( !head_poolable )
+            if ( !poolable ( head ) )
             {
                 window.Render ( head.mTransform, *head.mMesh, *head.mPipeline, head.mMaterial,
                                 Topology::TRIANGLE_LIST, 0, 0xffffffff, 1, 0, head.mSkinnedVertices, aRenderPass );
@@ -1609,16 +1669,8 @@ namespace AeonGames
                 continue;
             }
             size_t j = i + 1;
-            while ( j < count )
+            while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) )
             {
-                const RenderItem& item = queue[j];
-                if ( item.mPipeline != head.mPipeline ||
-                     item.mSkinnedVertices != nullptr ||
-                     item.mMesh->GetIndexCount() == 0 ||
-                     !GetVulkanMesh ( *item.mMesh )->IsPooled() )
-                {
-                    break;
-                }
                 ++j;
             }
             mInstanceTransforms.clear();
