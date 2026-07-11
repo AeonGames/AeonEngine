@@ -253,6 +253,7 @@ void main()
         FinalizeOverlay();
         mTextureStore.clear();
         mMeshStore.clear();
+        FinalizeGeometry();
         mMaterialStore.clear();
         mMaterialStorageBuffer.Finalize();
         mPipelineStore.clear();
@@ -404,6 +405,7 @@ void main()
         FinalizeOverlay();
         mTextureStore.clear();
         mMeshStore.clear();
+        FinalizeGeometry();
         mMaterialStore.clear();
         mMaterialStorageBuffer.Finalize();
         mPipelineStore.clear();
@@ -603,6 +605,84 @@ void main()
         {
             it->second.EnableAttributes ( mCurrentPipeline->GetVertexAttributes(), aSkinnedVertexOffset, aSkinnedVertexStride );
         }
+    }
+
+    void OpenGLRenderer::EnsureArenaCapacity ( GeometryArena& aArena, GLsizeiptr aRequired ) const
+    {
+        if ( aArena.mBuffer && aArena.mCapacity >= aRequired )
+        {
+            return;
+        }
+        // Grow geometrically (at least double, at least the required size) so a
+        // scene's meshes amortise to a handful of reallocations. 16 MiB start.
+        constexpr GLsizeiptr kInitialCapacity{ 16 * 1024 * 1024 };
+        GLsizeiptr new_capacity{ aArena.mCapacity ? aArena.mCapacity * 2 : kInitialCapacity };
+        while ( new_capacity < aRequired )
+        {
+            new_capacity *= 2;
+        }
+        auto new_buffer = std::make_unique<OpenGLBuffer>();
+        new_buffer->Initialize ( static_cast<GLsizei> ( new_capacity ), GL_STATIC_DRAW, nullptr );
+        if ( aArena.mBuffer && aArena.mUsed > 0 )
+        {
+            // Copy the live contents into the larger buffer. Runs only at mesh load.
+            glCopyNamedBufferSubData ( aArena.mBuffer->GetBufferId(), new_buffer->GetBufferId(), 0, 0, aArena.mUsed );
+            OPENGL_CHECK_ERROR_THROW;
+        }
+        // Retire the old buffer rather than deleting it: a frame that is still
+        // recording may have bound it to the shared VAO, and deleting it now
+        // could disturb that draw. Its data already lives in the new buffer.
+        if ( aArena.mBuffer )
+        {
+            mRetiredGeometryBuffers.push_back ( std::move ( aArena.mBuffer ) );
+        }
+        aArena.mBuffer = std::move ( new_buffer );
+        aArena.mCapacity = new_capacity;
+    }
+
+    OpenGLRenderer::GeometryAllocation OpenGLRenderer::RegisterMeshGeometry ( uint32_t aStride, const void* aVertexData,
+            GLsizeiptr aVertexBytes, const uint32_t* aIndexData, uint32_t aIndexCount ) const
+    {
+        GeometryAllocation allocation{ 0, 0 };
+        if ( aStride != 0 && aVertexBytes != 0 && aVertexData != nullptr )
+        {
+            // One arena per stride: mUsed stays a multiple of the stride (each
+            // mesh contributes vertexCount*stride bytes), so base_vertex is exact.
+            GeometryArena& arena = mGeometryVertexArenas[aStride];
+            EnsureArenaCapacity ( arena, arena.mUsed + aVertexBytes );
+            arena.mBuffer->WriteMemory ( arena.mUsed, aVertexBytes, aVertexData );
+            allocation.mBaseVertex = static_cast<uint32_t> ( arena.mUsed / aStride );
+            arena.mUsed += aVertexBytes;
+        }
+        if ( aIndexCount != 0 && aIndexData != nullptr )
+        {
+            const GLsizeiptr index_bytes = static_cast<GLsizeiptr> ( aIndexCount ) * static_cast<GLsizeiptr> ( sizeof ( uint32_t ) );
+            EnsureArenaCapacity ( mGeometryIndexArena, mGeometryIndexArena.mUsed + index_bytes );
+            mGeometryIndexArena.mBuffer->WriteMemory ( mGeometryIndexArena.mUsed, index_bytes, aIndexData );
+            allocation.mFirstIndex = static_cast<uint32_t> ( mGeometryIndexArena.mUsed / sizeof ( uint32_t ) );
+            mGeometryIndexArena.mUsed += index_bytes;
+        }
+        return allocation;
+    }
+
+    GLuint OpenGLRenderer::GetGeometryVertexBufferId ( uint32_t aStride ) const
+    {
+        auto it = mGeometryVertexArenas.find ( aStride );
+        return ( it != mGeometryVertexArenas.end() && it->second.mBuffer ) ? it->second.mBuffer->GetBufferId() : 0;
+    }
+
+    GLuint OpenGLRenderer::GetGeometryIndexBufferId() const
+    {
+        return mGeometryIndexArena.mBuffer ? mGeometryIndexArena.mBuffer->GetBufferId() : 0;
+    }
+
+    void OpenGLRenderer::FinalizeGeometry()
+    {
+        mGeometryVertexArenas.clear();
+        mGeometryIndexArena.mBuffer.reset();
+        mGeometryIndexArena.mUsed = 0;
+        mGeometryIndexArena.mCapacity = 0;
+        mRetiredGeometryBuffers.clear();
     }
 
     void OpenGLRenderer::LoadPipeline ( const Pipeline& aPipeline )

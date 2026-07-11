@@ -52,11 +52,36 @@ namespace AeonGames
         /** @brief Get the vertex buffer object id, for binding the static vertex
          * data as a storage buffer (SSBO) source in compute skinning. */
         GLuint GetVertexBufferId() const;
+        /** @brief True when this (static, non-skinned) mesh's geometry lives in
+         * the renderer's shared pool and is drawn with base-vertex/first-index
+         * offsets rather than from its own buffers. */
+        bool IsPooled() const
+        {
+            return mPooled;
+        }
+        /** @brief First vertex of this mesh within the shared per-stride vertex
+         * pool (stride units); the draw call's base vertex. */
+        uint32_t GetBaseVertex() const
+        {
+            return mBaseVertex;
+        }
+        /** @brief First index of this mesh within the shared uint32 index pool. */
+        uint32_t GetFirstIndex() const
+        {
+            return mFirstIndex;
+        }
     private:
         const OpenGLRenderer& mOpenGLRenderer;
         const Mesh* mMesh{nullptr};
         OpenGLBuffer mVertexBuffer{};
         OpenGLBuffer mIndexBuffer{};
+        // Shared geometry pool placement (valid when mPooled). Static meshes are
+        // uploaded into the renderer's shared per-stride vertex pool and shared
+        // uint32 index pool at load; the draw sources them via these offsets.
+        bool mPooled{false};
+        uint32_t mStride{0};
+        uint32_t mBaseVertex{0};
+        uint32_t mFirstIndex{0};
     };
 }
 #endif

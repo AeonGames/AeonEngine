@@ -19,6 +19,7 @@ limitations under the License.
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
+#include <memory>
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Transform.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -123,6 +124,26 @@ namespace AeonGames
         void UnregisterBindlessMaterial ( uint32_t aIndex );
         /// @brief Get the global bindless material storage buffer object.
         GLuint GetMaterialStorageBufferId() const;
+        /// @brief Result of registering a mesh into the shared geometry pool:
+        ///        the base vertex (in stride units) and first index (uint32
+        ///        units) handed to the draw call.
+        struct GeometryAllocation
+        {
+            uint32_t mBaseVertex;
+            uint32_t mFirstIndex;
+        };
+        /// @brief Upload a static (non-skinned) mesh's vertices and uint32
+        ///        indices into the shared per-stride vertex pool and the shared
+        ///        index pool, returning the base vertex (stride units) and first
+        ///        index (uint32 units) for the draw. Foundation for GPU-driven
+        ///        indirect drawing: many meshes share one bindable buffer pair.
+        GeometryAllocation RegisterMeshGeometry ( uint32_t aStride, const void* aVertexData,
+                GLsizeiptr aVertexBytes, const uint32_t* aIndexData, uint32_t aIndexCount ) const;
+        /// @brief The shared vertex pool buffer object for a given vertex stride,
+        ///        bound as the vertex array source for pooled static meshes.
+        GLuint GetGeometryVertexBufferId ( uint32_t aStride ) const;
+        /// @brief The shared uint32 index pool buffer object, bound for pooled meshes.
+        GLuint GetGeometryIndexBufferId() const;
 
         void AttachWindow ( void* aWindowId ) final;
         void DetachWindow ( void* aWindowId ) final;
@@ -236,6 +257,34 @@ namespace AeonGames
         uint32_t mBindlessMaterialHighWater{};
         std::vector<uint32_t> mBindlessMaterialFreeSlots{};
         ///@}
+        // Shared geometry pool for static (non-skinned) meshes: one growable
+        // vertex buffer per vertex stride plus one growable uint32 index buffer.
+        // Meshes register their geometry once at load and are drawn from these
+        // shared buffers via base-vertex/first-index offsets -- the foundation
+        // for GPU-driven indirect draws (many meshes, one bindable buffer pair).
+        // Skinned meshes keep their own buffers because their vertices are
+        // re-posed each frame into a separate compute-written buffer.
+        struct GeometryArena
+        {
+            std::unique_ptr<OpenGLBuffer> mBuffer{};
+            GLsizeiptr mUsed{ 0 };
+            GLsizeiptr mCapacity{ 0 };
+        };
+        mutable std::unordered_map<uint32_t, GeometryArena> mGeometryVertexArenas{};
+        mutable GeometryArena mGeometryIndexArena{};
+        // Arena buffers replaced by a larger one during growth. Meshes load
+        // lazily while a frame records, so an old buffer may still be bound to
+        // the shared VAO; deleting it immediately could disturb that in-flight
+        // draw. They are kept alive here -- their data was copied into the new
+        // buffer -- and released together at shutdown. Growth is geometric and
+        // stops once the scene's meshes are resident, so this stays bounded.
+        mutable std::vector<std::unique_ptr<OpenGLBuffer>> mRetiredGeometryBuffers{};
+        /// @brief Ensure an arena buffer holds @p aRequired bytes, reallocating
+        ///        and GPU-copying the existing contents when it must grow. Only
+        ///        called at mesh-load time.
+        void EnsureArenaCapacity ( GeometryArena& aArena, GLsizeiptr aRequired ) const;
+        /// @brief Destroy the shared geometry pool buffers.
+        void FinalizeGeometry();
         /** \addtogroup OverlayFunctionality Overlay functionality.
          * Both the shader program and the buffer describing the window/screen quad are
          * pretty much constant and usable without modifications by any Opengl window,

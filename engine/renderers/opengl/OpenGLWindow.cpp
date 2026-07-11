@@ -452,15 +452,36 @@ namespace AeonGames
         // instance buffer can hold every batch and each draw selects its slice;
         // this mirrors the Vulkan path's firstInstance argument.
         mOpenGLRenderer.BindMesh ( aMesh, skinned_vertex_buffer_id, skinned_vertex_offset, skinned_vertex_stride );
+        // Static (non-skinned) meshes are pooled into the renderer's shared
+        // geometry buffers; they draw with base-vertex/first-index offsets from
+        // the uint32 index pool. Skinned draws (a pre-skinned buffer is bound)
+        // and any non-pooled mesh keep the per-mesh-buffer path.
+        const OpenGLMesh* gl_mesh = mOpenGLRenderer.GetOpenGLMesh ( aMesh );
+        const bool pooled = ( gl_mesh != nullptr && gl_mesh->IsPooled() && skinned_vertex_buffer_id == 0 );
         if ( aMesh.GetIndexCount() )
         {
-            glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
-                                                  GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
+            if ( pooled )
+            {
+                glDrawElementsInstancedBaseVertexBaseInstance (
+                    TopologyMap.at ( aTopology ),
+                    ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                    GL_UNSIGNED_INT,
+                    reinterpret_cast<const uint8_t*> ( 0 ) + ( static_cast<size_t> ( gl_mesh->GetFirstIndex() ) + aVertexStart ) * sizeof ( uint32_t ),
+                    aInstanceCount,
+                    static_cast<GLint> ( gl_mesh->GetBaseVertex() ),
+                    aFirstInstance );
+            }
+            else
+            {
+                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                                                      GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
+            }
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         else
         {
-            glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), aVertexStart, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
+            const GLint first = pooled ? static_cast<GLint> ( gl_mesh->GetBaseVertex() ) + static_cast<GLint> ( aVertexStart ) : static_cast<GLint> ( aVertexStart );
+            glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), first, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }

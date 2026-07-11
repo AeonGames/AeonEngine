@@ -123,6 +123,9 @@ glDrawArraysInstanced
 glDrawElementsInstanced
 glDrawArraysInstancedBaseInstance
 glDrawElementsInstancedBaseInstance
+// Base-vertex indexed instancing (GL 4.2): draws a pooled static mesh from the
+// shared geometry buffers, offsetting into them by base vertex + first index.
+glDrawElementsInstancedBaseVertexBaseInstance
 glGenRenderbuffers
 glBindRenderbuffer
 glRenderbufferStorage
