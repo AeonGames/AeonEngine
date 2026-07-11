@@ -509,6 +509,101 @@ namespace AeonGames
                        static_cast<uint32_t> ( aModelMatrices.size() ), 0, nullptr, aRenderPass );
     }
 
+    void OpenGLWindow::RenderMultiBatch ( const Pipeline& aPipeline,
+                                          std::span<const Matrix4x4> aTransforms,
+                                          std::span<const Mesh* const> aMeshes,
+                                          std::span<const Material* const> aMaterials,
+                                          RenderPass aRenderPass ) const
+    {
+        if ( aMeshes.empty() )
+        {
+            return;
+        }
+        // Same pass-pipeline selection and engine state as RenderCommon: shadow /
+        // depth-pre passes substitute the renderer-owned depth-only pipelines.
+        switch ( aRenderPass )
+        {
+        case RenderPass::ShadowPass:
+            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
+            BindShadowPassState();
+            break;
+        case RenderPass::DepthPrePass:
+            mOpenGLRenderer.BindPipeline ( mClusterMarkPipeline );
+            BindDepthPrePassState();
+            break;
+        default:
+            mOpenGLRenderer.BindPipeline ( aPipeline );
+            BindShadingPassState();
+            break;
+        }
+        // Every instance's model matrix goes into one shared InstanceMatrices
+        // allocation; each command's base instance selects its slice (the shading
+        // vertex shader indexes it by gl_BaseInstanceARB + gl_InstanceID).
+        BindObjectMatrices ( aTransforms );
+        // Shading pass: upload the per-instance bindless material indices the
+        // fragment shader reads through the flat varying (parallel to the matrices).
+        if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass )
+        {
+            mOpenGLRenderer.BindMaterialStorageBuffer();
+            mInstanceMaterials.clear();
+            mInstanceMaterials.reserve ( aMaterials.size() );
+            for ( const Material * material : aMaterials )
+            {
+                mInstanceMaterials.push_back ( material != nullptr ? mOpenGLRenderer.GetMaterialBindlessIndex ( *material ) : 0u );
+            }
+            const size_t materials_size = mInstanceMaterials.size() * sizeof ( uint32_t );
+            BufferAccessor instance_materials = mStorageMemoryPoolBuffer.Allocate ( materials_size );
+            instance_materials.WriteMemory ( 0, materials_size, mInstanceMaterials.data() );
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::INSTANCE_MATERIALS, instance_materials );
+        }
+        // Every mesh here is pooled and shares the pipeline's vertex stride, so
+        // binding one pooled mesh binds the shared vertex + index pool buffers and
+        // the attribute layout for all of them; each command's base vertex / first
+        // index picks its mesh.
+        mOpenGLRenderer.BindMesh ( *aMeshes.front() );
+        // One indirect command per distinct mesh; consecutive equal meshes (the
+        // queue keeps them adjacent) share a command with instanceCount = run.
+        mIndirectCommands.clear();
+        uint32_t instance_base = 0;
+        size_t i = 0;
+        while ( i < aMeshes.size() )
+        {
+            const Mesh* mesh = aMeshes[i];
+            uint32_t run = 1;
+            while ( i + run < aMeshes.size() && aMeshes[i + run] == mesh )
+            {
+                ++run;
+            }
+            const OpenGLMesh* gl_mesh = mOpenGLRenderer.GetOpenGLMesh ( *mesh );
+            DrawElementsIndirectCommand command{};
+            command.mCount = mesh->GetIndexCount();
+            command.mInstanceCount = run;
+            command.mFirstIndex = gl_mesh->GetFirstIndex();
+            command.mBaseVertex = gl_mesh->GetBaseVertex();
+            command.mBaseInstance = instance_base;
+            mIndirectCommands.push_back ( command );
+            instance_base += run;
+            i += run;
+        }
+        const size_t commands_size = mIndirectCommands.size() * sizeof ( DrawElementsIndirectCommand );
+        // Upload the commands into the per-frame storage pool and issue the whole
+        // super-batch with one indirect multi-draw. The pool is persistent-coherent
+        // so the CPU-written commands are visible without a barrier.
+        BufferAccessor indirect = mStorageMemoryPoolBuffer.Allocate ( commands_size );
+        indirect.WriteMemory ( 0, commands_size, mIndirectCommands.data() );
+        const OpenGLBuffer& indirect_buffer =
+            reinterpret_cast<const OpenGLBuffer&> ( indirect.GetMemoryPoolBuffer()->GetBuffer() );
+        glBindBuffer ( GL_DRAW_INDIRECT_BUFFER, indirect_buffer.GetBufferId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glMultiDrawElementsIndirect ( GL_TRIANGLES, GL_UNSIGNED_INT,
+                                      reinterpret_cast<const void*> ( static_cast<uintptr_t> ( indirect.GetOffset() ) ),
+                                      static_cast<GLsizei> ( mIndirectCommands.size() ),
+                                      sizeof ( DrawElementsIndirectCommand ) );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glBindBuffer ( GL_DRAW_INDIRECT_BUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
     void OpenGLWindow::BindShadingPassState() const
     {
         mOpenGLRenderer.SetMatrices ( mMatrices );

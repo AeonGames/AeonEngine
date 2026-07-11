@@ -1,5 +1,9 @@
 #version 450
 
+#ifndef VULKAN
+#extension GL_ARB_shader_draw_parameters : require
+#endif
+
 // Point shadow depth pass vertex shader (OpenGL geometry-shader path).
 // Transforms each vertex to world space and forwards it; point_shadow_depth.geom
 // projects it into the six cube faces and routes each to its array layer. On
@@ -20,7 +24,7 @@ readonly buffer InstanceMatrices
 #ifdef VULKAN
 #define MODEL_MATRIX InstanceModelMatrices[gl_InstanceIndex]
 #else
-#define MODEL_MATRIX InstanceModelMatrices[gl_InstanceID]
+#define MODEL_MATRIX InstanceModelMatrices[gl_BaseInstanceARB + gl_InstanceID]
 #endif
 
 layout(location = 0) in vec3 VertexPosition;

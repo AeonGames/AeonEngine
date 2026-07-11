@@ -77,6 +77,11 @@ namespace AeonGames
         void BindComputePipeline ( const Pipeline& aPipeline, uint32_t aComputeStageIndex );
         /// @brief Set the active material for rendering.
         void SetMaterial ( const Material& aMaterial );
+        /// @brief Bind the global bindless material SSBO to the current pipeline's
+        ///        Bindless block. Used by RenderMultiBatch, whose per-instance
+        ///        material index comes from InstanceMaterials (no per-material
+        ///        Bind runs to bind it).
+        void BindMaterialStorageBuffer() const;
 
         /// @brief Bind a storage buffer (SSBO) to the current pipeline's
         ///        storage block identified by the CRC32 of its GLSL block name.
@@ -128,8 +133,7 @@ namespace AeonGames
         ///        loading it on demand. The draw path writes this per-instance
         ///        into the InstanceMaterials buffer so the shading shader selects
         ///        the record (parallel to the per-instance model matrices).
-        uint32_t GetMaterialBindlessIndex ( const Material& aMaterial );
-        /// @brief Result of registering a mesh into the shared geometry pool:
+        uint32_t GetMaterialBindlessIndex ( const Material& aMaterial );        /// @brief Result of registering a mesh into the shared geometry pool:
         ///        the base vertex (in stride units) and first index (uint32
         ///        units) handed to the draw call.
         struct GeometryAllocation
@@ -318,6 +322,10 @@ namespace AeonGames
         std::unordered_map<void*, OpenGLWindow> mWindowStore{}; ///< Attached window map.
         /// Reused scratch for gathering a batch's transforms for instanced draws.
         std::vector<Matrix4x4> mInstanceTransforms{};
+        /// Reused scratch for gathering a super-batch's meshes and materials
+        /// (consecutive same-pipeline pooled items) for one indirect multi-draw.
+        std::vector<const Mesh*> mSuperBatchMeshes{};
+        std::vector<const Material*> mSuperBatchMaterials{};
     private:
         static std::atomic<size_t> mRendererCount;
 #if defined(__unix__)

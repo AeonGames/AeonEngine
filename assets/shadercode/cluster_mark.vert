@@ -1,5 +1,9 @@
 #version 450
 
+#ifndef VULKAN
+#extension GL_ARB_shader_draw_parameters : require
+#endif
+
 // Depth pre-pass mark stage (Phase R2). Rasterizes geometry only to record
 // which clusters are occupied; mirrors the vertex inputs of
 // static_mesh.vert so the same static meshes bind unchanged.
@@ -29,7 +33,7 @@ readonly buffer InstanceMatrices
 #ifdef VULKAN
 #define MODEL_MATRIX InstanceModelMatrices[gl_InstanceIndex]
 #else
-#define MODEL_MATRIX InstanceModelMatrices[gl_InstanceID]
+#define MODEL_MATRIX InstanceModelMatrices[gl_BaseInstanceARB + gl_InstanceID]
 #endif
 
 layout(location = 0) in vec3 VertexPosition;

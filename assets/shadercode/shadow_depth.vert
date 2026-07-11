@@ -1,5 +1,9 @@
 #version 450
 
+#ifndef VULKAN
+#extension GL_ARB_shader_draw_parameters : require
+#endif
+
 // Directional shadow depth pass. Rasterizes static geometry into the shadow
 // map using the light's world-space view-projection. Mirrors the vertex inputs
 // of cluster_mark.vert / static_mesh.vert so the same static
@@ -29,7 +33,7 @@ readonly buffer InstanceMatrices
 #ifdef VULKAN
 #define MODEL_MATRIX InstanceModelMatrices[gl_InstanceIndex]
 #else
-#define MODEL_MATRIX InstanceModelMatrices[gl_InstanceID]
+#define MODEL_MATRIX InstanceModelMatrices[gl_BaseInstanceARB + gl_InstanceID]
 #endif
 
 layout(location = 0) in vec3 VertexPosition;

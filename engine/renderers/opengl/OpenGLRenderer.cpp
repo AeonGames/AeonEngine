@@ -758,6 +758,25 @@ void main()
         return ( it != mMaterialStore.end() ) ? it->second.GetBindlessMaterialIndex() : UINT32_MAX;
     }
 
+    void OpenGLRenderer::BindMaterialStorageBuffer() const
+    {
+        if ( mCurrentPipeline == nullptr )
+        {
+            return;
+        }
+        // Bind the renderer-owned global bindless material SSBO to the current
+        // pipeline's Bindless block. RenderMultiBatch needs this (the per-instance
+        // material index comes from InstanceMaterials, so no per-material Bind is
+        // called that would otherwise bind it).
+        const OpenGLUniformBlock* material_block = mCurrentPipeline->GetStorageBlock ( Mesh::BINDLESS );
+        if ( material_block == nullptr )
+        {
+            return;
+        }
+        glBindBufferBase ( GL_SHADER_STORAGE_BUFFER, material_block->binding, GetMaterialStorageBufferId() );
+        OPENGL_CHECK_ERROR_THROW;
+    }
+
     void OpenGLRenderer::BindStorageBuffer ( uint32_t aBinding, const BufferAccessor& aBuffer ) const
     {
         if ( mCurrentPipeline == nullptr )
@@ -1303,43 +1322,50 @@ void main()
             return;
         }
         OpenGLWindow& aWindow = it->second;
-        aScene.ForEachRenderBatch ( [this, &aWindow, aRenderPass] ( std::span<const RenderItem> aBatch )
+        const std::vector<RenderItem>& queue = aScene.GetRenderQueue();
+        const size_t count = queue.size();
+        // A "poolable" item is a weightless, indexed static mesh living in the
+        // shared geometry pool; poolable items sharing a pipeline draw together
+        // with one indirect multi-draw.
+        auto poolable = [this] ( const RenderItem & aItem ) -> bool
+                        {
+                            const OpenGLMesh* mesh = GetOpenGLMesh ( *aItem.mMesh );
+                            return aItem.mSkinnedVertices == nullptr &&
+                                   aItem.mMesh->GetIndexCount() != 0 &&
+                                   mesh != nullptr && mesh->IsPooled();
+                        };
+        // The queue is sorted by (pipeline, material, mesh) so poolable runs --
+        // and within them each mesh's instances -- are contiguous. Each pooled
+        // pipeline group becomes one glMultiDrawElementsIndirect; skinned /
+        // private / non-indexed items draw individually.
+        size_t i = 0;
+        while ( i < count )
         {
-            const RenderItem& head = aBatch.front();
-            if ( aBatch.size() == 1 )
+            const RenderItem& head = queue[i];
+            if ( !poolable ( head ) )
             {
-                aWindow.Render (
-                    head.mTransform,
-                    *head.mMesh,
-                    *head.mPipeline,
-                    head.mMaterial,
-                    Topology::TRIANGLE_LIST,
-                    0,
-                    0xffffffff,
-                    1,
-                    0,
-                    head.mSkinnedVertices,
-                    aRenderPass );
-                return;
+                aWindow.Render ( head.mTransform, *head.mMesh, *head.mPipeline, head.mMaterial,
+                                 Topology::TRIANGLE_LIST, 0, 0xffffffff, 1, 0, head.mSkinnedVertices, aRenderPass );
+                ++i;
+                continue;
             }
-            // Gather the batch's transforms contiguously for one instanced draw.
-            // mInstanceTransforms is reused so this only allocates when a batch
-            // grows beyond any previously seen size.
+            size_t j = i + 1;
+            while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) )
+            {
+                ++j;
+            }
             mInstanceTransforms.clear();
-            for ( const RenderItem& item : aBatch )
+            mSuperBatchMeshes.clear();
+            mSuperBatchMaterials.clear();
+            for ( size_t k = i; k < j; ++k )
             {
-                mInstanceTransforms.push_back ( item.mTransform );
+                mInstanceTransforms.push_back ( queue[k].mTransform );
+                mSuperBatchMeshes.push_back ( queue[k].mMesh );
+                mSuperBatchMaterials.push_back ( queue[k].mMaterial );
             }
-            aWindow.RenderInstanced (
-                mInstanceTransforms,
-                *head.mMesh,
-                *head.mPipeline,
-                head.mMaterial,
-                Topology::TRIANGLE_LIST,
-                0,
-                0xffffffff,
-                aRenderPass );
-        } );
+            aWindow.RenderMultiBatch ( *head.mPipeline, mInstanceTransforms, mSuperBatchMeshes, mSuperBatchMaterials, aRenderPass );
+            i = j;
+        }
     }
     bool OpenGLRenderer::IsValidWindow ( void* aWindowId ) const
     {

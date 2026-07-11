@@ -120,6 +120,18 @@ namespace AeonGames
                                uint32_t aVertexStart = 0,
                                uint32_t aVertexCount = 0xffffffff,
                                RenderPass aRenderPass = RenderPass::Shading );
+        /// @brief Draw a super-batch of consecutive same-pipeline pooled meshes
+        ///        with one glMultiDrawElementsIndirect. All transforms go into one
+        ///        shared InstanceMatrices allocation and all material indices into
+        ///        one InstanceMaterials allocation; one indirect command per
+        ///        distinct mesh (consecutive equal meshes share a command with
+        ///        instanceCount = run) selects its slice via base vertex / first
+        ///        index / base instance. The GPU-driven merge (Vulkan parity).
+        void RenderMultiBatch ( const Pipeline& aPipeline,
+                                std::span<const Matrix4x4> aTransforms,
+                                std::span<const Mesh* const> aMeshes,
+                                std::span<const Material* const> aMaterials,
+                                RenderPass aRenderPass ) const;
         /** @brief Dispatch the compute stage of a pipeline.
          *  @param aPipeline Pipeline whose compute stage to dispatch.
          *  @param aGroupCountX Number of workgroups in X.
@@ -351,6 +363,18 @@ namespace AeonGames
         // Reused scratch holding one bindless material index per instance for
         // BindInstanceMaterials; grows once then amortises (no per-draw alloc).
         mutable std::vector<uint32_t> mInstanceMaterials{};
+        // GL_ARB_multi_draw_indirect command layout (5 x GLuint = 20 bytes); one
+        // per distinct mesh in a super-batch, consumed by glMultiDrawElementsIndirect.
+        struct DrawElementsIndirectCommand
+        {
+            GLuint mCount;
+            GLuint mInstanceCount;
+            GLuint mFirstIndex;
+            GLuint mBaseVertex;
+            GLuint mBaseInstance;
+        };
+        // Reused scratch of indirect commands for RenderMultiBatch (amortised).
+        mutable std::vector<DrawElementsIndirectCommand> mIndirectCommands{};
     };
 }
 #endif
