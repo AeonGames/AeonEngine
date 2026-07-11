@@ -74,6 +74,18 @@ namespace AeonGames
             return "VK_ERROR_INVALID_SHADER_NV";
         case VK_ERROR_OUT_OF_POOL_MEMORY_KHR:
             return "VK_ERROR_OUT_OF_POOL_MEMORY_KHR";
+        case VK_ERROR_UNKNOWN:
+            return "VK_ERROR_UNKNOWN";
+        case VK_ERROR_FRAGMENTED_POOL:
+            return "VK_ERROR_FRAGMENTED_POOL";
+        case VK_ERROR_INVALID_EXTERNAL_HANDLE:
+            return "VK_ERROR_INVALID_EXTERNAL_HANDLE";
+        case VK_ERROR_FRAGMENTATION:
+            return "VK_ERROR_FRAGMENTATION";
+        case VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS:
+            return "VK_ERROR_INVALID_OPAQUE_CAPTURE_ADDRESS";
+        case VK_PIPELINE_COMPILE_REQUIRED:
+            return "VK_PIPELINE_COMPILE_REQUIRED";
         default:
             return "Unknown Result";
         }

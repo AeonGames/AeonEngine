@@ -36,6 +36,13 @@ namespace AeonGames
         {
             return;
         }
+        // Skip the entire frame while the device is lost: recording any pass
+        // against dead GPU handles would fault. The backend rebuilds the device
+        // at the next BeginFrame, after which this gate reopens.
+        if ( IsDeviceLost() )
+        {
+            return;
+        }
         // The per-frame protocol, expressed once as an ordered sequence of step
         // primitives the backends implement. Keeping it here (rather than
         // duplicated per backend) means OpenGL and Vulkan render the scene

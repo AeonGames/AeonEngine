@@ -23,6 +23,7 @@ limitations under the License.
 
 #include <cassert>
 #include <cstring>
+#include <cstdlib>
 #include <iostream>
 #include <sstream>
 #include <array>
@@ -235,6 +236,13 @@ namespace AeonGames
     {
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_UTILS_EXTENSION_NAME );
         mInstanceExtensionNames.emplace_back ( VK_EXT_DEBUG_REPORT_EXTENSION_NAME );
+        // Opt-in GPU-Assisted Validation (AEON_GPU_AV): instruments shaders to
+        // report the exact out-of-bounds descriptor/buffer access, needed to
+        // pin down the intermittent device loss. Requires the validation layer.
+        if ( std::getenv ( "AEON_GPU_AV" ) != nullptr )
+        {
+            mInstanceExtensionNames.emplace_back ( VK_EXT_VALIDATION_FEATURES_EXTENSION_NAME );
+        }
         mInstanceLayerNames.emplace_back ( "VK_LAYER_KHRONOS_validation" );
     }
 
@@ -413,6 +421,18 @@ namespace AeonGames
 #ifdef VK_USE_PLATFORM_METAL_EXT
         instance_create_info.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
 #endif
+        // Chain GPU-Assisted Validation on when requested (see SetupDebug); it
+        // makes the validation layer report the precise offending shader access.
+        VkValidationFeaturesEXT validation_features{};
+        const VkValidationFeatureEnableEXT gpu_av_enables[] { VK_VALIDATION_FEATURE_ENABLE_GPU_ASSISTED_EXT };
+        if ( mValidate && std::getenv ( "AEON_GPU_AV" ) != nullptr )
+        {
+            validation_features.sType = VK_STRUCTURE_TYPE_VALIDATION_FEATURES_EXT;
+            validation_features.enabledValidationFeatureCount = 1;
+            validation_features.pEnabledValidationFeatures = gpu_av_enables;
+            validation_features.pNext = instance_create_info.pNext;
+            instance_create_info.pNext = &validation_features;
+        }
         if ( VkResult result = vkCreateInstance ( &instance_create_info, nullptr, &mVkInstance ) )
         {
             // On failure the loader may still have written a non-null (but
@@ -505,13 +525,40 @@ namespace AeonGames
             std::vector<VkExtensionProperties> extension_properties ( extension_property_count );
             vkEnumerateDeviceExtensionProperties ( mVkPhysicalDevice, nullptr, &extension_property_count, extension_properties.data() );
             std::cout << LogLevel::Info << "Vulkan Renderer Available Device Extensions" << std::endl;
+            // Recomputed on every (re-)run so device-lost recovery re-detects support.
+            mHasDeviceFault = false;
             for ( auto& i : extension_properties )
             {
                 std::cout << LogLevel::Info << "  - " << i.extensionName << " (version " << i.specVersion << ")" << std::endl;
 
                 if ( !strcmp ( i.extensionName, VK_EXT_DEBUG_MARKER_EXTENSION_NAME ) )
                 {
-                    mDeviceExtensionNames.emplace_back ( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
+                    // Guard against a duplicate entry: InitializeDevice is re-run
+                    // by device-lost recovery, and mDeviceExtensionNames persists
+                    // across the rebuild, so only add the marker extension once.
+                    if ( std::find_if ( mDeviceExtensionNames.begin(), mDeviceExtensionNames.end(),
+                                        [] ( const char * aName )
+                {
+                    return strcmp ( aName, VK_EXT_DEBUG_MARKER_EXTENSION_NAME ) == 0;
+                    } ) == mDeviceExtensionNames.end() )
+                    {
+                        mDeviceExtensionNames.emplace_back ( VK_EXT_DEBUG_MARKER_EXTENSION_NAME );
+                    }
+                }
+                if ( !strcmp ( i.extensionName, VK_EXT_DEVICE_FAULT_EXTENSION_NAME ) )
+                {
+                    // Enables vkGetDeviceFaultInfoEXT so a VK_ERROR_DEVICE_LOST can
+                    // be attributed to a specific faulting GPU address/type. Same
+                    // idempotent add as above (recovery re-runs this).
+                    if ( std::find_if ( mDeviceExtensionNames.begin(), mDeviceExtensionNames.end(),
+                                        [] ( const char * aName )
+                {
+                    return strcmp ( aName, VK_EXT_DEVICE_FAULT_EXTENSION_NAME ) == 0;
+                    } ) == mDeviceExtensionNames.end() )
+                    {
+                        mDeviceExtensionNames.emplace_back ( VK_EXT_DEVICE_FAULT_EXTENSION_NAME );
+                    }
+                    mHasDeviceFault = true;
                 }
             }
         }
@@ -639,6 +686,16 @@ namespace AeonGames
 #endif
         vulkan11_features.pNext = &vulkan12_features;
         device_create_info.pNext = &vulkan11_features;
+        // Prepend the device-fault feature to the pNext chain when supported so
+        // vkGetDeviceFaultInfoEXT can report the faulting address after a loss.
+        VkPhysicalDeviceFaultFeaturesEXT fault_features{};
+        fault_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FAULT_FEATURES_EXT;
+        if ( mHasDeviceFault )
+        {
+            fault_features.deviceFault = VK_TRUE;
+            fault_features.pNext = const_cast<void*> ( device_create_info.pNext );
+            device_create_info.pNext = &fault_features;
+        }
         device_create_info.queueCreateInfoCount = 1;
         device_create_info.pQueueCreateInfos = &device_queue_create_info;
         device_create_info.enabledLayerCount = static_cast<uint32_t> ( mDeviceLayerNames.size() );
@@ -671,6 +728,17 @@ namespace AeonGames
             throw std::runtime_error ( stream.str().c_str() );
         }
         vkGetDeviceQueue ( mVkDevice, mQueueFamilyIndex, 0, &mVkQueue );
+        // Resolve the device-fault query entry point now the device exists; if it
+        // cannot be resolved, disable the feature so diagnostics stay silent.
+        if ( mHasDeviceFault )
+        {
+            mVkGetDeviceFaultInfoEXT = reinterpret_cast<PFN_vkGetDeviceFaultInfoEXT> (
+                                           vkGetDeviceProcAddr ( mVkDevice, "vkGetDeviceFaultInfoEXT" ) );
+            if ( mVkGetDeviceFaultInfoEXT == nullptr )
+            {
+                mHasDeviceFault = false;
+            }
+        }
     }
 
     void VulkanRenderer::InitializeCommandPools()
@@ -1042,6 +1110,17 @@ namespace AeonGames
 
         std::cout << LogLevel::Debug << "Bindless texture array capacity: " << mBindlessTextureCapacity
                   << ", material records: " << mBindlessMaterialCapacity << std::endl;
+        // Log the material storage buffer's device-address range so a
+        // VK_ERROR_DEVICE_LOST READ_INVALID can be matched against it: the
+        // clustered shading fragment shader reads material records through this
+        // buffer by device address (Materials.data[vMaterialIndex]), an
+        // unchecked raw pointer, so an out-of-range index faults inside or just
+        // past this range.
+        std::cout << LogLevel::Debug << "Material storage buffer BDA range: 0x" << std::hex
+                  << mMaterialStorageBuffer.GetDeviceAddress() << " .. 0x"
+                  << ( mMaterialStorageBuffer.GetDeviceAddress() + mMaterialStorageBuffer.GetSize() )
+                  << std::dec << " (" << mBindlessMaterialCapacity << " records of "
+                  << ( mMaterialStorageBuffer.GetSize() / mBindlessMaterialCapacity ) << " bytes)" << std::endl;
     }
 
     void VulkanRenderer::FinalizeBindless()
@@ -1382,6 +1461,10 @@ namespace AeonGames
 
     void VulkanRenderer::SetProjectionMatrix ( void* aWindowId, const Matrix4x4& aMatrix )
     {
+        if ( mDeviceLost )
+        {
+            return;
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
@@ -1392,6 +1475,10 @@ namespace AeonGames
 
     void VulkanRenderer::SetViewMatrix ( void* aWindowId, const Matrix4x4& aMatrix )
     {
+        if ( mDeviceLost )
+        {
+            return;
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
@@ -1402,6 +1489,10 @@ namespace AeonGames
 
     void VulkanRenderer::SetLights ( void* aWindowId, std::span<const GpuLight> aLights )
     {
+        if ( mDeviceLost )
+        {
+            return;
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
@@ -1412,6 +1503,10 @@ namespace AeonGames
 
     void VulkanRenderer::SetGlobals ( void* aWindowId, const GpuGlobals& aGlobals )
     {
+        if ( mDeviceLost )
+        {
+            return;
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
@@ -1422,6 +1517,10 @@ namespace AeonGames
 
     void VulkanRenderer::SetEnvironmentMap ( void* aWindowId, const Texture* aEnvironmentMap )
     {
+        if ( mDeviceLost )
+        {
+            return;
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
@@ -1449,8 +1548,245 @@ namespace AeonGames
         }
         it->second.BeginRender ( aComputePipeline );
     }
+    bool VulkanRenderer::IsDeviceLost() const
+    {
+        return mDeviceLost;
+    }
+
+    void VulkanRenderer::NotifyDeviceLost()
+    {
+        if ( !mDeviceLost )
+        {
+            std::cout << LogLevel::Error << "Vulkan device lost (VK_ERROR_DEVICE_LOST)." << std::endl;
+            // Query the fault info while the lost device still exists (recovery
+            // destroys it next frame). Logs the faulting GPU address/type, which
+            // attributes an out-of-bounds read/write or shader fault the plain
+            // device-lost cannot.
+            LogDeviceFaultInfo();
+            // By default, HALT on the very first loss so the fault report above is
+            // the last output and is not buried under repeated recovery attempts
+            // (each re-enumerates the whole device and floods the log). This makes
+            // the original GPU fault easy to capture. Set AEON_RECOVER_DEVICE_LOST=1
+            // to instead attempt in-process recovery (useful for transient TDRs).
+            const char* recover_env = std::getenv ( "AEON_RECOVER_DEVICE_LOST" );
+            const bool recover = ( recover_env != nullptr ) && ( recover_env[0] != '\0' ) && ( recover_env[0] != '0' );
+            if ( !recover )
+            {
+                std::cout << LogLevel::Error << "Halting on first device loss to preserve the GPU fault report above. "
+                                                "Set AEON_RECOVER_DEVICE_LOST=1 to attempt recovery instead." << std::endl;
+                std::cout.flush();
+                std::cerr.flush();
+                std::abort();
+            }
+        }
+        mDeviceLost = true;
+    }
+
+    void VulkanRenderer::LogDeviceFaultInfo()
+    {
+        if ( mVkDevice == VK_NULL_HANDLE )
+        {
+            return;
+        }
+        if ( !mHasDeviceFault || mVkGetDeviceFaultInfoEXT == nullptr )
+        {
+            std::cout << LogLevel::Error << "==== GPU DEVICE FAULT REPORT ==== unavailable "
+                                            "(VK_EXT_device_fault not enabled on this device)." << std::endl;
+            return;
+        }
+        VkDeviceFaultCountsEXT counts{};
+        counts.sType = VK_STRUCTURE_TYPE_DEVICE_FAULT_COUNTS_EXT;
+        if ( VkResult result = mVkGetDeviceFaultInfoEXT ( mVkDevice, &counts, nullptr ); result != VK_SUCCESS )
+        {
+            std::cout << LogLevel::Error << "==== GPU DEVICE FAULT REPORT ==== query for counts failed: "
+                      << GetVulkanResultString ( result ) << std::endl;
+            return;
+        }
+        std::vector<VkDeviceFaultAddressInfoEXT> address_infos ( counts.addressInfoCount );
+        std::vector<VkDeviceFaultVendorInfoEXT> vendor_infos ( counts.vendorInfoCount );
+        VkDeviceFaultInfoEXT info{};
+        info.sType = VK_STRUCTURE_TYPE_DEVICE_FAULT_INFO_EXT;
+        info.pAddressInfos = address_infos.empty() ? nullptr : address_infos.data();
+        info.pVendorInfos = vendor_infos.empty() ? nullptr : vendor_infos.data();
+        // pVendorBinaryData is left null: the crash-dump binary is not collected.
+        if ( VkResult result = mVkGetDeviceFaultInfoEXT ( mVkDevice, &counts, &info ); result != VK_SUCCESS )
+        {
+            std::cout << LogLevel::Error << "==== GPU DEVICE FAULT REPORT ==== query failed: "
+                      << GetVulkanResultString ( result ) << std::endl;
+            return;
+        }
+        auto address_type_name = [] ( VkDeviceFaultAddressTypeEXT aType ) -> const char*
+        {
+            switch ( aType )
+            {
+            case VK_DEVICE_FAULT_ADDRESS_TYPE_READ_INVALID_EXT:
+                return "READ_INVALID";
+            case VK_DEVICE_FAULT_ADDRESS_TYPE_WRITE_INVALID_EXT:
+                return "WRITE_INVALID";
+            case VK_DEVICE_FAULT_ADDRESS_TYPE_EXECUTE_INVALID_EXT:
+                return "EXECUTE_INVALID";
+            case VK_DEVICE_FAULT_ADDRESS_TYPE_INSTRUCTION_POINTER_UNKNOWN_EXT:
+                return "INSTRUCTION_POINTER_UNKNOWN";
+            case VK_DEVICE_FAULT_ADDRESS_TYPE_INSTRUCTION_POINTER_INVALID_EXT:
+                return "INSTRUCTION_POINTER_INVALID";
+            case VK_DEVICE_FAULT_ADDRESS_TYPE_INSTRUCTION_POINTER_FAULT_EXT:
+                return "INSTRUCTION_POINTER_FAULT";
+            default:
+                return "NONE";
+            }
+        };
+        std::cout << LogLevel::Error << "==== GPU DEVICE FAULT REPORT ==== " << info.description
+                  << " (" << counts.addressInfoCount << " address, " << counts.vendorInfoCount << " vendor)" << std::endl;
+        for ( uint32_t i = 0; i < counts.addressInfoCount; ++i )
+        {
+            const VkDeviceFaultAddressInfoEXT& a = address_infos[i];
+            std::cout << LogLevel::Error << "  address[" << i << "] " << address_type_name ( a.addressType )
+                      << " reportedAddress=0x" << std::hex << a.reportedAddress
+                      << " precision=0x" << a.addressPrecision << std::dec << std::endl;
+        }
+        for ( uint32_t i = 0; i < counts.vendorInfoCount; ++i )
+        {
+            const VkDeviceFaultVendorInfoEXT& v = vendor_infos[i];
+            std::cout << LogLevel::Error << "  vendor[" << i << "] " << v.description
+                      << " faultCode=0x" << std::hex << v.vendorFaultCode
+                      << " faultData=0x" << v.vendorFaultData << std::dec << std::endl;
+        }
+    }
+
+    bool VulkanRenderer::RecoverFromDeviceLost()
+    {
+        std::cout << LogLevel::Warning << "Attempting to recover from VK_ERROR_DEVICE_LOST..." << std::endl;
+
+        // Best effort: drain the lost device before tearing it down. These calls
+        // typically return VK_ERROR_DEVICE_LOST themselves; the return is ignored
+        // because destroying objects on a lost device is valid and is exactly
+        // what follows. (Per-window Finalize also issues its own idle waits.)
+        if ( mVkQueue != VK_NULL_HANDLE )
+        {
+            vkQueueWaitIdle ( mVkQueue );
+        }
+
+        // Preserve the native window handles so the windows can be recreated
+        // against the same surfaces once the device is rebuilt.
+        std::vector<void*> window_ids;
+        window_ids.reserve ( mWindowStore.size() );
+        for ( const auto& window : mWindowStore )
+        {
+            window_ids.emplace_back ( window.first );
+        }
+
+        // Tear down every device-scoped object in the same order as the
+        // destructor, but stop before the debug messenger and instance: those
+        // are instance-scoped and survive a logical-device loss, as does the
+        // physical device. The resource stores are cleared rather than reloaded
+        // here -- meshes, pipelines, materials and textures reload lazily on
+        // next use through the Get*/Load* paths, so only the eagerly created
+        // state (device, bindless, pools, windows, overlay, fallback textures)
+        // is rebuilt explicitly below.
+        FinalizeOverlay();
+        mWindowStore.clear();
+        mTextureStore.clear();
+        mMaterialStore.clear();
+        mPipelineStore.clear();
+        mMeshStore.clear();
+        FinalizeGeometry();
+        for ( auto& i : mVkDescriptorSetLayouts )
+        {
+            vkDestroyDescriptorSetLayout ( mVkDevice, std::get<1> ( i ), nullptr );
+        }
+        mVkDescriptorSetLayouts.clear();
+        FinalizeBindless();
+        FinalizeCommandPools();
+        FinalizeDevice();
+        // FinalizeDevice destroys the device but leaves the (now stale) queue
+        // handle; null it so a failed rebuild cannot make the destructor wait on
+        // a dead queue. InitializeDevice repopulates it on success.
+        mVkQueue = VK_NULL_HANDLE;
+
+        // The bindless texture/material slot bookkeeping and the shared geometry
+        // pool are rebuilt empty, so reset the allocators to match the cleared
+        // stores. The cached bound pipeline pointed into the destroyed store.
+        mBindlessTextureHighWater = 0;
+        mBindlessTextureFreeSlots.clear();
+        mBindlessMaterialHighWater = 0;
+        mBindlessMaterialFreeSlots.clear();
+        mBoundPipeline = nullptr;
+
+        try
+        {
+            InitializeDevice();
+            InitializeBindless();
+            InitializeCommandPools();
+            for ( void * window_id : window_ids )
+            {
+                AttachWindow ( window_id );
+            }
+            InitializeOverlay();
+            // Reload the material sampler fallback textures: the constructor
+            // loads them eagerly (GetDefaultTextureDescriptorImageInfo throws if
+            // they are missing) and nothing reloads them lazily.
+            for ( size_t i = 0; i < kMaterialSamplerSlots.size(); ++i )
+            {
+                ResourceId fallback{ "Texture"_crc32, kMaterialSamplerSlots[i].fallback_path };
+                mMaterialSamplerFallbacks[i] = fallback.Get<Texture>();
+                LoadTexture ( *mMaterialSamplerFallbacks[i] );
+            }
+            mDefaultTexture = mMaterialSamplerFallbacks[0];
+        }
+        catch ( const std::exception& e )
+        {
+            // A permanent failure (e.g. the GPU was physically removed) leaves
+            // the renderer device-lost; the frame loop keeps skipping frames and
+            // retrying, which recovers cleanly once a transient reset completes.
+            std::cout << LogLevel::Error << "Device-lost recovery failed: " << e.what()
+                      << " -- will retry next frame." << std::endl;
+            return false;
+        }
+
+        mDeviceLost = false;
+        std::cout << LogLevel::Info << "Recovered from VK_ERROR_DEVICE_LOST." << std::endl;
+        return true;
+    }
+
     void VulkanRenderer::BeginFrame ( void* aWindowId )
     {
+        // A lost device is rebuilt here, at a frame boundary where nothing is
+        // being recorded. If recovery fails this frame is skipped and retried on
+        // the next; IsDeviceLost keeps RenderScene and the other per-frame
+        // entry points from touching the (still absent) device meanwhile.
+        if ( mDeviceLost )
+        {
+            // A hard GPU hang never lets vkCreateDevice succeed again in-process
+            // (amdvlk returns VK_ERROR_DEVICE_LOST/UNKNOWN indefinitely). Stop
+            // after a few tries so the log is not flooded with a full device
+            // re-enumeration every second; the app keeps running but renders
+            // nothing until restarted.
+            if ( mRecoveryFailures >= kMaxRecoveryFailures )
+            {
+                return;
+            }
+            // Back off between failed attempts: a GPU reset (TDR) can leave
+            // vkCreateDevice returning VK_ERROR_DEVICE_LOST for a while, so
+            // retrying every frame just spins uselessly and floods the log.
+            if ( std::chrono::steady_clock::now() < mNextRecoveryAttempt )
+            {
+                return;
+            }
+            if ( !RecoverFromDeviceLost() )
+            {
+                ++mRecoveryFailures;
+                mNextRecoveryAttempt = std::chrono::steady_clock::now() + std::chrono::milliseconds ( 1000 );
+                if ( mRecoveryFailures >= kMaxRecoveryFailures )
+                {
+                    std::cout << LogLevel::Error << "Device could not be recovered after " << kMaxRecoveryFailures
+                              << " attempts; giving up (the GPU is likely hung -- see the device-fault report above). "
+                       "Restart the application." << std::endl;
+                }
+                return;
+            }
+            // Recovered: reset the failure budget for any future loss.
+            mRecoveryFailures = 0;
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {
@@ -1751,6 +2087,10 @@ namespace AeonGames
                                 const BufferAccessor& aSkinningMatrices,
                                 const BufferAccessor& aSkinnedVertices ) const
     {
+        if ( mDeviceLost )
+        {
+            return;
+        }
         auto it = mWindowStore.find ( aWindowId );
         if ( it == mWindowStore.end() )
         {

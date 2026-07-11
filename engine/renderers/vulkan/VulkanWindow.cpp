@@ -3115,6 +3115,12 @@ namespace AeonGames
         {
             return;
         }
+        // Never begin recording on a lost device; VulkanRenderer::BeginFrame
+        // rebuilds it at the top of the next frame before this is reached again.
+        if ( mVulkanRenderer.IsDeviceLost() )
+        {
+            return;
+        }
         mFrameBegun = true;
         // Wait only on THIS frame slot's previous submission (per-frame fence),
         // so the CPU can get up to kFramesInFlight frames ahead of the GPU
@@ -3124,6 +3130,14 @@ namespace AeonGames
                                VK_TRUE, UINT64_MAX ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            if ( result == VK_ERROR_DEVICE_LOST )
+            {
+                // Abort the frame and hand off to the renderer's recovery path;
+                // leave mFrameBegun false so nothing treats this as a live frame.
+                mVulkanRenderer.NotifyDeviceLost();
+                mFrameBegun = false;
+                return;
+            }
         }
         // Acquire the next swapchain image, signalling this frame's acquire
         // semaphore. The image index is not known until this returns, which is
@@ -3137,6 +3151,12 @@ namespace AeonGames
                                    const_cast<uint32_t * > ( &mActiveImageIndex ) ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            if ( result == VK_ERROR_DEVICE_LOST )
+            {
+                mVulkanRenderer.NotifyDeviceLost();
+                mFrameBegun = false;
+                return;
+            }
         }
         // If a previous, still-in-flight frame is rendering into the image we
         // just acquired, wait on its fence before reusing the image, then record
@@ -3440,6 +3460,10 @@ namespace AeonGames
         if ( VkResult result = vkQueueSubmit ( mVulkanRenderer.GetQueue(), 1, &submit_info, mVkFences[mFrameIndex] ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            if ( result == VK_ERROR_DEVICE_LOST )
+            {
+                mVulkanRenderer.NotifyDeviceLost();
+            }
         }
         std::array<VkResult, 1> result_array{ { VkResult::VK_SUCCESS } };
         VkPresentInfoKHR present_info{};
@@ -3453,6 +3477,16 @@ namespace AeonGames
         if ( VkResult result = vkQueuePresentKHR ( mVulkanRenderer.GetQueue(), &present_info ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
+            if ( result == VK_ERROR_DEVICE_LOST )
+            {
+                mVulkanRenderer.NotifyDeviceLost();
+            }
+        }
+        // A per-swapchain present result can also surface the device loss even
+        // when the aggregate return did not; recover on that too.
+        if ( result_array[0] == VK_ERROR_DEVICE_LOST )
+        {
+            mVulkanRenderer.NotifyDeviceLost();
         }
         mMemoryPoolBuffers[mFrameIndex].Reset();
         mStorageMemoryPoolBuffers[mFrameIndex].Reset();
@@ -3825,15 +3859,34 @@ namespace AeonGames
             mCullLoaded = true;
         }
         const uint32_t count = static_cast<uint32_t> ( aInstances.size() );
+        // The dispatch launches one thread per candidate, rounded UP to the
+        // compute workgroup size (64). Those tail threads (count..padded-1) still
+        // execute, and cull.comp cannot reliably reject them: its `index >=
+        // cull_instances.length()` guard is broken on this suballocated dynamic
+        // SSBO because GLSL .length() (OpArrayLength) returns the whole 8 MB pool
+        // length on amdvlk, not the bound per-allocation range. So size every
+        // cull buffer to the padded thread count and zero the input tail: a
+        // zeroed candidate has indexCount 0, so any tail thread that survives the
+        // frustum test only emits an inert (no-op) indirect draw, and every read
+        // and compacted write stays in bounds. (Confirmed the OOB with GPU-AV:
+        // VUID-vkCmdDispatch-storageBuffers-06936 on set=1 / cull_instances.)
+        const uint32_t padded = ( ( count + 63u ) / 64u ) * 64u;
         // Candidate instances (input) plus the four compacted outputs. The output
         // model / material arrays are the shading pass's InstanceMatrices /
         // InstanceMaterials, indexed by gl_InstanceIndex = a command's firstInstance.
-        BufferAccessor cull_instances = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( count * sizeof ( GpuCullInstance ) );
+        BufferAccessor cull_instances = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( padded * sizeof ( GpuCullInstance ) );
         cull_instances.WriteMemory ( 0, count * sizeof ( GpuCullInstance ), aInstances.data() );
-        BufferAccessor commands = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( count * sizeof ( VkDrawIndexedIndirectCommand ) );
+        if ( padded > count )
+        {
+            // All-zero bytes: a zeroed GpuCullInstance has indexCount 0 (inert).
+            static const std::array<uint8_t, 64 * sizeof ( GpuCullInstance ) > zero_pad{};
+            cull_instances.WriteMemory ( count * sizeof ( GpuCullInstance ),
+                                         ( padded - count ) * sizeof ( GpuCullInstance ), zero_pad.data() );
+        }
+        BufferAccessor commands = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( padded * sizeof ( VkDrawIndexedIndirectCommand ) );
         BufferAccessor draw_count = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( sizeof ( uint32_t ) );
-        BufferAccessor models = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( static_cast<size_t> ( count ) * sizeof ( float ) * 16 );
-        BufferAccessor materials = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( count * sizeof ( uint32_t ) );
+        BufferAccessor models = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( static_cast<size_t> ( padded ) * sizeof ( float ) * 16 );
+        BufferAccessor materials = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( padded * sizeof ( uint32_t ) );
         const uint32_t zero = 0;
         draw_count.WriteMemory ( 0, sizeof ( uint32_t ), &zero );
         const StorageBufferBinding bindings[]
@@ -3848,7 +3901,7 @@ namespace AeonGames
         mCulledShadingBatches.push_back ( CulledShadingBatch
         {
             mVulkanRenderer.GetVulkanPipeline ( aShadingPipeline ),
-                           &aRepresentativeMesh, commands, draw_count, models, materials, count
+                           &aRepresentativeMesh, commands, draw_count, models, materials, padded
         } );
     }
 

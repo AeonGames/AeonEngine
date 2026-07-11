@@ -23,6 +23,7 @@ limitations under the License.
 #include <tuple>
 #include <array>
 #include <vector>
+#include <chrono>
 #include "aeongames/Platform.hpp"
 #include "aeongames/Renderer.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -53,6 +54,14 @@ namespace AeonGames
         /// @brief Registered renderer name ("Vulkan"); selects per-renderer
         ///        pipeline shader variants.
         std::string_view GetName() const final;
+        /// @brief True once a Vulkan call has reported VK_ERROR_DEVICE_LOST and
+        ///        the device has not yet been rebuilt. While true the frame loop
+        ///        skips all GPU work; recovery is attempted at the next BeginFrame.
+        bool IsDeviceLost() const final;
+        /// @brief Record that a Vulkan call returned VK_ERROR_DEVICE_LOST. Called
+        ///        by the window when a submit/present/acquire fails; sets the
+        ///        device-lost flag so the next BeginFrame rebuilds the device.
+        void NotifyDeviceLost();
         /// @brief Get the Vulkan instance handle.
         const VkInstance& GetInstance() const;
         /// @brief Get the physical device handle.
@@ -241,6 +250,23 @@ namespace AeonGames
         void InitializeBindless();
         /// @brief Destroy the global bindless descriptor set/pool/layout.
         void FinalizeBindless();
+        /// @brief Rebuild the logical device and every device-scoped object after
+        ///        a VK_ERROR_DEVICE_LOST. The instance, debug messenger and
+        ///        physical device survive a logical-device loss and are reused;
+        ///        the device, bindless arrays, command pools, windows and overlay
+        ///        are recreated and the resource stores cleared so meshes,
+        ///        pipelines, materials and textures reload lazily on next use.
+        ///        Called at a frame boundary (top of BeginFrame). Returns true on
+        ///        success; on failure the renderer stays device-lost and the
+        ///        caller retries on the following frame.
+        bool RecoverFromDeviceLost();
+        /// @brief Query VK_EXT_device_fault (when supported) after a
+        ///        VK_ERROR_DEVICE_LOST and log the faulting GPU address(es) and
+        ///        vendor fault info. Must run while the lost device still exists
+        ///        (before recovery destroys it); a no-op when the extension is
+        ///        unavailable. Pinpoints out-of-bounds GPU reads/writes and
+        ///        shader page faults that a plain device-lost cannot attribute.
+        void LogDeviceFaultInfo();
         void InitializeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout, VkDescriptorType aVkDescriptorType );
         void FinalizeDescriptorSetLayout ( VkDescriptorSetLayout& aVkDescriptorSetLayout );
         /// @brief Submit the scene's render queue for one pass, resolving the
@@ -253,6 +279,21 @@ namespace AeonGames
         Display* mDisplay {XOpenDisplay ( nullptr ) };
 #endif
         bool mValidate { true };
+        // Set when a Vulkan call reports VK_ERROR_DEVICE_LOST; cleared once the
+        // device has been rebuilt. Guards the per-frame entry points so no work
+        // is recorded against dead handles between loss and recovery.
+        bool mDeviceLost { false };
+        // Earliest time the next recovery may be attempted. After a failed
+        // rebuild (the GPU is often still mid-reset, so vkCreateDevice returns
+        // VK_ERROR_DEVICE_LOST) recovery backs off instead of hammering the
+        // driver every frame, giving a transient TDR time to complete.
+        std::chrono::steady_clock::time_point mNextRecoveryAttempt {};
+        // Consecutive failed recovery attempts. A hard GPU hang (as opposed to a
+        // transient TDR) never lets vkCreateDevice succeed again in-process, so
+        // recovery gives up after kMaxRecoveryFailures rather than re-enumerating
+        // the whole device every second forever (which floods the log).
+        unsigned int mRecoveryFailures { 0 };
+        static constexpr unsigned int kMaxRecoveryFailures { 5 };
         VkInstance mVkInstance{ VK_NULL_HANDLE };
         VkDevice mVkDevice { VK_NULL_HANDLE};
         VkPhysicalDevice mVkPhysicalDevice{ VK_NULL_HANDLE };
@@ -265,6 +306,12 @@ namespace AeonGames
         PFN_vkCreateDebugUtilsMessengerEXT vkCreateDebugUtilsMessengerEXT{nullptr};
         PFN_vkDestroyDebugUtilsMessengerEXT vkDestroyDebugUtilsMessengerEXT{nullptr};
         VkDebugUtilsMessengerEXT mVkDebugUtilsMessengerEXT{VK_NULL_HANDLE};
+        // VK_EXT_device_fault diagnostics: enabled at device creation when the
+        // physical device advertises the extension. The entry point is resolved
+        // once the device exists and queried on a VK_ERROR_DEVICE_LOST to report
+        // the faulting GPU address/type. Both are refreshed by device-lost recovery.
+        bool mHasDeviceFault{ false };
+        PFN_vkGetDeviceFaultInfoEXT mVkGetDeviceFaultInfoEXT{ nullptr };
         VkCommandPool mVkSingleTimeCommandPool{ VK_NULL_HANDLE };
         VkQueue mVkQueue{ VK_NULL_HANDLE };
         mutable std::vector<std::tuple<size_t, VkDescriptorSetLayout >> mVkDescriptorSetLayouts{};

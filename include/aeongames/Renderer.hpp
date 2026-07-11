@@ -558,6 +558,20 @@ namespace AeonGames
         /** @return The renderer's registered name ("OpenGL"/"Vulkan"), used to
          *  resolve per-renderer pipeline shader variants. */
         virtual std::string_view GetName() const = 0;
+        /** @return True when the rendering device has been lost and not yet
+         *  recovered. Backends that can lose their device (e.g. Vulkan on a GPU
+         *  reset/TDR) override this; while it returns true RenderScene skips the
+         *  whole frame so no work is recorded against dead GPU handles. The
+         *  default implementation always returns false.
+         *
+         *  Defined inline on purpose: Renderer has no other non-pure virtual, so
+         *  an out-of-line definition here would become the vtable key function
+         *  and move the (currently weak, emitted-per-TU) Renderer vtable into a
+         *  single object file, breaking the separately-linked renderer DLLs. */
+        virtual bool IsDeviceLost() const
+        {
+            return false;
+        }
         ///@}
     protected:
         /** Returns @p aLights filtered to only the currently enabled light

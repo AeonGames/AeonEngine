@@ -36,6 +36,13 @@ struct GpuMaterial
       float pad1;
       vec4  emissive_factor;
 };
+// Number of records in the global material storage buffer; mirrors
+// mBindlessMaterialCapacity in VulkanRenderer::InitializeBindless. The
+// per-instance material index is data-driven and, on Vulkan, indexes the buffer
+// through an unchecked buffer_reference (BDA) pointer, so a stale/garbage index
+// (e.g. an unregistered material's UINT32_MAX) must be rejected before the read
+// or it dereferences a wild GPU address (VK_ERROR_DEVICE_LOST, READ_INVALID).
+const uint MATERIAL_CAPACITY = 4096u;
 #ifdef VULKAN
 layout(set = 2, binding = 0) uniform sampler2D global_textures[];
 // Material records reached by buffer device address (BDA): the push constant
@@ -54,7 +61,9 @@ layout(push_constant) uniform MaterialPushConstant
       layout(offset = 72) MaterialRef Materials;
 };
 layout(location = 5) flat in uint vMaterialIndex;
-#define MATERIAL_INDEX  vMaterialIndex
+// Fall back to record 0 (always registered) for any index at or past the buffer
+// capacity, so the unchecked BDA read below can never fault the GPU.
+#define MATERIAL_INDEX  ( vMaterialIndex < MATERIAL_CAPACITY ? vMaterialIndex : 0u )
 #define MAT_REC         Materials.data[MATERIAL_INDEX]
 #define MAT_TEX(i)      global_textures[nonuniformEXT(MAT_REC.texture_refs[i].x)]
 #else
@@ -70,7 +79,9 @@ layout(binding = 4, std430) readonly buffer Bindless
 // read from the InstanceMaterials buffer (parallel to the model matrices), so a
 // single indirect multi-draw can shade meshes with different materials.
 layout(location = 5) flat in uint vMaterialIndex;
-#define MATERIAL_INDEX  vMaterialIndex
+// Match the Vulkan guard: clamp the data-driven index to the material buffer so
+// an out-of-range value cannot read past the storage buffer.
+#define MATERIAL_INDEX  ( vMaterialIndex < MATERIAL_CAPACITY ? vMaterialIndex : 0u )
 #define MAT_REC         materials[MATERIAL_INDEX]
 #define MAT_TEX(i)      sampler2D(MAT_REC.texture_refs[i])
 #endif
