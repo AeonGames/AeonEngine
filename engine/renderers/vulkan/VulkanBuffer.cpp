@@ -56,6 +56,8 @@ namespace AeonGames
         std::swap ( mUsage, aBuffer.mUsage );
         std::swap ( mProperties, aBuffer.mProperties );
         std::swap ( mDeviceMemory, aBuffer.mDeviceMemory );
+        std::swap ( mAllocationSize, aBuffer.mAllocationSize );
+        std::swap ( mHostCoherent, aBuffer.mHostCoherent );
     }
 
     void VulkanBuffer::Initialize ( const VkDeviceSize aSize, const VkBufferUsageFlags aUsage, const VkMemoryPropertyFlags aProperties, const void * aData )
@@ -90,9 +92,40 @@ namespace AeonGames
         {
             if ( ( mProperties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT ) )
             {
-                void* data = Map ( aOffset, aSize );
-                memcpy ( data, aData, aSize );
-                Unmap();
+                if ( mHostCoherent )
+                {
+                    void* data = Map ( aOffset, aSize );
+                    memcpy ( data, aData, aSize );
+                    Unmap();
+                }
+                else
+                {
+                    // Non-coherent host memory: the copy is not visible to the
+                    // device until explicitly flushed, and vkFlushMappedMemoryRanges
+                    // requires the range to be aligned to nonCoherentAtomSize. Grow
+                    // the range outward to that granularity (clamped to the real
+                    // allocation size so the tail case stays valid), map and write
+                    // within it, then flush exactly that range.
+                    const VkDeviceSize atom = mVulkanRenderer.GetPhysicalDeviceProperties().limits.nonCoherentAtomSize;
+                    const VkDeviceSize begin = ( static_cast<VkDeviceSize> ( aOffset ) / atom ) * atom;
+                    VkDeviceSize end = ( ( static_cast<VkDeviceSize> ( aOffset ) + aSize + atom - 1 ) / atom ) * atom;
+                    if ( end > mAllocationSize )
+                    {
+                        end = mAllocationSize;
+                    }
+                    uint8_t* base = static_cast<uint8_t*> ( Map ( begin, end - begin ) );
+                    memcpy ( base + ( aOffset - begin ), aData, aSize );
+                    VkMappedMemoryRange mapped_range{};
+                    mapped_range.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+                    mapped_range.memory = mDeviceMemory;
+                    mapped_range.offset = begin;
+                    mapped_range.size = end - begin;
+                    if ( VkResult result = vkFlushMappedMemoryRanges ( mVulkanRenderer.GetDevice(), 1, &mapped_range ) )
+                    {
+                        std::cout << LogLevel::Error << "vkFlushMappedMemoryRanges failed: ( " << GetVulkanResultString ( result ) << " )" << std::endl;
+                    }
+                    Unmap();
+                }
             }
             else if ( ( mProperties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ) && ( mUsage & VK_BUFFER_USAGE_TRANSFER_DST_BIT ) )
             {
@@ -177,13 +210,20 @@ namespace AeonGames
         // vkGetBufferDeviceAddress is invalid.
         memory_allocate_info.pNext = ( mUsage & VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT ) ? &memory_allocate_flags_info : nullptr;
         memory_allocate_info.allocationSize = memory_requirements.size;
-        memory_allocate_info.memoryTypeIndex = mVulkanRenderer.GetMemoryTypeIndex ( mProperties );
+        const uint32_t memory_type_index = mVulkanRenderer.GetMemoryTypeIndex ( mProperties );
+        memory_allocate_info.memoryTypeIndex = memory_type_index;
 
         if ( memory_allocate_info.memoryTypeIndex == std::numeric_limits<uint32_t>::max() )
         {
             std::cout << LogLevel::Error << "No suitable memory type found for buffer." << std::endl;
             throw std::runtime_error ( "No suitable memory type found for buffer." );
         }
+        // Record the real allocation size and the chosen memory type's coherency
+        // so WriteMemory can flush exactly the written range on non-coherent host
+        // memory, and skip the flush when the memory is coherent.
+        mAllocationSize = memory_requirements.size;
+        mHostCoherent = ( mVulkanRenderer.GetPhysicalDeviceMemoryProperties().memoryTypes[memory_type_index].propertyFlags
+                          & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT ) != 0;
 
         if ( VkResult result = vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mDeviceMemory ) )
         {

@@ -63,6 +63,12 @@ namespace AeonGames
         VkDeviceSize mSize{};
         VkBufferUsageFlags mUsage{};
         VkMemoryPropertyFlags mProperties{};
+        // Real backing-allocation size (>= mSize) and whether the chosen memory
+        // type is actually host-coherent. WriteMemory uses these to flush the
+        // exact written range on non-coherent host memory (and to skip the flush
+        // entirely when the memory is coherent).
+        VkDeviceSize mAllocationSize{ 0 };
+        bool mHostCoherent{ false };
     };
 }
 #endif
