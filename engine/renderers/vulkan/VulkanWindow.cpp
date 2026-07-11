@@ -3525,8 +3525,9 @@ namespace AeonGames
     void VulkanWindow::BindShadingPassSets ( const VulkanPipeline* aPipeline ) const
     {
 #ifndef NDEBUG
-        // Engine sets bound here, plus MATERIAL/SAMPLERS (VulkanMaterial::Bind) and
-        // INSTANCE_MATRICES (BindObjectMatrices) bound by the caller after us.
+        // Engine sets bound here, plus MATERIAL/SAMPLERS (VulkanMaterial::Bind),
+        // INSTANCE_MATRICES (BindObjectMatrices) and INSTANCE_MATERIALS
+        // (BindInstanceMaterials) bound by the caller after us.
         AssertDescriptorSetsHandled ( aPipeline,
         {
             Mesh::BindingLocations::MATRICES, Mesh::BindingLocations::LIGHTS,
@@ -3538,7 +3539,7 @@ namespace AeonGames
             Mesh::BindingLocations::PREFILTERED_ENVIRONMENT,
             Mesh::BindingLocations::BINDLESS,
             Mesh::BindingLocations::MATERIAL, Mesh::BindingLocations::SAMPLERS,
-            Mesh::BindingLocations::INSTANCE_MATRICES,
+            Mesh::BindingLocations::INSTANCE_MATRICES, Mesh::BindingLocations::INSTANCE_MATERIALS,
         } );
 #endif
         // Bind an engine-owned descriptor set at its reflected set index, if the
@@ -3673,6 +3674,33 @@ namespace AeonGames
                                   &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
     }
 
+    void VulkanWindow::BindInstanceMaterials ( const VulkanPipeline* aPipeline, uint32_t aMaterialIndex, uint32_t aCount ) const
+    {
+        uint32_t set_index = aPipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::INSTANCE_MATERIALS );
+        if ( set_index == std::numeric_limits<uint32_t>::max() )
+        {
+            return;
+        }
+        // One material index per instance (all equal for a single-material batch;
+        // a later step merges batches so they can differ). Staged in a reused
+        // scratch, then uploaded to a transient per-draw storage allocation with
+        // its own descriptor set and a zero dynamic offset, like BindObjectMatrices.
+        mInstanceMaterialIndices.assign ( aCount, aMaterialIndex );
+        const size_t size = static_cast<size_t> ( aCount ) * sizeof ( uint32_t );
+        BufferAccessor instance_materials = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( size );
+        instance_materials.WriteMemory ( 0, size, mInstanceMaterialIndices.data() );
+        const VulkanStorageMemoryPoolBuffer* memory_pool_buffer =
+            reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( instance_materials.GetMemoryPoolBuffer() );
+        size_t offset = instance_materials.GetOffset();
+        uint32_t dynamic_offset = 0;
+        vkCmdBindDescriptorSets ( GetCommandBuffer(),
+                                  VK_PIPELINE_BIND_POINT_GRAPHICS,
+                                  aPipeline->GetPipelineLayout(),
+                                  set_index,
+                                  1,
+                                  &memory_pool_buffer->GetDescriptorSet ( offset ), 1, &dynamic_offset );
+    }
+
     void VulkanWindow::RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
                                       const Mesh& aMesh,
                                       const Pipeline& aPipeline,
@@ -3759,7 +3787,13 @@ namespace AeonGames
         // shadow/depth pipelines ignore it.
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass && aMaterial != nullptr )
         {
-            mVulkanRenderer.GetVulkanMaterial ( *aMaterial )->Bind ( mVkCommandBuffer, *pipeline );
+            const VulkanMaterial* vulkan_material = mVulkanRenderer.GetVulkanMaterial ( *aMaterial );
+            vulkan_material->Bind ( mVkCommandBuffer, *pipeline );
+            // Per-instance bindless material index (replaces the removed
+            // material-index push constant): one entry per instance so the
+            // shading vertex shader can forward it by gl_InstanceIndex, matching
+            // the object-matrix buffer's instance count.
+            BindInstanceMaterials ( pipeline, vulkan_material->GetBindlessMaterialIndex(), static_cast<uint32_t> ( aModelMatrices.size() ) );
         }
         const VulkanMesh* vulkan_mesh = mVulkanRenderer.GetVulkanMesh ( aMesh );
         vulkan_mesh->Bind ( mVkCommandBuffer, skinned_vertex_buffer, skinned_vertex_offset );

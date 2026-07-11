@@ -253,6 +253,12 @@ namespace AeonGames
         ///        pipeline. The uber-pipeline vertex shaders index it by
         ///        gl_InstanceIndex, so a single draw covers the whole batch.
         void BindObjectMatrices ( const VulkanPipeline* aPipeline, std::span<const Matrix4x4> aMatrices ) const;
+        /// @brief Upload per-instance bindless material indices into a transient
+        ///        storage buffer and bind it at INSTANCE_MATERIALS. The shading
+        ///        vertex shader forwards the index (by gl_InstanceIndex) to the
+        ///        fragment shader, so one indirect draw can shade meshes with
+        ///        different materials. Inert for pipelines without the set.
+        void BindInstanceMaterials ( const VulkanPipeline* aPipeline, uint32_t aMaterialIndex, uint32_t aCount ) const;
         /// @brief Bind the engine-owned descriptor sets for a Shading-pass draw
         ///        (matrices, lights, clustering, globals, shadows). Excludes the
         ///        per-draw material and object-matrix sets. Shared by Render and
@@ -293,6 +299,9 @@ namespace AeonGames
         // avoids any cross-frame descriptor aliasing.
         std::vector<VulkanMemoryPoolBuffer> mMemoryPoolBuffers;
         mutable std::vector<VulkanStorageMemoryPoolBuffer> mStorageMemoryPoolBuffers;
+        // Scratch reused by BindInstanceMaterials to stage one batch's
+        // per-instance bindless material indices before uploading them.
+        mutable std::vector<uint32_t> mInstanceMaterialIndices{};
         Matrix4x4 mProjectionMatrix{};
         Matrix4x4 mViewMatrix{};
         // Per-frame-in-flight rings of the core per-frame uniform/storage

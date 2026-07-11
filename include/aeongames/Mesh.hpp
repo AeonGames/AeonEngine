@@ -82,6 +82,7 @@ namespace AeonGames
             SOURCE_VERTICES   = "SourceVertices"_crc32,  ///< Compute skinning: rest-pose source vertex buffer (SSBO, R4).
             SKINNED_VERTICES  = "SkinnedVertices"_crc32, ///< Compute skinning: skinned output vertex buffer (SSBO, R4).
             INSTANCE_MATRICES = "InstanceMatrices"_crc32, ///< Instanced rendering: per-instance model matrices indexed by instance id (SSBO).
+            INSTANCE_MATERIALS = "InstanceMaterials"_crc32, ///< GPU-driven rendering: per-instance bindless material index indexed by instance id (SSBO).
             SHADOW_PARAMS     = "ShadowParams"_crc32,    ///< Directional shadow mapping: light view-projection and filtering params (UBO).
             SHADOW_MAP        = "ShadowMap"_crc32,       ///< Directional shadow mapping: depth shadow map sampled with comparison (sampler2DShadow).
             SPOT_SHADOW_PARAMS = "SpotShadowParams"_crc32, ///< Spot shadow mapping: per-caster light view-projections, caster light indices and filtering params (UBO).

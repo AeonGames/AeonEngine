@@ -19,7 +19,8 @@ uniform Matrices
 
 // Metallic-roughness material inputs. On both backends the surface's textures
 // and factors come from one record in the global bindless material storage
-// buffer, selected by the per-draw MaterialIndex (a push constant on Vulkan, a
+// buffer, selected by MATERIAL_INDEX (a per-instance flat varying on Vulkan,
+// forwarded by the vertex shader from the InstanceMaterials buffer; a
 // default-block uniform on OpenGL). The DiffuseMap..EmissiveMap and
 // BaseColorFactor..EmissiveFactor names below are macros into that record, so
 // main() is backend-agnostic: Vulkan indexes a global combined-image-sampler
@@ -44,12 +45,17 @@ layout(buffer_reference, std430, buffer_reference_align = 16) readonly buffer Ma
 {
       GpuMaterial data[];
 };
+// The material storage buffer pointer is a push constant (constant per frame,
+// shared across an indirect multi-draw); the per-instance material index
+// arrives as a flat varying the vertex shader read from the InstanceMaterials
+// buffer, so a single indirect draw can shade meshes with different materials.
 layout(push_constant) uniform MaterialPushConstant
 {
-      layout(offset = 64) uint MaterialIndex;
       layout(offset = 72) MaterialRef Materials;
 };
-#define MAT_REC         Materials.data[MaterialIndex]
+layout(location = 5) flat in uint vMaterialIndex;
+#define MATERIAL_INDEX  vMaterialIndex
+#define MAT_REC         Materials.data[MATERIAL_INDEX]
 #define MAT_TEX(i)      global_textures[nonuniformEXT(MAT_REC.texture_refs[i].x)]
 #else
 // Global material storage buffer (block name "Bindless" -> Mesh::BINDLESS, the
@@ -61,7 +67,8 @@ layout(binding = 4, std430) readonly buffer Bindless
       GpuMaterial materials[];
 };
 layout(location = 0) uniform uint MaterialIndex;
-#define MAT_REC         materials[MaterialIndex]
+#define MATERIAL_INDEX  MaterialIndex
+#define MAT_REC         materials[MATERIAL_INDEX]
 #define MAT_TEX(i)      sampler2D(MAT_REC.texture_refs[i])
 #endif
 #define DiffuseMap      MAT_TEX(0)

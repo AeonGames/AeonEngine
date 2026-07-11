@@ -29,6 +29,18 @@ readonly buffer InstanceMatrices
 #define MODEL_MATRIX InstanceModelMatrices[gl_InstanceID]
 #endif
 
+// Per-instance bindless material index (Vulkan only): written parallel to the
+// model matrices and forwarded to the fragment shader as a flat varying, so a
+// single indirect multi-draw can shade meshes with different materials. OpenGL
+// still delivers the material index through a default-block uniform.
+#ifdef VULKAN
+layout(set = 1, binding = 0, std430) readonly buffer InstanceMaterials
+{
+      uint InstanceMaterialIndices[];
+};
+layout(location = 5) flat out uint vMaterialIndex;
+#endif
+
 layout(location = 0) in vec3 VertexPosition;
 layout(location = 1) in vec3 VertexNormal;
 layout(location = 2) in vec3 VertexTangent;
@@ -69,4 +81,7 @@ void main()
       eyeCoords = ( ViewMatrix * MODEL_MATRIX * vec4 ( VertexPosition, 1.0 ) ).xyz;
       gl_Position = ProjectionMatrix * ViewMatrix * MODEL_MATRIX * vec4(VertexPosition, 1.0);
       CoordUV = VertexUV;
+#ifdef VULKAN
+      vMaterialIndex = InstanceMaterialIndices[gl_InstanceIndex];
+#endif
 }
