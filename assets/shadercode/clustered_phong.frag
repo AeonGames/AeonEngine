@@ -234,20 +234,23 @@ uniform samplerCubeArrayShadow PointShadowMap;
 
 // Per-frame scene-wide shading globals, independent of any object, light or
 // cluster. ambient.rgb is the ambient color and ambient.a its intensity; the
-// fragment shader uses their product as the flat ambient fill. Kept in its own
-// small block so future frame-wide values (fog, exposure, ...) can join it.
+// fragment shader uses their product as the flat ambient fill.
+//
+// SH coefficients: the NVIDIA GL GLSL front-end mis-fetches std140 UBO members
+// past the first, dropping the R and B channels of the SH vec4s (a green-only
+// ambient tint). Earlier workarounds -- flattening vec4[9] to named members, and
+// reading the bits as uint -- both stopped working after a driver update, so the
+// mis-fetch is at the UBO load level regardless of type. Declaring the block as
+// a std430 storage buffer (SSBO) instead routes it through a different memory
+// path the driver reads correctly. The CPU side is unchanged (same 160-byte
+// buffer). Vulkan (SPIR-V) is unaffected and keeps the std140 UBO.
 #ifdef VULKAN
-layout(set = 14, binding = 0, std140)
+layout(set = 14, binding = 0, std140) uniform Globals
 #else
-layout(binding = 3, std140)
+layout(binding = 6, std430) readonly buffer Globals
 #endif
-uniform Globals
 {
       vec4 ambient;
-      // Order-2 SH coefficients. Declared as nine named vec4 rather than a
-      // vec4[9] array: the NVIDIA GL compiler miscompiles reads of a vec4 array
-      // member in this std140 block, dropping the R and B channels (a green-only
-      // tint). The memory layout is identical to Vector4 sh[9] on the CPU side.
       vec4 sh0;
       vec4 sh1;
       vec4 sh2;

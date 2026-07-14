@@ -889,6 +889,16 @@ void main()
         {
             return;
         }
+        // The Globals block is a std430 SSBO on the shading pipeline (works around
+        // an NVIDIA std140-UBO fetch bug that green-tints the SH ambient) but stays
+        // a std140 UBO elsewhere (e.g. tonemap, which reads only the first member).
+        // Bind whichever the current pipeline reflected.
+        if ( const OpenGLUniformBlock* storage_block = mCurrentPipeline->GetStorageBlock ( Mesh::GLOBALS ) )
+        {
+            glBindBufferRange ( GL_SHADER_STORAGE_BUFFER, storage_block->binding, aGlobalsBuffer.GetBufferId(), 0, aGlobalsBuffer.GetSize() );
+            OPENGL_CHECK_ERROR_THROW;
+            return;
+        }
         const OpenGLUniformBlock* uniform_block{ mCurrentPipeline->GetUniformBlock ( Mesh::GLOBALS ) };
         if ( uniform_block == nullptr )
         {
