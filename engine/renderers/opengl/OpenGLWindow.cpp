@@ -43,6 +43,19 @@ limitations under the License.
 
 namespace AeonGames
 {
+    // Data-driven Hi-Z occlusion-culling toggle (AEON_HIZ_OCCLUSION=0 turns it
+    // off, default on), read once from the environment. Gates both the per-frame
+    // pyramid build and the cull compute's occlusion test so a disabled feature
+    // costs nothing at all.
+    static bool HiZOcclusionEnabled()
+    {
+        static const bool enabled = []
+        {
+            const char* value = std::getenv ( "AEON_HIZ_OCCLUSION" );
+            return ! ( value != nullptr && value[0] == '0' );
+        } ();
+        return enabled;
+    }
     // Texture unit the directional shadow map is bound to during shading. Must
     // match `layout(binding = N) uniform sampler2DShadow ShadowMap;` in the GL
     // path of the shading fragment shaders.
@@ -835,7 +848,12 @@ namespace AeonGames
         Barrier();
         // Reduce the depth pre-pass depth into the Hi-Z pyramid before the colour
         // pass clears depth, so the shading cull can test occlusion against it.
-        BuildHiZPyramid();
+        // Skipped entirely when occlusion culling is disabled: the pyramid would
+        // go unsampled, so building it would be pure waste.
+        if ( HiZOcclusionEnabled() )
+        {
+            BuildHiZPyramid();
+        }
         if ( aComputePipeline != nullptr )
         {
             DispatchLightCull ( *aComputePipeline );
@@ -1780,12 +1798,7 @@ namespace AeonGames
         params.screen[3] = mActiveCullEnabled ? 1.0f : 0.0f;
         // Hi-Z occlusion culling toggle for the GPU cull compute (data-driven;
         // AEON_HIZ_OCCLUSION=0 disables it for A/B comparison, default on).
-        static const bool occlusion_enabled = []
-        {
-            const char* value = std::getenv ( "AEON_HIZ_OCCLUSION" );
-            return ! ( value != nullptr && value[0] == '0' );
-        } ();
-        params.occlusion[0] = occlusion_enabled ? 1.0f : 0.0f;
+        params.occlusion[0] = HiZOcclusionEnabled() ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
