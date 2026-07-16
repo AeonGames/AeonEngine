@@ -86,6 +86,7 @@ namespace AeonGames
             CULL_INSTANCES    = "CullInstances"_crc32,   ///< GPU-driven culling: per-candidate-instance model matrix, AABB and draw params, read by the cull compute (SSBO).
             DRAW_COMMANDS     = "DrawCommands"_crc32,     ///< GPU-driven culling: compacted VkDrawIndexedIndirectCommand list written by the cull compute (SSBO).
             DRAW_COUNT        = "DrawCount"_crc32,        ///< GPU-driven culling: visible-instance count written by the cull compute, read by vkCmdDrawIndexedIndirectCount (SSBO).
+            HI_Z              = "HiZ"_crc32,             ///< Hi-Z occlusion culling: max-reduced depth pyramid sampled by the cull compute (sampler2D).
             SHADOW_PARAMS     = "ShadowParams"_crc32,    ///< Directional shadow mapping: light view-projection and filtering params (UBO).
             SHADOW_MAP        = "ShadowMap"_crc32,       ///< Directional shadow mapping: depth shadow map sampled with comparison (sampler2DShadow).
             SPOT_SHADOW_PARAMS = "SpotShadowParams"_crc32, ///< Spot shadow mapping: per-caster light view-projections, caster light indices and filtering params (UBO).

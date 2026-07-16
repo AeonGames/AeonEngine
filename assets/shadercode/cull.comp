@@ -106,6 +106,23 @@ writeonly buffer InstanceMaterials
     uint out_materials[];
 };
 
+#ifdef VULKAN
+// Clustered-shading parameters UBO (auto-bound). Only the trailing occlusion
+// vec4 is read here (.x > 0.5 enables Hi-Z occlusion culling); the earlier
+// members mirror the shared ClusterParams block so std140 offsets line up.
+layout(set = 6, binding = 0, std140) uniform ClusterParams
+{
+    mat4  cull_inverse_projection;
+    uvec4 cull_cluster_grid;
+    vec4  cull_cluster_screen;
+    vec4  cull_cluster_occlusion; // .x = Hi-Z occlusion enable
+};
+// Hi-Z depth pyramid (max-reduced), level 0 at half the depth resolution. An
+// instance is rejected only when its nearest projected depth is behind the
+// farthest stored depth across its whole screen footprint.
+layout(set = 7, binding = 0) uniform sampler2D HiZ;
+#endif
+
 void main()
 {
     uint index = gl_GlobalInvocationID.x;
@@ -156,6 +173,60 @@ void main()
             break;
         }
     }
+
+#ifdef VULKAN
+    // Hi-Z occlusion: reject instances that pass the frustum test but are fully
+    // hidden behind previously-rasterized geometry (the depth pre-pass depth,
+    // reduced into the pyramid). Conservative -- a near-plane straddle, a
+    // degenerate/off-screen footprint, or the disabled flag keeps the instance.
+    if ( visible && cull_cluster_occlusion.x > 0.5 )
+    {
+        ivec2 hiz_base = textureSize ( HiZ, 0 );
+        int hiz_levels = textureQueryLevels ( HiZ );
+        vec2 uv_min = vec2 ( 1.0 );
+        vec2 uv_max = vec2 ( 0.0 );
+        float nearest = 1.0;
+        bool straddle = false;
+        for ( int c = 0; c < 8; ++c )
+        {
+            vec3 corner = vec3 (
+                              ( c & 1 ) != 0 ? world_max.x : world_min.x,
+                              ( c & 2 ) != 0 ? world_max.y : world_min.y,
+                              ( c & 4 ) != 0 ? world_max.z : world_min.z );
+            vec4 clip = vp * vec4 ( corner, 1.0 );
+            if ( clip.w <= 0.0 )
+            {
+                straddle = true;
+                break;
+            }
+            vec3 ndc = clip.xyz / clip.w;
+            uv_min = min ( uv_min, ndc.xy * 0.5 + 0.5 );
+            uv_max = max ( uv_max, ndc.xy * 0.5 + 0.5 );
+            nearest = min ( nearest, ndc.z ); // Vulkan window depth is [0,1]
+        }
+        if ( !straddle )
+        {
+            vec2 cmin = clamp ( uv_min, 0.0, 1.0 );
+            vec2 cmax = clamp ( uv_max, 0.0, 1.0 );
+            if ( cmax.x > cmin.x && cmax.y > cmin.y )
+            {
+                vec2 rect = ( cmax - cmin ) * vec2 ( hiz_base );
+                float max_side = max ( rect.x, rect.y );
+                int lod = clamp ( int ( ceil ( log2 ( max ( max_side, 1.0 ) ) ) ), 0, hiz_levels - 1 );
+                float flod = float ( lod );
+                float scene_max = max (
+                                      max ( textureLod ( HiZ, vec2 ( cmin.x, cmin.y ), flod ).r,
+                                            textureLod ( HiZ, vec2 ( cmax.x, cmin.y ), flod ).r ),
+                                      max ( textureLod ( HiZ, vec2 ( cmin.x, cmax.y ), flod ).r,
+                                            textureLod ( HiZ, vec2 ( cmax.x, cmax.y ), flod ).r ) );
+                if ( nearest > scene_max )
+                {
+                    visible = false;
+                }
+            }
+        }
+    }
+#endif
 
     if ( !visible )
     {

@@ -70,6 +70,10 @@ namespace AeonGames
         void BeginFrame();
         /// @brief Begin the main render pass. Must be called after BeginFrame.
         void BeginRenderPass();
+        /// @brief Begin the shading pass. When a depth pre-pass ran this frame
+        ///        (lighting present) it LOADs the stored depth via the shading
+        ///        render pass for early-Z; otherwise it clears like BeginRenderPass.
+        void BeginShadingRenderPass();
         /// @brief BeginFrame, optionally dispatch the per-frame compute
         ///        pipeline's ordered stages, then BeginRenderPass.
         void BeginRender ( const Pipeline* aComputePipeline = nullptr );
@@ -225,6 +229,12 @@ namespace AeonGames
         void InitializeSwapchain();
         void InitializeImageViews();
         void InitializeDepthStencil();
+        /// @brief Create the Hi-Z depth pyramid: a per-frame-in-flight R32F mip
+        ///        chain (SAMPLED | STORAGE) at half the depth resolution, its
+        ///        per-mip storage/sampled views, full-chain sampled view and
+        ///        NEAREST sampler. Depends on the depth image, so it runs after
+        ///        InitializeDepthStencil and is recreated with it on resize.
+        void InitializeHiZ();
         void InitializeRenderPass();
         void InitializeFrameBuffers();
         void InitializeCommandBuffer();
@@ -260,6 +270,8 @@ namespace AeonGames
         void FinalizeSwapchain();
         void FinalizeImageViews();
         void FinalizeDepthStencil();
+        /// @brief Release the Hi-Z pyramid image, views, sampler and descriptors.
+        void FinalizeHiZ();
         void FinalizeRenderPass();
         void FinalizeFrameBuffers();
         void FinalizeEnvironmentMap();
@@ -282,6 +294,11 @@ namespace AeonGames
         /// @brief Dispatch the remaining compute stages (light culling) after
         ///        the depth pre-pass has flagged the active clusters.
         void DispatchLightCull ( const Pipeline& aComputePipeline );
+        /// @brief Build the Hi-Z depth pyramid from this frame's depth pre-pass:
+        ///        transition the scene depth to shader-read, reduce it into the
+        ///        Hi-Z mip 0, then max-reduce each successive mip. Runs outside a
+        ///        render pass (in EndDepthPrePass) before the shading cull.
+        void BuildHiZPyramid();
         /// @brief Upload per-object model matrices into a transient storage
         ///        buffer and bind it at INSTANCE_MATRICES for the given
         ///        pipeline. The uber-pipeline vertex shaders index it by
@@ -409,6 +426,11 @@ namespace AeonGames
         VkFormat mVkDepthStencilFormat{ VK_FORMAT_UNDEFINED };
         VkSurfaceFormatKHR mVkSurfaceFormatKHR{};
         VkRenderPass mVkRenderPass{ VK_NULL_HANDLE };
+        // Early-Z variant of the scene render pass: depth attachment LOADs the
+        // depth pre-pass result instead of clearing, so the shading pass reuses
+        // it for early depth rejection. Compatible with mVkRenderPass, so the
+        // same framebuffer and pipelines serve both.
+        VkRenderPass mVkShadingRenderPass{ VK_NULL_HANDLE };
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
@@ -424,6 +446,34 @@ namespace AeonGames
         // cannot be sampled directly).
         std::array<VkImageView, kFramesInFlight> mVkDepthSampleImageView{};
         VkSampler mVkDepthSampler{ VK_NULL_HANDLE };
+        // Hi-Z depth pyramid: a max-reduced R32F mip chain built from the depth
+        // pre-pass each frame and sampled by the GPU cull compute for occlusion
+        // culling. Ring-buffered per frame in flight alongside the depth image it
+        // derives from. mVkHiZMipStorageViews[frame][level] is the single-mip
+        // storage view hiz_build writes; mVkHiZMipSampleViews the matching
+        // single-mip sampled view read as the next level's source;
+        // mVkHiZSampleView the full-chain view the cull shader samples by LOD.
+        std::array<VkImage, kFramesInFlight> mVkHiZImage{};
+        std::array<VkDeviceMemory, kFramesInFlight> mVkHiZImageMemory{};
+        std::array<std::vector<VkImageView>, kFramesInFlight> mVkHiZMipStorageViews{};
+        std::array<std::vector<VkImageView>, kFramesInFlight> mVkHiZMipSampleViews{};
+        std::array<VkImageView, kFramesInFlight> mVkHiZSampleView{};
+        VkSampler mVkHiZSampler{ VK_NULL_HANDLE };
+        uint32_t mHiZMipCount{ 0 };
+        VkExtent2D mHiZBaseExtent{ 0, 0 };
+        // Descriptor sets for the hiz_build dispatches: per (frame, mip) one
+        // source (set 0, combined image sampler) and one dest (set 1, storage
+        // image). Source level 0 samples the scene depth, level k>0 Hi-Z mip
+        // k-1; dest is Hi-Z mip k. Updated once at init (views stable to resize).
+        VkDescriptorPool mHiZDescriptorPool{ VK_NULL_HANDLE };
+        std::array<std::vector<VkDescriptorSet>, kFramesInFlight> mHiZSourceSets{};
+        std::array<std::vector<VkDescriptorSet>, kFramesInFlight> mHiZDestSets{};
+        // Per-frame combined-image-sampler set the GPU cull compute samples the
+        // full Hi-Z pyramid through (bound at HI_Z by Dispatch when reflected).
+        std::array<VkDescriptorSet, kFramesInFlight> mHiZCullSets{};
+        // Renderer-owned Hi-Z pyramid build compute pipeline, loaded lazily.
+        Pipeline mHiZBuildPipeline{};
+        bool mHiZBuildLoaded{ false };
         // Command pools/buffers are ring-buffered one per frame in flight so the
         // CPU can record frame N+1 while the GPU still executes frame N.
         // mVkCommandBuffer aliases the current frame's buffer (set in BeginFrame)

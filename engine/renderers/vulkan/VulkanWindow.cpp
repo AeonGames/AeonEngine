@@ -138,6 +138,20 @@ namespace AeonGames
         std::swap ( mVkDepthStencilImageView, aVulkanWindow.mVkDepthStencilImageView );
         std::swap ( mVkDepthSampleImageView, aVulkanWindow.mVkDepthSampleImageView );
         std::swap ( mVkDepthSampler, aVulkanWindow.mVkDepthSampler );
+        // Hi-Z pyramid resources (created in InitializeHiZ; the build pipeline is
+        // lazily (re)loaded so, like mCullPipeline, it is intentionally not moved).
+        std::swap ( mVkHiZImage, aVulkanWindow.mVkHiZImage );
+        std::swap ( mVkHiZImageMemory, aVulkanWindow.mVkHiZImageMemory );
+        std::swap ( mVkHiZMipStorageViews, aVulkanWindow.mVkHiZMipStorageViews );
+        std::swap ( mVkHiZMipSampleViews, aVulkanWindow.mVkHiZMipSampleViews );
+        std::swap ( mVkHiZSampleView, aVulkanWindow.mVkHiZSampleView );
+        std::swap ( mVkHiZSampler, aVulkanWindow.mVkHiZSampler );
+        std::swap ( mHiZMipCount, aVulkanWindow.mHiZMipCount );
+        std::swap ( mHiZBaseExtent, aVulkanWindow.mHiZBaseExtent );
+        std::swap ( mHiZDescriptorPool, aVulkanWindow.mHiZDescriptorPool );
+        std::swap ( mHiZSourceSets, aVulkanWindow.mHiZSourceSets );
+        std::swap ( mHiZDestSets, aVulkanWindow.mHiZDestSets );
+        std::swap ( mHiZCullSets, aVulkanWindow.mHiZCullSets );
         std::swap ( mHasStencil, aVulkanWindow.mHasStencil );
         std::swap ( mActiveImageIndex, aVulkanWindow.mActiveImageIndex );
         std::swap ( mVkViewport, aVulkanWindow.mVkViewport );
@@ -145,6 +159,7 @@ namespace AeonGames
         std::swap ( mVkDepthStencilFormat, aVulkanWindow.mVkDepthStencilFormat );
         std::swap ( mVkSurfaceFormatKHR, aVulkanWindow.mVkSurfaceFormatKHR );
         std::swap ( mVkRenderPass, aVulkanWindow.mVkRenderPass );
+        std::swap ( mVkShadingRenderPass, aVulkanWindow.mVkShadingRenderPass );
         std::swap ( mVkHdrColorImage, aVulkanWindow.mVkHdrColorImage );
         std::swap ( mVkHdrColorImageMemory, aVulkanWindow.mVkHdrColorImageMemory );
         std::swap ( mVkHdrColorImageView, aVulkanWindow.mVkHdrColorImageView );
@@ -585,6 +600,229 @@ namespace AeonGames
         vkCreateSampler ( mVulkanRenderer.GetDevice(), &depth_sampler_create_info, nullptr, &mVkDepthSampler );
     }
 
+    void VulkanWindow::InitializeHiZ()
+    {
+        if ( mVkSurfaceCapabilitiesKHR.currentExtent.width == 0 ||
+             mVkSurfaceCapabilitiesKHR.currentExtent.height == 0 )
+        {
+            return;
+        }
+        // Hi-Z level 0 is HALF the depth resolution; each further level halves
+        // again down to 1x1. The depth buffer (full res) is the source reduced
+        // into level 0, so a screen footprint measured in depth texels maps to a
+        // Hi-Z LOD via log2(footprint) - 1 (the -1 for the half-res base) in the
+        // cull shader.
+        const uint32_t depth_w = mVkSurfaceCapabilitiesKHR.currentExtent.width;
+        const uint32_t depth_h = mVkSurfaceCapabilitiesKHR.currentExtent.height;
+        mHiZBaseExtent.width  = depth_w > 1u ? depth_w / 2u : 1u;
+        mHiZBaseExtent.height = depth_h > 1u ? depth_h / 2u : 1u;
+        uint32_t max_dim = mHiZBaseExtent.width > mHiZBaseExtent.height ? mHiZBaseExtent.width : mHiZBaseExtent.height;
+        mHiZMipCount = 1u;
+        while ( ( max_dim >>= 1 ) != 0u )
+        {
+            ++mHiZMipCount;
+        }
+
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            VkImageCreateInfo image_create_info{};
+            image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+            image_create_info.format = VK_FORMAT_R32_SFLOAT;
+            image_create_info.imageType = VK_IMAGE_TYPE_2D;
+            image_create_info.extent.width = mHiZBaseExtent.width;
+            image_create_info.extent.height = mHiZBaseExtent.height;
+            image_create_info.extent.depth = 1;
+            image_create_info.mipLevels = mHiZMipCount;
+            image_create_info.arrayLayers = 1;
+            image_create_info.samples = VK_SAMPLE_COUNT_1_BIT;
+            image_create_info.tiling = VK_IMAGE_TILING_OPTIMAL;
+            // SAMPLED so the cull compute samples the pyramid by LOD; STORAGE so
+            // hiz_build writes each mip via imageStore. R32_SFLOAT is a mandatory
+            // storage-image format, so no feature query is needed.
+            image_create_info.usage = VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_STORAGE_BIT;
+            image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+            image_create_info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+            if ( VkResult result = vkCreateImage ( mVulkanRenderer.GetDevice(), &image_create_info, nullptr, &mVkHiZImage[frame] ) )
+            {
+                std::ostringstream stream;
+                stream << "Hi-Z vkCreateImage failed: ( " << GetVulkanResultString ( result ) << " )";
+                std::cout << LogLevel::Error << stream.str() << std::endl;
+                throw std::runtime_error ( stream.str().c_str() );
+            }
+
+            VkMemoryRequirements memory_requirements;
+            vkGetImageMemoryRequirements ( mVulkanRenderer.GetDevice(), mVkHiZImage[frame], &memory_requirements );
+            uint32_t memory_index = UINT32_MAX;
+            for ( uint32_t i = 0; i < mVulkanRenderer.GetPhysicalDeviceMemoryProperties().memoryTypeCount; ++i )
+            {
+                if ( ( memory_requirements.memoryTypeBits & ( 1 << i ) ) &&
+                     ( ( mVulkanRenderer.GetPhysicalDeviceMemoryProperties().memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ) == VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT ) )
+                {
+                    memory_index = i;
+                    break;
+                }
+            }
+            if ( memory_index == UINT32_MAX )
+            {
+                throw std::runtime_error ( "Hi-Z: no suitable device-local memory type." );
+            }
+            VkMemoryAllocateInfo memory_allocate_info{};
+            memory_allocate_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+            memory_allocate_info.allocationSize = memory_requirements.size;
+            memory_allocate_info.memoryTypeIndex = memory_index;
+            vkAllocateMemory ( mVulkanRenderer.GetDevice(), &memory_allocate_info, nullptr, &mVkHiZImageMemory[frame] );
+            vkBindImageMemory ( mVulkanRenderer.GetDevice(), mVkHiZImage[frame], mVkHiZImageMemory[frame], 0 );
+
+            // Full-chain sampled view (all mips) for the cull shader's textureLod.
+            VkImageViewCreateInfo view_create_info{};
+            view_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+            view_create_info.image = mVkHiZImage[frame];
+            view_create_info.viewType = VK_IMAGE_VIEW_TYPE_2D;
+            view_create_info.format = VK_FORMAT_R32_SFLOAT;
+            view_create_info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            view_create_info.subresourceRange.baseMipLevel = 0;
+            view_create_info.subresourceRange.levelCount = mHiZMipCount;
+            view_create_info.subresourceRange.baseArrayLayer = 0;
+            view_create_info.subresourceRange.layerCount = 1;
+            vkCreateImageView ( mVulkanRenderer.GetDevice(), &view_create_info, nullptr, &mVkHiZSampleView[frame] );
+
+            // Single-mip storage (write) + sampled (read) views per level.
+            mVkHiZMipStorageViews[frame].resize ( mHiZMipCount, VK_NULL_HANDLE );
+            mVkHiZMipSampleViews[frame].resize ( mHiZMipCount, VK_NULL_HANDLE );
+            for ( uint32_t level = 0; level < mHiZMipCount; ++level )
+            {
+                VkImageViewCreateInfo mip_view = view_create_info;
+                mip_view.subresourceRange.baseMipLevel = level;
+                mip_view.subresourceRange.levelCount = 1;
+                vkCreateImageView ( mVulkanRenderer.GetDevice(), &mip_view, nullptr, &mVkHiZMipStorageViews[frame][level] );
+                vkCreateImageView ( mVulkanRenderer.GetDevice(), &mip_view, nullptr, &mVkHiZMipSampleViews[frame][level] );
+            }
+        }
+
+        // NEAREST, clamped sampler with a full LOD range so the cull shader can
+        // textureLod any pyramid level. hiz_build reads its source via texelFetch,
+        // which bypasses sampler filtering.
+        VkSamplerCreateInfo sampler_create_info{};
+        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_create_info.magFilter = VK_FILTER_NEAREST;
+        sampler_create_info.minFilter = VK_FILTER_NEAREST;
+        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        sampler_create_info.minLod = 0.0f;
+        sampler_create_info.maxLod = static_cast<float> ( mHiZMipCount );
+        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        vkCreateSampler ( mVulkanRenderer.GetDevice(), &sampler_create_info, nullptr, &mVkHiZSampler );
+
+        // Build-dispatch descriptor sets. The layouts mirror hiz_build's
+        // reflected sets (set 0 combined-image-sampler, set 1 storage image);
+        // stageFlags = ALL matches VulkanPipeline's reflection so the sets are
+        // layout-compatible with the pipeline at bind time.
+        VkDescriptorSetLayoutBinding source_binding{};
+        source_binding.binding = 0;
+        source_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        source_binding.descriptorCount = 1;
+        source_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        VkDescriptorSetLayoutCreateInfo source_layout_create_info{};
+        source_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        source_layout_create_info.bindingCount = 1;
+        source_layout_create_info.pBindings = &source_binding;
+        const VkDescriptorSetLayout source_layout = mVulkanRenderer.GetDescriptorSetLayout ( source_layout_create_info );
+
+        VkDescriptorSetLayoutBinding dest_binding{};
+        dest_binding.binding = 0;
+        dest_binding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+        dest_binding.descriptorCount = 1;
+        dest_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        VkDescriptorSetLayoutCreateInfo dest_layout_create_info{};
+        dest_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        dest_layout_create_info.bindingCount = 1;
+        dest_layout_create_info.pBindings = &dest_binding;
+        const VkDescriptorSetLayout dest_layout = mVulkanRenderer.GetDescriptorSetLayout ( dest_layout_create_info );
+
+        // set_pairs source (sampler) + set_pairs dest (storage) build sets, plus
+        // kFramesInFlight sampler sets for the cull compute's pyramid read.
+        const uint32_t set_pairs = kFramesInFlight * mHiZMipCount;
+        std::vector<VkDescriptorPoolSize> pool_sizes;
+        pool_sizes.reserve ( 2u * set_pairs + kFramesInFlight );
+        for ( uint32_t i = 0; i < set_pairs + kFramesInFlight; ++i )
+        {
+            pool_sizes.push_back ( { VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1u } );
+        }
+        for ( uint32_t i = 0; i < set_pairs; ++i )
+        {
+            pool_sizes.push_back ( { VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1u } );
+        }
+        mHiZDescriptorPool = CreateDescriptorPool ( mVulkanRenderer.GetDevice(), pool_sizes );
+
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            mHiZSourceSets[frame].resize ( mHiZMipCount, VK_NULL_HANDLE );
+            mHiZDestSets[frame].resize ( mHiZMipCount, VK_NULL_HANDLE );
+            for ( uint32_t level = 0; level < mHiZMipCount; ++level )
+            {
+                mHiZSourceSets[frame][level] = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mHiZDescriptorPool, source_layout );
+                VkDescriptorImageInfo source_info{};
+                if ( level == 0 )
+                {
+                    // Level 0 reduces the scene depth (sampled in READ_ONLY).
+                    source_info.sampler = mVkDepthSampler;
+                    source_info.imageView = mVkDepthSampleImageView[frame];
+                    source_info.imageLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+                }
+                else
+                {
+                    // Level k reduces Hi-Z mip k-1 (kept in GENERAL).
+                    source_info.sampler = mVkHiZSampler;
+                    source_info.imageView = mVkHiZMipSampleViews[frame][level - 1];
+                    source_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                }
+                VkWriteDescriptorSet source_write{};
+                source_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                source_write.dstSet = mHiZSourceSets[frame][level];
+                source_write.dstBinding = 0;
+                source_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                source_write.descriptorCount = 1;
+                source_write.pImageInfo = &source_info;
+
+                mHiZDestSets[frame][level] = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mHiZDescriptorPool, dest_layout );
+                VkDescriptorImageInfo dest_info{};
+                dest_info.imageView = mVkHiZMipStorageViews[frame][level];
+                dest_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+                VkWriteDescriptorSet dest_write{};
+                dest_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                dest_write.dstSet = mHiZDestSets[frame][level];
+                dest_write.dstBinding = 0;
+                dest_write.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
+                dest_write.descriptorCount = 1;
+                dest_write.pImageInfo = &dest_info;
+
+                const VkWriteDescriptorSet writes[] = { source_write, dest_write };
+                vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 2, writes, 0, nullptr );
+            }
+        }
+
+        // Per-frame set the cull compute samples the whole pyramid through
+        // (GENERAL layout, full-chain view); bound at HI_Z by Dispatch.
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            mHiZCullSets[frame] = CreateDescriptorSet ( mVulkanRenderer.GetDevice(), mHiZDescriptorPool, source_layout );
+            VkDescriptorImageInfo cull_info{};
+            cull_info.sampler = mVkHiZSampler;
+            cull_info.imageView = mVkHiZSampleView[frame];
+            cull_info.imageLayout = VK_IMAGE_LAYOUT_GENERAL;
+            VkWriteDescriptorSet cull_write{};
+            cull_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            cull_write.dstSet = mHiZCullSets[frame];
+            cull_write.dstBinding = 0;
+            cull_write.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            cull_write.descriptorCount = 1;
+            cull_write.pImageInfo = &cull_info;
+            vkUpdateDescriptorSets ( mVulkanRenderer.GetDevice(), 1, &cull_write, 0, nullptr );
+        }
+    }
+
     void VulkanWindow::InitializeFrameBuffers()
     {
         if ( mVkSurfaceCapabilitiesKHR.currentExtent.width == 0 ||
@@ -806,7 +1044,11 @@ namespace AeonGames
         attachment_descriptions[3].format = mVkDepthStencilFormat;
         attachment_descriptions[3].samples = VK_SAMPLE_COUNT_1_BIT;
         attachment_descriptions[3].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        attachment_descriptions[3].storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        // STORE (was DONT_CARE) so the depth pre-pass's depth survives the render
+        // pass and can be sampled by the Hi-Z pyramid builder (and the SSR
+        // composite) afterwards. The shading pass re-clears depth on load, so
+        // this only preserves the pre-pass result for the compute reduce.
+        attachment_descriptions[3].storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         attachment_descriptions[3].stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         attachment_descriptions[3].stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
         attachment_descriptions[3].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
@@ -868,6 +1110,18 @@ namespace AeonGames
         render_pass_create_info.pSubpasses = subpass_descriptions.data();
         vkCreateRenderPass ( mVulkanRenderer.GetDevice(), &render_pass_create_info, nullptr, &mVkRenderPass );
 
+        // Early-Z shading render pass: identical attachments, but the depth
+        // attachment LOADs the depth pre-pass result (which BuildHiZPyramid
+        // leaves in ATTACHMENT_OPTIMAL) instead of clearing, so the shading pass
+        // reuses it for early depth rejection. Colour still clears (the pre-pass
+        // wrote only throwaway sentinels). Layouts differ from mVkRenderPass but
+        // attachment formats/counts match, so the two are render-pass compatible.
+        attachment_descriptions[3].loadOp = VK_ATTACHMENT_LOAD_OP_LOAD;
+        attachment_descriptions[3].initialLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        vkCreateRenderPass ( mVulkanRenderer.GetDevice(), &render_pass_create_info, nullptr, &mVkShadingRenderPass );
+        attachment_descriptions[3].loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        attachment_descriptions[3].initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+
         // --- Tonemap resolve resources (extent-independent) ---------------------
         // Linear sampler for the HDR colour image (clamp; no depth comparison).
         VkSamplerCreateInfo hdr_sampler_create_info{};
@@ -925,6 +1179,11 @@ namespace AeonGames
         {
             vkDestroyRenderPass ( mVulkanRenderer.GetDevice(), mVkRenderPass, nullptr );
             mVkRenderPass = VK_NULL_HANDLE;
+        }
+        if ( mVkShadingRenderPass != VK_NULL_HANDLE )
+        {
+            vkDestroyRenderPass ( mVulkanRenderer.GetDevice(), mVkShadingRenderPass, nullptr );
+            mVkShadingRenderPass = VK_NULL_HANDLE;
         }
         if ( mVkTonemapRenderPass != VK_NULL_HANDLE )
         {
@@ -2904,6 +3163,14 @@ namespace AeonGames
         // screen.w gates active-cluster culling in the light-cull stage: it is
         // only set once the depth pre-pass mark stage has run this frame.
         params.screen[3] = mActiveCullEnabled ? 1.0f : 0.0f;
+        // Hi-Z occlusion culling toggle for the GPU cull compute (data-driven;
+        // AEON_HIZ_OCCLUSION=0 disables it for A/B comparison, default on).
+        static const bool occlusion_enabled = []
+        {
+            const char* value = std::getenv ( "AEON_HIZ_OCCLUSION" );
+            return ! ( value != nullptr && value[0] == '0' );
+        } ();
+        params.occlusion[0] = occlusion_enabled ? 1.0f : 0.0f;
         mClusterParams[mFrameIndex].WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
@@ -2918,6 +3185,7 @@ namespace AeonGames
         InitializeSwapchain();
         InitializeImageViews();
         InitializeDepthStencil();
+        InitializeHiZ();
         InitializeFrameBuffers();
         InitializeShadowMap();
         InitializeSpotShadowMap();
@@ -2940,6 +3208,7 @@ namespace AeonGames
         FinalizeFrameBuffers();
         FinalizeEnvironmentMap();
         FinalizePrefilteredEnvironment();
+        FinalizeHiZ();
         FinalizeDepthStencil();
         FinalizeImageViews();
         FinalizeSwapchain();
@@ -2976,12 +3245,14 @@ namespace AeonGames
                 throw std::runtime_error ( stream.str().c_str() );
             }
             FinalizeFrameBuffers();
+            FinalizeHiZ();
             FinalizeDepthStencil();
             FinalizeImageViews();
             FinalizeSwapchain();
             InitializeSwapchain();
             InitializeImageViews();
             InitializeDepthStencil();
+            InitializeHiZ();
             InitializeFrameBuffers();
         }
         mVkViewport.x = static_cast<float> ( aX );
@@ -3230,6 +3501,34 @@ namespace AeonGames
         vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
     }
 
+    void VulkanWindow::BeginShadingRenderPass()
+    {
+        // Without a depth pre-pass (no lighting pipeline) there is no stored
+        // depth to reuse, so clear as usual. mActiveCullEnabled marks that the
+        // depth pre-pass + Hi-Z ran this frame and left depth in ATTACHMENT.
+        if ( !mActiveCullEnabled )
+        {
+            BeginRenderPass();
+            return;
+        }
+        // Colour clears (throwaway pre-pass sentinels); depth LOADs the pre-pass
+        // result for early-Z. The depth clear value is ignored under loadOp LOAD.
+        std::array<VkClearValue, 4> clear_values{};
+        clear_values[0].color.float32[0] = 0.5f;
+        clear_values[0].color.float32[1] = 0.5f;
+        clear_values[0].color.float32[2] = 0.5f;
+        clear_values[0].color.float32[3] = 0.0f;
+        clear_values[3].depthStencil.depth = 1.0f;
+        VkRenderPassBeginInfo render_pass_begin_info{};
+        render_pass_begin_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        render_pass_begin_info.renderPass = mVkShadingRenderPass;
+        render_pass_begin_info.framebuffer = mVkHdrFramebuffer[mFrameIndex];
+        render_pass_begin_info.renderArea = mVkScissor;
+        render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
+        render_pass_begin_info.pClearValues = clear_values.data();
+        vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
+    }
+
     void VulkanWindow::BeginRender ( const Pipeline* aComputePipeline )
     {
         BeginFrame();
@@ -3279,6 +3578,10 @@ namespace AeonGames
         // The mark pass wrote the per-cluster active flags from the fragment
         // shader; make those writes visible to the light-cull compute stage.
         Barrier();
+        // Reduce the stored pre-pass depth into the Hi-Z pyramid before light
+        // culling, so the shading GPU cull can reject occluded instances. Runs
+        // outside any render pass, which EndDepthPrePass guarantees.
+        BuildHiZPyramid();
         if ( aComputePipeline != nullptr )
         {
             DispatchLightCull ( *aComputePipeline );
@@ -3342,6 +3645,113 @@ namespace AeonGames
             Dispatch ( aComputePipeline, group_count, 1, 1, bindings, stage );
             Barrier();
         }
+    }
+
+    void VulkanWindow::BuildHiZPyramid()
+    {
+        if ( mVkHiZImage[mFrameIndex] == VK_NULL_HANDLE || mHiZMipCount == 0 )
+        {
+            return;
+        }
+        if ( !mHiZBuildLoaded )
+        {
+            mHiZBuildPipeline.LoadFromFile ( "shaders/hiz_build" );
+            mHiZBuildLoaded = true;
+        }
+        const VulkanPipeline* pipeline = mVulkanRenderer.GetVulkanPipeline ( mHiZBuildPipeline );
+        if ( pipeline == nullptr )
+        {
+            return;
+        }
+
+        // 1. Make the depth pre-pass's stored depth (storeOp = STORE) sampleable
+        //    by the reducer. After the pre-pass render pass ends the depth is in
+        //    the render pass's depth finalLayout (DEPTH_STENCIL_ATTACHMENT_OPTIMAL).
+        VkImageMemoryBarrier depth_barrier{};
+        depth_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        depth_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        depth_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        depth_barrier.image = mVkDepthStencilImage[mFrameIndex];
+        depth_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( mHasStencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        depth_barrier.subresourceRange.levelCount = 1;
+        depth_barrier.subresourceRange.layerCount = 1;
+        depth_barrier.oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_barrier.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        depth_barrier.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        depth_barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &depth_barrier );
+
+        // 2. Move the whole Hi-Z image to GENERAL (imageStore writes AND sampled
+        //    reads are both valid there), discarding last frame's contents -- the
+        //    per-frame fence already ordered the previous use of this slot.
+        VkImageMemoryBarrier hiz_barrier{};
+        hiz_barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        hiz_barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        hiz_barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        hiz_barrier.image = mVkHiZImage[mFrameIndex];
+        hiz_barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        hiz_barrier.subresourceRange.levelCount = mHiZMipCount;
+        hiz_barrier.subresourceRange.layerCount = 1;
+        hiz_barrier.oldLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        hiz_barrier.newLayout = VK_IMAGE_LAYOUT_GENERAL;
+        hiz_barrier.srcAccessMask = 0;
+        hiz_barrier.dstAccessMask = VK_ACCESS_SHADER_WRITE_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &hiz_barrier );
+
+        // 3. Reduce level by level. hiz_build reflects both its sets to the
+        //    "Samplers" bucket (indistinguishable by name), so bind them by fixed
+        //    index: set 0 = source sampler, set 1 = dest storage image.
+        vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE, pipeline->GetVkComputePipeline ( 0 ) );
+        for ( uint32_t level = 0; level < mHiZMipCount; ++level )
+        {
+            const VkDescriptorSet sets[]
+            {
+                mHiZSourceSets[mFrameIndex][level],
+                mHiZDestSets[mFrameIndex][level],
+            };
+            vkCmdBindDescriptorSets ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(), 0, 2, sets, 0, nullptr );
+            uint32_t level_w = mHiZBaseExtent.width >> level;
+            uint32_t level_h = mHiZBaseExtent.height >> level;
+            if ( level_w == 0u )
+            {
+                level_w = 1u;
+            }
+            if ( level_h == 0u )
+            {
+                level_h = 1u;
+            }
+            vkCmdDispatch ( mVkCommandBuffer, ( level_w + 7u ) / 8u, ( level_h + 7u ) / 8u, 1u );
+            // Make this mip's writes visible as the next mip's sampled source and,
+            // after the last mip, to the shading cull that samples the pyramid.
+            Barrier();
+        }
+
+        // Return the scene depth to the attachment layout so the shading pass can
+        // LOAD it for early-Z (mVkShadingRenderPass declares the depth attachment
+        // initial layout as ATTACHMENT_OPTIMAL). Orders after the level-0 sample.
+        VkImageMemoryBarrier depth_restore{};
+        depth_restore.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        depth_restore.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        depth_restore.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        depth_restore.image = mVkDepthStencilImage[mFrameIndex];
+        depth_restore.subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT | ( mHasStencil ? VK_IMAGE_ASPECT_STENCIL_BIT : 0 );
+        depth_restore.subresourceRange.levelCount = 1;
+        depth_restore.subresourceRange.layerCount = 1;
+        depth_restore.oldLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_READ_ONLY_OPTIMAL;
+        depth_restore.newLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_restore.srcAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        depth_restore.dstAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_READ_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT,
+                               VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &depth_restore );
     }
 
     void VulkanWindow::EndRender()
@@ -4146,6 +4556,16 @@ namespace AeonGames
                                       &mClusterParamsDescriptorSet, 0, nullptr );
         }
 
+        if ( uint32_t hiz_set_index = pipeline->GetDescriptorSetIndex ( Mesh::BindingLocations::HI_Z ); hiz_set_index != std::numeric_limits<uint32_t>::max() )
+        {
+            vkCmdBindDescriptorSets ( mVkCommandBuffer,
+                                      VK_PIPELINE_BIND_POINT_COMPUTE,
+                                      pipeline->GetPipelineLayout(),
+                                      hiz_set_index,
+                                      1,
+                                      &mHiZCullSets[mFrameIndex], 0, nullptr );
+        }
+
         for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
         {
             if ( storage_buffer.mBuffer == nullptr )
@@ -4363,6 +4783,64 @@ namespace AeonGames
                 vkFreeMemory ( mVulkanRenderer.GetDevice(), mVkDepthStencilImageMemory[frame], nullptr );
                 mVkDepthStencilImageMemory[frame] = VK_NULL_HANDLE;
             }
+        }
+    }
+
+    void VulkanWindow::FinalizeHiZ()
+    {
+        if ( mVkHiZSampler != VK_NULL_HANDLE )
+        {
+            vkDestroySampler ( mVulkanRenderer.GetDevice(), mVkHiZSampler, nullptr );
+            mVkHiZSampler = VK_NULL_HANDLE;
+        }
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            for ( VkImageView& view : mVkHiZMipStorageViews[frame] )
+            {
+                if ( view != VK_NULL_HANDLE )
+                {
+                    vkDestroyImageView ( mVulkanRenderer.GetDevice(), view, nullptr );
+                    view = VK_NULL_HANDLE;
+                }
+            }
+            mVkHiZMipStorageViews[frame].clear();
+            for ( VkImageView& view : mVkHiZMipSampleViews[frame] )
+            {
+                if ( view != VK_NULL_HANDLE )
+                {
+                    vkDestroyImageView ( mVulkanRenderer.GetDevice(), view, nullptr );
+                    view = VK_NULL_HANDLE;
+                }
+            }
+            mVkHiZMipSampleViews[frame].clear();
+            if ( mVkHiZSampleView[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImageView ( mVulkanRenderer.GetDevice(), mVkHiZSampleView[frame], nullptr );
+                mVkHiZSampleView[frame] = VK_NULL_HANDLE;
+            }
+            if ( mVkHiZImage[frame] != VK_NULL_HANDLE )
+            {
+                vkDestroyImage ( mVulkanRenderer.GetDevice(), mVkHiZImage[frame], nullptr );
+                mVkHiZImage[frame] = VK_NULL_HANDLE;
+            }
+            if ( mVkHiZImageMemory[frame] != VK_NULL_HANDLE )
+            {
+                vkFreeMemory ( mVulkanRenderer.GetDevice(), mVkHiZImageMemory[frame], nullptr );
+                mVkHiZImageMemory[frame] = VK_NULL_HANDLE;
+            }
+        }
+        mHiZMipCount = 0;
+        mHiZBaseExtent = { 0, 0 };
+        if ( mHiZDescriptorPool != VK_NULL_HANDLE )
+        {
+            vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mHiZDescriptorPool, nullptr );
+            mHiZDescriptorPool = VK_NULL_HANDLE;
+        }
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            mHiZSourceSets[frame].clear();
+            mHiZDestSets[frame].clear();
+            mHiZCullSets[frame] = VK_NULL_HANDLE;
         }
     }
 

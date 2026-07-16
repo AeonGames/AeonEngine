@@ -1,0 +1,67 @@
+// Copyright (C) 2026 Rodrigo Jose Hernandez Cordoba
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+#version 450
+
+// Hierarchical-Z (Hi-Z) pyramid builder. One dispatch per output mip: every
+// destination texel takes the MAX of the 2x2 source texels below it. Max
+// (farthest) depth is the conservative reduction for occlusion culling, whose
+// test compares an instance's NEAREST depth against the stored value: an
+// instance is only rejected when it is behind even the farthest occluder in its
+// screen footprint, so nothing visible is ever culled.
+//
+// The same shader reduces every level. For level 0 the source is the scene
+// depth buffer (from the depth pre-pass); for level k>0 it is Hi-Z level k-1.
+// Both are bound as a plain sampler2D whose .r is the depth, so no per-level
+// branch is needed. Sizes are queried from the bound images (imageSize /
+// textureSize), so there is no push constant or uniform to feed.
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+// Source: scene depth (level 0) or the previous Hi-Z mip (level k>0). A
+// single-mip sampled view is bound per dispatch, so texelFetch LOD 0 reads it.
+#ifdef VULKAN
+layout(set = 0, binding = 0) uniform sampler2D uSource;
+#else
+layout(binding = 0) uniform sampler2D uSource;
+#endif
+
+// Destination: the Hi-Z mip being written this dispatch (single-mip storage view).
+#ifdef VULKAN
+layout(set = 1, binding = 0, r32f) writeonly uniform image2D uDest;
+#else
+layout(binding = 0, r32f) writeonly uniform image2D uDest;
+#endif
+
+void main()
+{
+    ivec2 dst_coord = ivec2 ( gl_GlobalInvocationID.xy );
+    ivec2 dst_size  = imageSize ( uDest );
+    if ( dst_coord.x >= dst_size.x || dst_coord.y >= dst_size.y )
+    {
+        return;
+    }
+
+    // The 2x2 source block for this destination texel. Clamp to the source's
+    // last texel so an odd-sized source (dst_size*2 > src_size) reads its edge
+    // instead of out of bounds -- the clamped read only repeats an occluder, so
+    // the max stays conservative.
+    ivec2 src_size = textureSize ( uSource, 0 );
+    ivec2 s = dst_coord * 2;
+    float d0 = texelFetch ( uSource, min ( s + ivec2 ( 0, 0 ), src_size - 1 ), 0 ).r;
+    float d1 = texelFetch ( uSource, min ( s + ivec2 ( 1, 0 ), src_size - 1 ), 0 ).r;
+    float d2 = texelFetch ( uSource, min ( s + ivec2 ( 0, 1 ), src_size - 1 ), 0 ).r;
+    float d3 = texelFetch ( uSource, min ( s + ivec2 ( 1, 1 ), src_size - 1 ), 0 ).r;
+
+    imageStore ( uDest, dst_coord, vec4 ( max ( max ( d0, d1 ), max ( d2, d3 ) ) ) );
+}

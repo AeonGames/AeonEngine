@@ -420,7 +420,11 @@ namespace AeonGames
         pipeline_depth_stencil_state_create_info.flags = 0;
         pipeline_depth_stencil_state_create_info.depthTestEnable = VK_TRUE;
         pipeline_depth_stencil_state_create_info.depthWriteEnable = VK_TRUE;
-        pipeline_depth_stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_LESS;
+        // LESS_OR_EQUAL (not LESS) so the shading pass can reuse the depth
+        // pre-pass depth for early-Z: a shading fragment at exactly the stored
+        // pre-pass depth must pass. The skybox sits at 0.99999 (< far), so it is
+        // unaffected, and opaque geometry is unchanged for distinct depths.
+        pipeline_depth_stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
         pipeline_depth_stencil_state_create_info.depthBoundsTestEnable = VK_FALSE;
         pipeline_depth_stencil_state_create_info.stencilTestEnable = VK_FALSE;
         pipeline_depth_stencil_state_create_info.front = {};
@@ -830,6 +834,7 @@ namespace AeonGames
                      ( crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SHADOW_MAP ||
                        crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::SPOT_SHADOW_MAP ||
                        crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::POINT_SHADOW_MAP ||
+                       crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::HI_Z ||
                        crc32i ( descriptor_set->bindings[0]->name, strlen ( descriptor_set->bindings[0]->name ) ) == Mesh::BindingLocations::PREFILTERED_ENVIRONMENT ) )
                 {
                     type_name = descriptor_set->bindings[0]->name;

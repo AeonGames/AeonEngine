@@ -1974,7 +1974,7 @@ namespace AeonGames
                 i = j;
             }
             window.BarrierComputeToIndirect();
-            window.BeginRenderPass();
+            window.BeginShadingRenderPass();
             window.DrawCulledShadingBatches();
             for ( size_t k = 0; k < count; ++k )
             {

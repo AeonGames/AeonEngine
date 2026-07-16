@@ -101,8 +101,14 @@ namespace AeonGames
         Matrix4x4 inverse_projection {};
         uint32_t  grid[4]   { CLUSTER_GRID_X, CLUSTER_GRID_Y, CLUSTER_GRID_Z, CLUSTER_COUNT };
         float     screen[4] { 0.0f, 0.0f, 0.0f, 0.0f };
+        // Trailing block consumed only by the GPU-driven cull compute (cull.comp,
+        // Vulkan): occlusion[0] > 0.5 enables Hi-Z occlusion culling. Appended in
+        // std140 order so shaders that declare the shorter ClusterParams block
+        // (cluster_build, light_cull, cluster_mark, clustered_phong) read an
+        // unchanged prefix of the same buffer.
+        float     occlusion[4] { 0.0f, 0.0f, 0.0f, 0.0f };
     };
-    static_assert ( sizeof ( GpuClusterParams ) == 64 + 16 + 16,
+    static_assert ( sizeof ( GpuClusterParams ) == 64 + 16 + 16 + 16,
                     "GpuClusterParams layout must match the shader-side std140 ClusterParams block." );
 }
 #endif
