@@ -222,6 +222,15 @@ namespace AeonGames
         /// @brief Dispatch the remaining compute stages (light culling) after
         ///        the depth pre-pass has flagged the active clusters.
         void DispatchLightCull ( const Pipeline& aComputePipeline );
+        /// @brief (Re)create the Hi-Z pyramid texture + per-mip views for the
+        ///        given depth resolution (level 0 is half of it). Destroys any
+        ///        previous pyramid first; a zero size just tears it down.
+        void CreateHiZ ( uint32_t aWidth, uint32_t aHeight );
+        /// @brief Release the Hi-Z texture and its per-mip views.
+        void DestroyHiZ();
+        /// @brief Reduce the depth pre-pass depth into the Hi-Z pyramid (max per
+        ///        2x2). Runs in EndDepthPrePass before the colour pass clears depth.
+        void BuildHiZPyramid();
         /// @brief Create the off-screen directional shadow map: a sampleable
         ///        depth texture, its framebuffer, and the ShadowParams UBO.
         void InitializeShadowMap();
@@ -403,6 +412,17 @@ namespace AeonGames
         // first time a pooled shading batch is culled.
         Pipeline mCullPipeline{};
         bool mCullLoaded{false};
+        // Hi-Z occlusion pyramid: an R32F mip chain (level 0 = half the depth
+        // resolution) reduced from the depth pre-pass each frame and sampled by
+        // the cull compute to drop occluded instances. mHiZMipViews are the
+        // single-mip views the reducer binds as each level's sampled source.
+        GLuint mHiZTexture{0};
+        std::vector<GLuint> mHiZMipViews{};
+        uint32_t mHiZMipCount{0};
+        uint32_t mHiZBaseWidth{0};
+        uint32_t mHiZBaseHeight{0};
+        Pipeline mHiZBuildPipeline{};
+        bool mHiZBuildLoaded{false};
         // One pooled shading batch whose draw commands were generated on the GPU
         // by the cull compute; drawn with glMultiDrawElementsIndirectCount.
         struct CulledShadingBatch

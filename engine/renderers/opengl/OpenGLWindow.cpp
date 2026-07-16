@@ -248,6 +248,7 @@ namespace AeonGames
                 glDeleteTextures ( 1, &mPrefilteredEnvTexture );
                 mPrefilteredEnvTexture = 0;
             }
+            DestroyHiZ();
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
             mWindowId = None;
@@ -356,6 +357,7 @@ namespace AeonGames
                 glDeleteTextures ( 1, &mPrefilteredEnvTexture );
                 mPrefilteredEnvTexture = 0;
             }
+            DestroyHiZ();
             mFrameBuffer.Finalize();
             ReleaseDC ( mWindowId, mDeviceContext );
             mWindowId = nullptr;
@@ -636,6 +638,9 @@ namespace AeonGames
             { Mesh::BindingLocations::INSTANCE_MATRICES, &models },
             { Mesh::BindingLocations::INSTANCE_MATERIALS, &materials },
         };
+        // Bind the Hi-Z pyramid at the cull shader's HiZ sampler unit (0) so the
+        // occlusion test can sample it; harmless when occlusion is disabled.
+        glBindTextureUnit ( 0, mHiZTexture );
         // One thread per candidate; local_size_x = 64.
         Dispatch ( mCullPipeline, ( count + 63u ) / 64u, 1, 1, bindings, 0 );
         mCulledShadingBatches.push_back ( CulledShadingBatch
@@ -818,6 +823,9 @@ namespace AeonGames
         // The mark pass wrote the per-cluster active flags from the fragment
         // shader; make those writes visible to the light-cull compute stage.
         Barrier();
+        // Reduce the depth pre-pass depth into the Hi-Z pyramid before the colour
+        // pass clears depth, so the shading cull can test occlusion against it.
+        BuildHiZPyramid();
         if ( aComputePipeline != nullptr )
         {
             DispatchLightCull ( *aComputePipeline );
@@ -1324,6 +1332,109 @@ namespace AeonGames
         }
     }
 
+    void OpenGLWindow::CreateHiZ ( uint32_t aWidth, uint32_t aHeight )
+    {
+        DestroyHiZ();
+        if ( aWidth == 0 || aHeight == 0 )
+        {
+            return;
+        }
+        // Level 0 is half the depth resolution; each further level halves again
+        // down to 1x1. The cull shader measures footprints in level-0 texels.
+        mHiZBaseWidth = aWidth > 1u ? aWidth / 2u : 1u;
+        mHiZBaseHeight = aHeight > 1u ? aHeight / 2u : 1u;
+        uint32_t max_dim = mHiZBaseWidth > mHiZBaseHeight ? mHiZBaseWidth : mHiZBaseHeight;
+        mHiZMipCount = 1u;
+        while ( ( max_dim >>= 1 ) != 0u )
+        {
+            ++mHiZMipCount;
+        }
+        glCreateTextures ( GL_TEXTURE_2D, 1, &mHiZTexture );
+        glTextureStorage2D ( mHiZTexture, static_cast<GLsizei> ( mHiZMipCount ), GL_R32F,
+                             static_cast<GLsizei> ( mHiZBaseWidth ), static_cast<GLsizei> ( mHiZBaseHeight ) );
+        // NEAREST with an explicit mip range so the cull shader's textureLod
+        // selects an exact pyramid level; hiz_build reads via texelFetch, which
+        // ignores the sampler's filtering.
+        glTextureParameteri ( mHiZTexture, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST );
+        glTextureParameteri ( mHiZTexture, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        glTextureParameteri ( mHiZTexture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+        glTextureParameteri ( mHiZTexture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+        glTextureParameteri ( mHiZTexture, GL_TEXTURE_BASE_LEVEL, 0 );
+        glTextureParameteri ( mHiZTexture, GL_TEXTURE_MAX_LEVEL, static_cast<GLint> ( mHiZMipCount - 1u ) );
+        // Single-mip views, one per level, bound as the reducer's sampled source
+        // for the next level (level 0's source is the scene depth instead). Views
+        // require immutable storage, which glTextureStorage2D provides.
+        mHiZMipViews.resize ( mHiZMipCount, 0 );
+        for ( uint32_t level = 0; level < mHiZMipCount; ++level )
+        {
+            glGenTextures ( 1, &mHiZMipViews[level] );
+            glTextureView ( mHiZMipViews[level], GL_TEXTURE_2D, mHiZTexture, GL_R32F, level, 1, 0, 1 );
+            glTextureParameteri ( mHiZMipViews[level], GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+            glTextureParameteri ( mHiZMipViews[level], GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
+    void OpenGLWindow::DestroyHiZ()
+    {
+        for ( GLuint view : mHiZMipViews )
+        {
+            if ( view != 0 )
+            {
+                glDeleteTextures ( 1, &view );
+            }
+        }
+        mHiZMipViews.clear();
+        if ( mHiZTexture != 0 )
+        {
+            glDeleteTextures ( 1, &mHiZTexture );
+            mHiZTexture = 0;
+        }
+        mHiZMipCount = 0;
+        mHiZBaseWidth = 0;
+        mHiZBaseHeight = 0;
+    }
+
+    void OpenGLWindow::BuildHiZPyramid()
+    {
+        if ( mHiZTexture == 0 || mHiZMipCount == 0 )
+        {
+            return;
+        }
+        if ( !mHiZBuildLoaded )
+        {
+            mHiZBuildPipeline.LoadFromFile ( "shaders/hiz_build" );
+            mHiZBuildLoaded = true;
+        }
+        // Make the depth pre-pass's depth writes visible to the reducer's fetch.
+        glMemoryBarrier ( GL_TEXTURE_FETCH_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT );
+        mOpenGLRenderer.BindComputePipeline ( mHiZBuildPipeline, 0 );
+        for ( uint32_t level = 0; level < mHiZMipCount; ++level )
+        {
+            // Source at unit 0 (hiz_build's uSource): level 0 reduces the scene
+            // depth, level k>0 reduces Hi-Z mip k-1 (its single-mip view).
+            const GLuint source = ( level == 0 ) ? mFrameBuffer.GetDepthBuffer() : mHiZMipViews[level - 1];
+            glBindTextureUnit ( 0, source );
+            // Dest at image unit 0 (uDest): Hi-Z mip `level`, write-only R32F.
+            glBindImageTexture ( 0, mHiZTexture, static_cast<GLint> ( level ), GL_FALSE, 0, GL_WRITE_ONLY, GL_R32F );
+            uint32_t w = mHiZBaseWidth >> level;
+            uint32_t h = mHiZBaseHeight >> level;
+            if ( w == 0u )
+            {
+                w = 1u;
+            }
+            if ( h == 0u )
+            {
+                h = 1u;
+            }
+            glDispatchCompute ( ( w + 7u ) / 8u, ( h + 7u ) / 8u, 1u );
+            // This mip's image writes feed the next level's texel fetch and,
+            // after the last level, the cull shader's sample.
+            glMemoryBarrier ( GL_SHADER_IMAGE_ACCESS_BARRIER_BIT | GL_TEXTURE_FETCH_BARRIER_BIT );
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
+    }
+
     void OpenGLWindow::BeginFrame()
     {
         // Idempotent within a frame: the application may call BeginFrame()
@@ -1610,6 +1721,14 @@ namespace AeonGames
         // screen.w gates active-cluster culling in the light-cull stage: it is
         // only set once the depth pre-pass mark stage has run this frame.
         params.screen[3] = mActiveCullEnabled ? 1.0f : 0.0f;
+        // Hi-Z occlusion culling toggle for the GPU cull compute (data-driven;
+        // AEON_HIZ_OCCLUSION=0 disables it for A/B comparison, default on).
+        static const bool occlusion_enabled = []
+        {
+            const char* value = std::getenv ( "AEON_HIZ_OCCLUSION" );
+            return ! ( value != nullptr && value[0] == '0' );
+        } ();
+        params.occlusion[0] = occlusion_enabled ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
@@ -1696,6 +1815,8 @@ namespace AeonGames
             glViewport ( aX, aY, aWidth, aHeight );
             OPENGL_CHECK_ERROR_THROW;
             mFrameBuffer.Resize ( aWidth, aHeight );
+            // Rebuild the Hi-Z pyramid for the new depth resolution.
+            CreateHiZ ( aWidth, aHeight );
             //mOverlay.Resize ( aWidth, aHeight );
             mViewportWidth = aWidth;
             mViewportHeight = aHeight;

@@ -106,11 +106,15 @@ writeonly buffer InstanceMaterials
     uint out_materials[];
 };
 
+// Clustered-shading parameters UBO (auto-bound on Vulkan; bound by reflected
+// block binding on GL). Only the trailing occlusion vec4 is read here (.x > 0.5
+// enables Hi-Z occlusion culling); the earlier members mirror the shared
+// ClusterParams block so std140 offsets line up.
 #ifdef VULKAN
-// Clustered-shading parameters UBO (auto-bound). Only the trailing occlusion
-// vec4 is read here (.x > 0.5 enables Hi-Z occlusion culling); the earlier
-// members mirror the shared ClusterParams block so std140 offsets line up.
 layout(set = 6, binding = 0, std140) uniform ClusterParams
+#else
+layout(binding = 1, std140) uniform ClusterParams
+#endif
 {
     mat4  cull_inverse_projection;
     uvec4 cull_cluster_grid;
@@ -120,7 +124,10 @@ layout(set = 6, binding = 0, std140) uniform ClusterParams
 // Hi-Z depth pyramid (max-reduced), level 0 at half the depth resolution. An
 // instance is rejected only when its nearest projected depth is behind the
 // farthest stored depth across its whole screen footprint.
+#ifdef VULKAN
 layout(set = 7, binding = 0) uniform sampler2D HiZ;
+#else
+layout(binding = 0) uniform sampler2D HiZ;
 #endif
 
 void main()
@@ -174,7 +181,6 @@ void main()
         }
     }
 
-#ifdef VULKAN
     // Hi-Z occlusion: reject instances that pass the frustum test but are fully
     // hidden behind previously-rasterized geometry (the depth pre-pass depth,
     // reduced into the pyramid). Conservative -- a near-plane straddle, a
@@ -202,7 +208,11 @@ void main()
             vec3 ndc = clip.xyz / clip.w;
             uv_min = min ( uv_min, ndc.xy * 0.5 + 0.5 );
             uv_max = max ( uv_max, ndc.xy * 0.5 + 0.5 );
-            nearest = min ( nearest, ndc.z ); // Vulkan window depth is [0,1]
+#ifdef VULKAN
+            nearest = min ( nearest, ndc.z );             // window depth [0,1]
+#else
+            nearest = min ( nearest, ndc.z * 0.5 + 0.5 ); // GL NDC [-1,1] -> [0,1]
+#endif
         }
         if ( !straddle )
         {
@@ -226,7 +236,6 @@ void main()
             }
         }
     }
-#endif
 
     if ( !visible )
     {

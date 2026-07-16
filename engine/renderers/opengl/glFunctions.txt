@@ -194,6 +194,10 @@ glDeleteSync
 // Compute shaders
 glDispatchCompute
 glMemoryBarrier
+// Hi-Z occlusion culling: storage-image binding for the pyramid builder and
+// single-mip texture views used as its per-level sampled source.
+glBindImageTexture
+glTextureView
 // GL_ARB_bindless_texture: resident sampler handles are stored in the material
 // SSBO so shaders index textures without per-draw binds -- the OpenGL parity of
 // the Vulkan descriptor-indexing (bindless) path.
