@@ -100,7 +100,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_BLEND );
         OPENGL_CHECK_ERROR_THROW;
-        glDepthFunc ( GL_LESS );
+        glDepthFunc ( GL_LEQUAL );
         OPENGL_CHECK_ERROR_THROW;
         glEnable ( GL_DEPTH_TEST );
         OPENGL_CHECK_ERROR_THROW;
@@ -831,8 +831,9 @@ namespace AeonGames
             DispatchLightCull ( *aComputePipeline );
         }
         // Begin the main color pass; the application's second geometry
-        // traversal shades normally using the now-populated light grid.
-        BeginRenderPass();
+        // traversal shades normally using the now-populated light grid. Reuse
+        // the depth pre-pass depth (do not clear it) for early-Z rejection.
+        BeginRenderPass ( false );
     }
 
     void OpenGLWindow::InitializeShadowMap()
@@ -1466,9 +1467,15 @@ namespace AeonGames
         mFrameBuffer.Bind();
     }
 
-    void OpenGLWindow::BeginRenderPass()
+    void OpenGLWindow::BeginRenderPass ( bool aClearDepth )
     {
-        glClear ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+        // Early-Z: the shading pass passes aClearDepth == false to reuse the
+        // depth pre-pass depth instead of clearing it, so opaque fragments behind
+        // the stored depth are rejected before shading (the global depth func is
+        // LEQUAL, so a fragment at exactly the pre-pass depth still passes).
+        // Colour always clears -- the depth pre-pass wrote only throwaway
+        // sentinels to the colour/G-buffer attachments.
+        glClear ( aClearDepth ? ( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT ) : GL_COLOR_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
         // Opaque scene geometry must not blend: it is drawn in arbitrary order
         // and many diffuse textures carry alpha < 1, which would otherwise make

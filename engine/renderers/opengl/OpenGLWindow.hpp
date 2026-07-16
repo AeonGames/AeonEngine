@@ -76,7 +76,7 @@ namespace AeonGames
         /// @brief Begin the frame: make the context current and bind the framebuffer.
         void BeginFrame();
         /// @brief Begin the render pass: clear buffers and enable depth testing.
-        void BeginRenderPass();
+        void BeginRenderPass ( bool aClearDepth = true );
         /// @brief End the depth pre-pass, dispatch light culling and begin the
         ///        main color pass.
         void EndDepthPrePass ( const Pipeline* aComputePipeline );
