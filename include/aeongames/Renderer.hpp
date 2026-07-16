@@ -89,6 +89,11 @@ namespace AeonGames
     public:
         /** Virtual destructor. */
         DLL virtual ~Renderer() = 0;
+        /** Number of GPU timestamp marks the opt-in per-pass benchmark records
+         *  each frame (see RecordGpuTimestamp): frame start, before/after the
+         *  depth pre-pass, after Hi-Z + light cull, after shading, and before
+         *  EndRender -- five segments plus the total. */
+        static constexpr uint32_t kGpuTimestampMarks = 6;
         ///@name Renderer specific resource functions
         ///@{
         /** Loads mesh data into GPU memory.
@@ -592,6 +597,30 @@ namespace AeonGames
         virtual void SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass ) = 0;
         /** @return True when @p aWindowId names a surface known to this renderer. */
         virtual bool IsValidWindow ( void* aWindowId ) const = 0;
+        /** Records a GPU timestamp into slot @p aSlot of @p aWindowId's timer
+         *  ring for the opt-in per-pass benchmark (AEON_BENCH_FRAMES). Called
+         *  from RenderScene at the frame's pass boundaries. The default is a
+         *  no-op so backends without timer support simply skip benchmarking.
+         *  Defined inline so it stays out of the class's key-function set and the
+         *  vtable keeps its weak/COMDAT emission across the plugin DLLs.
+         *  @param aWindowId Platform dependent window handle.
+         *  @param aSlot Mark index in [0, kGpuTimestampMarks). */
+        virtual void RecordGpuTimestamp ( void* aWindowId, uint32_t aSlot )
+        {
+            ( void ) aWindowId;
+            ( void ) aSlot;
+        }
+        /** Reads back this frame's kGpuTimestampMarks GPU timestamps (in
+         *  nanoseconds) for @p aWindowId, blocking until they are available.
+         *  @param aWindowId Platform dependent window handle.
+         *  @param aTimestampsNs Receives the marks in nanoseconds.
+         *  @return True if a full set of timestamps was produced this frame. */
+        virtual bool ReadGpuTimestamps ( void* aWindowId, std::array<uint64_t, kGpuTimestampMarks>& aTimestampsNs )
+        {
+            ( void ) aWindowId;
+            ( void ) aTimestampsNs;
+            return false;
+        }
     private:
         /** Draws debug geometry (an analytic infinite ground grid, per-node
          * world-space AABB wireframes and the scene octree cell wireframes) on
@@ -653,6 +682,34 @@ namespace AeonGames
             bool rendered{false};
         };
         std::unordered_map<void*, std::array<PointShadowCacheEntry, MAX_POINT_SHADOW_CASTERS>> mPointShadowCache{};
+        /** Reads AEON_BENCH_FRAMES / AEON_BENCH_WARMUP once and arms the opt-in
+         *  per-pass GPU benchmark. Called on the first RenderScene. */
+        void InitBenchmark();
+        /** Records mark @p aSlot when benchmarking is armed for this frame. */
+        void MaybeRecordTimestamp ( void* aWindowId, uint32_t aSlot );
+        /** Reads this frame's marks, accumulates the per-segment times (after the
+         *  warm-up), and prints a summary + exits once the target sample count is
+         *  reached. Called after EndRender. */
+        void EndBenchmarkFrame ( void* aWindowId );
+        /** True once InitBenchmark has run. */
+        bool mBenchmarkInitialized{false};
+        /** True when AEON_BENCH_FRAMES armed the benchmark. */
+        bool mBenchmarkActive{false};
+        /** True when the current frame recorded a full set of marks (lighting
+         *  frames only); gates the readback in EndBenchmarkFrame. */
+        bool mBenchmarkFrameRecorded{false};
+        /** Frames to discard before collecting (AEON_BENCH_WARMUP). */
+        uint32_t mBenchmarkWarmup{0};
+        /** Target number of measured frames (AEON_BENCH_FRAMES). */
+        uint32_t mBenchmarkTarget{0};
+        /** Measured frames collected so far. */
+        uint32_t mBenchmarkCollected{0};
+        /** Armed frames seen so far (spans warm-up + measured). */
+        uint64_t mBenchmarkFrameCounter{0};
+        /** Per-segment sample times in milliseconds (kGpuTimestampMarks-1 segments). */
+        std::array < std::vector<double>, kGpuTimestampMarks - 1 > mBenchmarkSegments{};
+        /** Per-frame total (mark 0 -> last mark) sample times in milliseconds. */
+        std::vector<double> mBenchmarkTotals{};
     };
     /**@name Factory Functions */
     /*@{*/

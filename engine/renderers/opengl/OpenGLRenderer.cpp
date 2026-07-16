@@ -1326,6 +1326,24 @@ void main()
         }
         it->second.Finish();
     }
+    void OpenGLRenderer::RecordGpuTimestamp ( void* aWindowId, uint32_t aSlot )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.RecordGpuTimestamp ( aSlot );
+    }
+    bool OpenGLRenderer::ReadGpuTimestamps ( void* aWindowId, std::array<uint64_t, kGpuTimestampMarks>& aTimestampsNs )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return false;
+        }
+        return it->second.ReadGpuTimestamps ( aTimestampsNs );
+    }
     void OpenGLRenderer::SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass )
     {
         auto it = mWindowStore.find ( aWindowId );

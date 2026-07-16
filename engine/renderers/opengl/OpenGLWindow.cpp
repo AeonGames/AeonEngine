@@ -248,6 +248,11 @@ namespace AeonGames
                 glDeleteTextures ( 1, &mPrefilteredEnvTexture );
                 mPrefilteredEnvTexture = 0;
             }
+            if ( mGpuTimersLoaded )
+            {
+                glDeleteQueries ( static_cast<GLsizei> ( mGpuTimerQueries.size() ), mGpuTimerQueries.data() );
+                mGpuTimersLoaded = false;
+            }
             DestroyHiZ();
             mFrameBuffer.Finalize();
             mDisplay =  nullptr;
@@ -356,6 +361,11 @@ namespace AeonGames
             {
                 glDeleteTextures ( 1, &mPrefilteredEnvTexture );
                 mPrefilteredEnvTexture = 0;
+            }
+            if ( mGpuTimersLoaded )
+            {
+                glDeleteQueries ( static_cast<GLsizei> ( mGpuTimerQueries.size() ), mGpuTimerQueries.data() );
+                mGpuTimersLoaded = false;
             }
             DestroyHiZ();
             mFrameBuffer.Finalize();
@@ -1689,6 +1699,46 @@ namespace AeonGames
         mOpenGLRenderer.MakeCurrent ( mWindowId );
 #endif
         glFinish();
+    }
+    void OpenGLWindow::RecordGpuTimestamp ( uint32_t aSlot )
+    {
+        if ( aSlot >= mGpuTimerQueries.size() )
+        {
+            return;
+        }
+        if ( !mGpuTimersLoaded )
+        {
+            glGenQueries ( static_cast<GLsizei> ( mGpuTimerQueries.size() ), mGpuTimerQueries.data() );
+            OPENGL_CHECK_ERROR_NO_THROW;
+            mGpuTimersLoaded = true;
+        }
+        // GL_TIMESTAMP records the GPU clock when every prior command has
+        // completed; subtracting consecutive marks yields each pass's GPU cost.
+        glQueryCounter ( mGpuTimerQueries[aSlot], GL_TIMESTAMP );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        if ( aSlot + 1 == mGpuTimerQueries.size() )
+        {
+            mGpuTimersRecorded = true;
+        }
+    }
+    bool OpenGLWindow::ReadGpuTimestamps ( std::array<uint64_t, Renderer::kGpuTimestampMarks>& aTimestampsNs )
+    {
+        if ( !mGpuTimersLoaded || !mGpuTimersRecorded )
+        {
+            return false;
+        }
+        mGpuTimersRecorded = false;
+        // Block until each mark is available (GL_TIMESTAMP results are already in
+        // nanoseconds). Waiting on the last mark drains the frame's GPU work,
+        // which serialises CPU/GPU but leaves the measured GPU deltas intact.
+        for ( uint32_t i = 0; i < aTimestampsNs.size(); ++i )
+        {
+            GLuint64 value = 0;
+            glGetQueryObjectui64v ( mGpuTimerQueries[i], GL_QUERY_RESULT, &value );
+            aTimestampsNs[i] = value;
+        }
+        OPENGL_CHECK_ERROR_NO_THROW;
+        return true;
     }
     void OpenGLWindow::WriteOverlayPixels ( int32_t aXOffset, int32_t aYOffset, uint32_t aWidth, uint32_t aHeight, Texture::Format aFormat, Texture::Type aType, const uint8_t* aPixels )
     {

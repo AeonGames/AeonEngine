@@ -198,6 +198,11 @@ glMemoryBarrier
 // single-mip texture views used as its per-level sampled source.
 glBindImageTexture
 glTextureView
+// GPU timestamp queries (GL 3.3) for the opt-in per-pass benchmark timers.
+glGenQueries
+glDeleteQueries
+glQueryCounter
+glGetQueryObjectui64v
 // GL_ARB_bindless_texture: resident sampler handles are stored in the material
 // SSBO so shaders index textures without per-draw binds -- the OpenGL parity of
 // the Vulkan descriptor-indexing (bindless) path.

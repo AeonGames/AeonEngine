@@ -109,6 +109,13 @@ namespace AeonGames
         /// @brief Block until the GPU has finished every command issued for this
         ///        window (glFinish), so buffers can be safely read back.
         void Finish();
+        /// @brief Record a GPU timestamp into slot @p aSlot of the per-pass
+        ///        benchmark timer ring (AEON_BENCH_FRAMES); lazily creates the
+        ///        GL_TIMESTAMP query objects on first use.
+        void RecordGpuTimestamp ( uint32_t aSlot );
+        /// @brief Read back this frame's benchmark timestamps (nanoseconds),
+        ///        blocking until available. False when none were recorded yet.
+        bool ReadGpuTimestamps ( std::array<uint64_t, Renderer::kGpuTimestampMarks>& aTimestampsNs );
         void Render (   const Matrix4x4& aModelMatrix,
                         const Mesh& aMesh,
                         const Pipeline& aPipeline,
@@ -423,6 +430,13 @@ namespace AeonGames
         uint32_t mHiZBaseHeight{0};
         Pipeline mHiZBuildPipeline{};
         bool mHiZBuildLoaded{false};
+        // Opt-in per-pass GPU timers (AEON_BENCH_FRAMES): one GL_TIMESTAMP query
+        // per mark, sampled at the frame's pass boundaries so a benchmark run can
+        // report the per-pass GPU cost. Lazily created on first use (post-move),
+        // released in the dtor. Zero cost when the benchmark env var is unset.
+        std::array<GLuint, Renderer::kGpuTimestampMarks> mGpuTimerQueries{};
+        bool mGpuTimersLoaded{false};
+        bool mGpuTimersRecorded{false};
         // One pooled shading batch whose draw commands were generated on the GPU
         // by the cull compute; drawn with glMultiDrawElementsIndirectCount.
         struct CulledShadingBatch

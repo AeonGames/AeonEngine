@@ -25,6 +25,11 @@ limitations under the License.
 #include "aeongames/Transform.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/CRC.hpp"
+#include <algorithm>
+#include <cstdlib>
+#include <iostream>
+#include <iomanip>
+#include <string_view>
 
 namespace AeonGames
 {
@@ -48,7 +53,16 @@ namespace AeonGames
         // duplicated per backend) means OpenGL and Vulkan render the scene
         // through identical logic.
         const Pipeline* lighting = aScene.GetLightingPipeline();
+        if ( !mBenchmarkInitialized )
+        {
+            InitBenchmark();
+        }
+        // The opt-in per-pass benchmark times only lighting frames: the pass
+        // boundaries the marks bracket exist only when the lighting path runs,
+        // so a frame records either the full mark set or none.
+        mBenchmarkFrameRecorded = mBenchmarkActive && ( lighting != nullptr );
         BeginRender ( aWindowId, lighting );
+        MaybeRecordTimestamp ( aWindowId, 0 );
         if ( lighting )
         {
             // Spot shadow passes: render each spot shadow caster's depth into its
@@ -138,10 +152,14 @@ namespace AeonGames
         {
             // Depth pre-pass: flag clusters containing visible geometry with the
             // renderer's marking pipeline before light culling.
+            MaybeRecordTimestamp ( aWindowId, 1 );
             SubmitRenderQueue ( aWindowId, aScene, RenderPass::DepthPrePass );
+            MaybeRecordTimestamp ( aWindowId, 2 );
             EndDepthPrePass ( aWindowId, lighting );
+            MaybeRecordTimestamp ( aWindowId, 3 );
         }
         SubmitRenderQueue ( aWindowId, aScene, RenderPass::Shading );
+        MaybeRecordTimestamp ( aWindowId, 4 );
         // Debug geometry shares the scene depth buffer and must precede the
         // overlay so the GUI stays on top.
         if ( mDebugRendering )
@@ -152,7 +170,124 @@ namespace AeonGames
         {
             RenderOverlay ( aWindowId, *aGuiOverlay );
         }
+        MaybeRecordTimestamp ( aWindowId, 5 );
         EndRender ( aWindowId );
+        EndBenchmarkFrame ( aWindowId );
+    }
+
+    void Renderer::InitBenchmark()
+    {
+        mBenchmarkInitialized = true;
+        const char* frames_env = std::getenv ( "AEON_BENCH_FRAMES" );
+        if ( frames_env == nullptr )
+        {
+            return;
+        }
+        const long frames = std::strtol ( frames_env, nullptr, 10 );
+        if ( frames <= 0 )
+        {
+            return;
+        }
+        mBenchmarkTarget = static_cast<uint32_t> ( frames );
+        const char* warmup_env = std::getenv ( "AEON_BENCH_WARMUP" );
+        mBenchmarkWarmup = ( warmup_env != nullptr )
+                           ? static_cast<uint32_t> ( std::max ( 0L, std::strtol ( warmup_env, nullptr, 10 ) ) )
+                           : 60u;
+        mBenchmarkActive = true;
+        for ( auto& segment : mBenchmarkSegments )
+        {
+            segment.reserve ( mBenchmarkTarget );
+        }
+        mBenchmarkTotals.reserve ( mBenchmarkTarget );
+        std::cout << "GPU benchmark armed: " << mBenchmarkTarget
+                  << " frames after " << mBenchmarkWarmup << " warm-up frames" << std::endl;
+    }
+
+    void Renderer::MaybeRecordTimestamp ( void* aWindowId, uint32_t aSlot )
+    {
+        if ( !mBenchmarkFrameRecorded )
+        {
+            return;
+        }
+        RecordGpuTimestamp ( aWindowId, aSlot );
+    }
+
+    void Renderer::EndBenchmarkFrame ( void* aWindowId )
+    {
+        if ( !mBenchmarkFrameRecorded )
+        {
+            return;
+        }
+        mBenchmarkFrameRecorded = false;
+        std::array<uint64_t, kGpuTimestampMarks> marks{};
+        if ( !ReadGpuTimestamps ( aWindowId, marks ) )
+        {
+            return;
+        }
+        ++mBenchmarkFrameCounter;
+        if ( mBenchmarkFrameCounter <= mBenchmarkWarmup )
+        {
+            return;
+        }
+        for ( uint32_t i = 0; i + 1 < kGpuTimestampMarks; ++i )
+        {
+            const double ms = ( marks[i + 1] >= marks[i] )
+                              ? static_cast<double> ( marks[i + 1] - marks[i] ) * 1e-6 : 0.0;
+            mBenchmarkSegments[i].push_back ( ms );
+        }
+        mBenchmarkTotals.push_back ( ( marks[kGpuTimestampMarks - 1] >= marks[0] )
+                                     ? static_cast<double> ( marks[kGpuTimestampMarks - 1] - marks[0] ) * 1e-6 : 0.0 );
+        if ( ++mBenchmarkCollected < mBenchmarkTarget )
+        {
+            return;
+        }
+        // Target reached: summarise each segment and the total, then exit.
+        static constexpr std::array < const char*, kGpuTimestampMarks - 1 > kSegmentNames =
+        {
+            "shadows+setup", "depth prepass", "hiz+lightcull", "shading", "debug+overlay"
+        };
+        auto stat = [] ( std::vector<double> v, double& mn, double& med, double& mean, double& p95, double& mx )
+        {
+            std::sort ( v.begin(), v.end() );
+            mn = v.front();
+            mx = v.back();
+            med = v[v.size() / 2];
+            p95 = v[std::min ( v.size() - 1, static_cast<size_t> ( static_cast<double> ( v.size() ) * 0.95 ) )];
+            double sum = 0.0;
+            for ( double x : v )
+            {
+                sum += x;
+            }
+            mean = sum / static_cast<double> ( v.size() );
+        };
+        const char* occ_env = std::getenv ( "AEON_HIZ_OCCLUSION" );
+        const bool occlusion_on = ( occ_env == nullptr ) || ( std::string_view ( occ_env ) != "0" );
+        std::cout << "\n=== GPU per-pass benchmark (" << mBenchmarkCollected
+                  << " frames, occlusion=" << ( occlusion_on ? "ON" : "OFF" ) << ") ===\n";
+        std::cout << std::left << std::setw ( 16 ) << "segment"
+                  << std::right << std::setw ( 9 ) << "min" << std::setw ( 9 ) << "median"
+                  << std::setw ( 9 ) << "mean" << std::setw ( 9 ) << "p95"
+                  << std::setw ( 9 ) << "max" << "   (ms)\n";
+        std::cout << std::fixed << std::setprecision ( 3 );
+        double mn = 0.0, med = 0.0, mean = 0.0, p95 = 0.0, mx = 0.0;
+        for ( uint32_t i = 0; i + 1 < kGpuTimestampMarks; ++i )
+        {
+            if ( mBenchmarkSegments[i].empty() )
+            {
+                continue;
+            }
+            stat ( mBenchmarkSegments[i], mn, med, mean, p95, mx );
+            std::cout << std::left << std::setw ( 16 ) << kSegmentNames[i]
+                      << std::right << std::setw ( 9 ) << mn << std::setw ( 9 ) << med
+                      << std::setw ( 9 ) << mean << std::setw ( 9 ) << p95 << std::setw ( 9 ) << mx << "\n";
+        }
+        std::cout << std::string ( 61, '-' ) << "\n";
+        stat ( mBenchmarkTotals, mn, med, mean, p95, mx );
+        std::cout << std::left << std::setw ( 16 ) << "TOTAL"
+                  << std::right << std::setw ( 9 ) << mn << std::setw ( 9 ) << med
+                  << std::setw ( 9 ) << mean << std::setw ( 9 ) << p95 << std::setw ( 9 ) << mx
+                  << "\n" << std::endl;
+        std::exit ( 0 );
     }
 
     void Renderer::SetDebugRendering ( bool aEnabled )

@@ -177,6 +177,8 @@ namespace AeonGames
         void EndPointShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Finish ( void* aWindowId ) final;
+        void RecordGpuTimestamp ( void* aWindowId, uint32_t aSlot ) final;
+        bool ReadGpuTimestamps ( void* aWindowId, std::array<uint64_t, kGpuTimestampMarks>& aTimestampsNs ) final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,
                       const Mesh& aMesh,
