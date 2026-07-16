@@ -21,6 +21,7 @@ set(PIPELINES
     "cull|comp=cull.comp"
     "hiz_build|comp=hiz_build.comp"
     "cluster_mark|vert=cluster_mark.vert|frag=cluster_mark.frag"
+    "cluster_mark_comp|comp=cluster_mark_comp.comp"
     "lighting|comp=lighting.0.comp|comp=lighting.1.comp"
     "skinning|comp=skinning.comp"
     "shadow_depth|vert=shadow_depth.vert|frag=shadow_depth.frag"

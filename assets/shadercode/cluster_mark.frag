@@ -74,7 +74,13 @@ uint fragment_cluster_index()
 
 void main()
 {
+      // The cluster-active marking is done per-fragment on Vulkan, but on OpenGL
+      // it is moved to a compute pass over the finished depth buffer
+      // (cluster_mark_comp): the per-fragment scatter under this pass's full
+      // overdraw was ~95% of the pre-pass cost. So on GL this pass is depth-only.
+#ifdef VULKAN
       cluster_active[fragment_cluster_index()] = 1u;
+#endif
       FragColor = vec4 ( 0.0 );
       GNormalRough = vec4 ( 0.0 );
       GSpecWeight = vec4 ( 0.0 );

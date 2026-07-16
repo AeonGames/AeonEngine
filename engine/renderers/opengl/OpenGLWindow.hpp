@@ -229,6 +229,10 @@ namespace AeonGames
         /// @brief Dispatch the remaining compute stages (light culling) after
         ///        the depth pre-pass has flagged the active clusters.
         void DispatchLightCull ( const Pipeline& aComputePipeline );
+        /// @brief Mark active clusters from the depth pre-pass depth buffer in a
+        ///        compute pass (OpenGL): the per-pixel replacement for the
+        ///        per-fragment cluster_mark scatter, run before light culling.
+        void DispatchClusterMark();
         /// @brief (Re)create the Hi-Z pyramid texture + per-mip views for the
         ///        given depth resolution (level 0 is half of it). Destroys any
         ///        previous pyramid first; a zero size just tears it down.
@@ -325,6 +329,11 @@ namespace AeonGames
         // lazily the first frame clustering runs.
         Pipeline mClusterMarkPipeline{};
         bool mClusterMarkLoaded{false};
+        // Renderer-owned compute that marks active clusters from the finished
+        // depth buffer (OpenGL only), replacing the per-fragment cluster_mark
+        // scatter that dominated the pre-pass. Loaded lazily on first use.
+        Pipeline mClusterMarkComputePipeline{};
+        bool mClusterMarkComputeLoaded{false};
         // Renderer-owned fullscreen tone-map pipeline (loaded lazily) and its
         // empty VAO, used to resolve the off-screen linear HDR colour target to
         // the swapchain (exposure + ACES tone map + sRGB encode).
