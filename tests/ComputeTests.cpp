@@ -608,10 +608,20 @@ namespace AeonGames
         };
 
         // One full gated frame: mark stage (BeginRender + Render) then gated
-        // light-cull (EndDepthPrePass) then present (EndRender).
+        // light-cull (EndDepthPrePass). The mark + cull compute is what this test
+        // verifies; open the shading pass before presenting so EndRender has an
+        // active render pass to close (on Vulkan EndDepthPrePass ends the depth
+        // pre-pass pass and leaves the shading pass to the caller, unlike the GL
+        // path which reopens it).
         renderer->BeginRender ( hwnd, &lighting );
-        renderer->Render ( hwnd, model, mesh, shading );
+        // Draw into the depth pre-pass so the renderer substitutes its cluster-mark
+        // pipeline, which flags the clusters the geometry covers. Passing the
+        // scene's shading pipeline under the default Shading pass would instead try
+        // to draw clustered_phong with its lighting/material sets unbound.
+        renderer->Render ( hwnd, model, mesh, shading, nullptr, Topology::TRIANGLE_LIST,
+                           0, 0xffffffff, 1, 0, nullptr, RenderPass::DepthPrePass );
         renderer->EndDepthPrePass ( hwnd, &lighting );
+        renderer->BeginRenderPass ( hwnd );
         renderer->EndRender ( hwnd );
 
         // Re-make the GL context current here, then Finish() to drain the GPU so

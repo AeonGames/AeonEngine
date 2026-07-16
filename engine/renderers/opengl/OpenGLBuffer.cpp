@@ -165,8 +165,14 @@ namespace AeonGames
         {
             return;
         }
+        // READ is included alongside WRITE so the persistent mapping is backed by
+        // CPU-cached (not write-combined) memory: without it, reads of the mapped
+        // pointer -- e.g. GPU compute results read back on the host -- can return
+        // stale/zero data on drivers that place write-only coherent buffers in
+        // write-combined memory. The pool is small and host-written each frame, so
+        // the cached mapping has no meaningful cost.
         constexpr GLbitfield storage_flags =
-            GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
+            GL_MAP_READ_BIT | GL_MAP_WRITE_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
         glCreateBuffers ( 1, &mBuffer );
         glNamedBufferStorage ( mBuffer, mSize, nullptr, storage_flags );
         OPENGL_CHECK_ERROR_THROW;

@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2019,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2019,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ limitations under the License.
 namespace AeonGames
 {
     BufferAccessor::BufferAccessor ( MemoryPoolBuffer* aMemoryPoolBuffer, size_t aOffset, size_t aSize ) :
-        mMemoryPoolBuffer{aMemoryPoolBuffer}, mOffset{aOffset}, mSize{aSize}
+        mMemoryPoolBuffer{aMemoryPoolBuffer},
+        mBuffer{ ( aMemoryPoolBuffer != nullptr ) ? & aMemoryPoolBuffer->GetBuffer() : nullptr },
+        mOffset{aOffset}, mSize{aSize}
     {}
 
     BufferAccessor::BufferAccessor () = default;
@@ -32,21 +34,21 @@ namespace AeonGames
 
     void BufferAccessor::WriteMemory ( size_t aOffset, size_t aSize, const void *aData ) const
     {
-        if ( mMemoryPoolBuffer != nullptr )
+        if ( mBuffer != nullptr )
         {
-            mMemoryPoolBuffer->GetBuffer().WriteMemory ( mOffset + aOffset, aSize, aData );
+            mBuffer->WriteMemory ( mOffset + aOffset, aSize, aData );
         }
     }
     void* BufferAccessor::Map ( size_t aOffset, size_t aSize ) const
     {
         aSize = ( aSize != 0 ) ? aSize : mSize;
-        return ( mMemoryPoolBuffer != nullptr ) ? mMemoryPoolBuffer->GetBuffer().Map ( mOffset + aOffset, aSize ) : nullptr;
+        return ( mBuffer != nullptr ) ? mBuffer->Map ( mOffset + aOffset, aSize ) : nullptr;
     }
     void BufferAccessor::Unmap() const
     {
-        if ( mMemoryPoolBuffer != nullptr )
+        if ( mBuffer != nullptr )
         {
-            mMemoryPoolBuffer->GetBuffer().Unmap();
+            mBuffer->Unmap();
         }
     }
     size_t BufferAccessor::GetOffset() const

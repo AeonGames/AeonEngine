@@ -20,6 +20,7 @@ limitations under the License.
 namespace AeonGames
 {
     class MemoryPoolBuffer;
+    class Buffer;
     /** @brief Provides access to a region within a memory pool buffer. */
     class BufferAccessor
     {
@@ -63,6 +64,12 @@ namespace AeonGames
         DLL const MemoryPoolBuffer* GetMemoryPoolBuffer() const;
     private:
         MemoryPoolBuffer* mMemoryPoolBuffer{nullptr};
+        // Concrete backing buffer captured at construction. A pooled buffer may
+        // cycle GetBuffer() through a ring of physical buffers as frames reset,
+        // so host reads/writes must target the buffer that was current when this
+        // region was allocated -- otherwise a read-back after a frame reset would
+        // hit a different (empty) ring slot than the one the GPU wrote.
+        const Buffer* mBuffer{nullptr};
         size_t mOffset{0};
         size_t mSize{0};
     };
