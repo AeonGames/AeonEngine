@@ -914,11 +914,14 @@ namespace AeonGames
 
     TEST ( ComputeTest, VulkanActiveClusterCull )
     {
-#ifdef _WIN32
-        RunActiveClusterCullTest ( "Vulkan" );
-#else
-        GTEST_SKIP() << "Active-cluster cull test requires Win32 windowing.";
-#endif
+        // The Vulkan backend no longer marks active clusters: the per-fragment
+        // cluster_mark scatter was the depth pre-pass bottleneck, so Vulkan now
+        // light-culls every cluster (ClusterParams.screen.w = 0) for a cheap
+        // depth-only pre-pass. Active-cluster culling therefore has nothing to
+        // verify here until the compute mark (cluster_mark_comp, OpenGL-only for
+        // now) is ported to Vulkan. The OpenGLActiveClusterCull test still covers
+        // the marking path.
+        GTEST_SKIP() << "Vulkan light-culls all clusters (no active-cluster marking).";
     }
 
     TEST ( ComputeTest, OpenGLSkinning )

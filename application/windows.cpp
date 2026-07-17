@@ -33,6 +33,7 @@ limitations under the License.
 #include <tuple>
 #include <shellapi.h>
 #include <chrono>
+#include <cstdlib>
 #include "Window.h"
 
 #ifdef _WIN32
@@ -531,6 +532,18 @@ namespace AeonGames
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
         bool prev_cursor_captured = false;
         bool cursor_hidden = false;
+        // Optional whole-frame GPU-time measurement (AEON_FRAMETIME_FRAMES=N):
+        // times RenderScene + a full GPU sync (Finish) each frame and prints the
+        // average before exiting. Backend-agnostic, so GL and Vulkan are directly
+        // comparable. A fixed warm-up is discarded first.
+        const char* frametime_env = std::getenv ( "AEON_FRAMETIME_FRAMES" );
+        const uint32_t frametime_target = ( frametime_env != nullptr ) ? static_cast<uint32_t> ( std::strtoul ( frametime_env, nullptr, 10 ) ) : 0u;
+        const uint32_t frametime_warmup = 60u;
+        uint32_t frametime_seen = 0u;
+        uint32_t frametime_count = 0u;
+        double frametime_sum = 0.0;
+        double frametime_min = 1e30;
+        double frametime_max = 0.0;
         while ( !done )
         {
             if ( PeekMessage ( &msg, NULL, 0, 0, PM_REMOVE ) )
@@ -630,7 +643,31 @@ namespace AeonGames
                 // frustum, runs the depth pre-pass and light culling when the
                 // scene has a lighting pipeline, submits the shading pass and
                 // composites the overlay.
-                mRenderer->RenderScene ( mWindowId, aScene, mGuiOverlay.get() );
+                if ( frametime_target != 0u )
+                {
+                    const auto ft0 = std::chrono::high_resolution_clock::now();
+                    mRenderer->RenderScene ( mWindowId, aScene, mGuiOverlay.get() );
+                    mRenderer->Finish ( mWindowId );
+                    const auto ft1 = std::chrono::high_resolution_clock::now();
+                    const double ft_ms = std::chrono::duration<double, std::milli> ( ft1 - ft0 ).count();
+                    if ( ++frametime_seen > frametime_warmup )
+                    {
+                        frametime_sum += ft_ms;
+                        frametime_min = ( ft_ms < frametime_min ) ? ft_ms : frametime_min;
+                        frametime_max = ( ft_ms > frametime_max ) ? ft_ms : frametime_max;
+                        if ( ++frametime_count >= frametime_target )
+                        {
+                            std::cout << "\n=== whole-frame time (" << frametime_count << " frames): avg "
+                                      << ( frametime_sum / static_cast<double> ( frametime_count ) ) << " ms  min "
+                                      << frametime_min << "  max " << frametime_max << " ms ===" << std::endl;
+                            std::exit ( 0 );
+                        }
+                    }
+                }
+                else
+                {
+                    mRenderer->RenderScene ( mWindowId, aScene, mGuiOverlay.get() );
+                }
 
                 // End-of-frame input bookkeeping. Done after the scene has read
                 // this frame's input so deltas/edges are valid during Update().

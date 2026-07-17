@@ -3160,9 +3160,12 @@ namespace AeonGames
             return value != nullptr && value[0] != '\0' && value[0] != '0';
         } ();
         params.screen[2] = heatmap ? 1.0f : 0.0f;
-        // screen.w gates active-cluster culling in the light-cull stage: it is
-        // only set once the depth pre-pass mark stage has run this frame.
-        params.screen[3] = mActiveCullEnabled ? 1.0f : 0.0f;
+        // screen.w gates the light-cull stage's empty-cluster skip. Vulkan no
+        // longer marks active clusters (the per-fragment scatter was the pre-pass
+        // bottleneck; the compute mark is OpenGL-only for now), so it must
+        // light-cull every cluster: screen.w = 0. This is the AEON_CLUSTER_MARK_ALL
+        // path -- correct lighting, just without the empty-cluster optimisation.
+        params.screen[3] = 0.0f;
         // Hi-Z occlusion culling toggle for the GPU cull compute (data-driven;
         // AEON_HIZ_OCCLUSION=0 disables it for A/B comparison, default on).
         static const bool occlusion_enabled = []
