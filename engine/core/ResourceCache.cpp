@@ -44,8 +44,9 @@ namespace AeonGames
         // Don't store nullptrs
         if ( pointer.GetRaw() )
         {
-            gResourceStore.emplace ( std::make_pair ( aKey, std::move ( pointer ) ) );
-            return gResourceStore[aKey];
+            // emplace returns an iterator to the stored element, so return it
+            // directly instead of a second hash lookup via operator[].
+            return gResourceStore.emplace ( aKey, std::move ( pointer ) ).first->second;
         }
         return unique_nullptr;
     }

@@ -847,14 +847,16 @@ namespace AeonGames
         auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         if ( it == mMeshStore.end() )
         {
-            LoadMesh ( aMesh );
-            it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+            // Find-or-emplace: on a miss, construct in place and keep the
+            // iterator instead of calling LoadMesh and looking the key up again.
+            // Mirrors LoadMesh's empty-mesh guard so behaviour is unchanged.
+            if ( aMesh.GetVertexCount() == 0 )
+            {
+                return nullptr;
+            }
+            it = mMeshStore.emplace ( aMesh.GetConsecutiveId(), VulkanMesh{*this, aMesh} ).first;
         }
-        if ( it != mMeshStore.end() )
-        {
-            return &it->second;
-        }
-        return nullptr;
+        return &it->second;
     }
 
     /*-----------------Pipeline-----------------------*/
@@ -872,8 +874,9 @@ namespace AeonGames
             }
             else
             {
-                LoadPipeline ( aPipeline );
-                it = mPipelineStore.find ( aPipeline.GetConsecutiveId() );
+                // Find-or-emplace: construct in place and keep the iterator
+                // rather than calling LoadPipeline and looking the key up again.
+                it = mPipelineStore.emplace ( aPipeline.GetConsecutiveId(), VulkanPipeline{*this, aPipeline} ).first;
             }
         }
         if ( it != mPipelineStore.end() )
@@ -888,15 +891,20 @@ namespace AeonGames
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
         if ( it == mMaterialStore.end() )
         {
-            LoadMaterial ( aMaterial );
-            it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );
+            // Find-or-emplace: construct in place and keep the iterator rather
+            // than calling LoadMaterial and looking the key up again. The sampler
+            // texture preload below is kept in sync with LoadMaterial.
+            for ( auto& i : aMaterial.GetSamplers() )
+            {
+                const Texture* texture = std::get<1> ( i ).Get<Texture>();
+                if ( mTextureStore.find ( texture->GetConsecutiveId() ) == mTextureStore.end() )
+                {
+                    LoadTexture ( *texture );
+                }
+            }
+            it = mMaterialStore.emplace ( aMaterial.GetConsecutiveId(), VulkanMaterial{*this, aMaterial} ).first;
         }
-
-        if ( it != mMaterialStore.end() )
-        {
-            return &it->second;
-        }
-        return nullptr;
+        return &it->second;
     }
 
     void VulkanRenderer::LoadPipeline ( const Pipeline& aPipeline )

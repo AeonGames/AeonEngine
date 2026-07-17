@@ -599,8 +599,9 @@ void main()
         auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         if ( it == mMeshStore.end() )
         {
-            LoadMesh ( aMesh );
-            it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+            // Find-or-emplace: construct in place and keep the iterator rather
+            // than calling LoadMesh and looking the key up again.
+            it = mMeshStore.emplace ( aMesh.GetConsecutiveId(), OpenGLMesh{*this, aMesh} ).first;
         }
         it->second.Bind ( aSkinnedVertexBufferId );
         if ( mCurrentPipeline != nullptr )
@@ -818,14 +819,11 @@ void main()
         auto it = mMeshStore.find ( aMesh.GetConsecutiveId() );
         if ( it == mMeshStore.end() )
         {
-            LoadMesh ( aMesh );
-            it = mMeshStore.find ( aMesh.GetConsecutiveId() );
+            // Find-or-emplace: construct in place and keep the iterator rather
+            // than calling LoadMesh and looking the key up again.
+            it = mMeshStore.emplace ( aMesh.GetConsecutiveId(), OpenGLMesh{*this, aMesh} ).first;
         }
-        if ( it != mMeshStore.end() )
-        {
-            return &it->second;
-        }
-        return nullptr;
+        return &it->second;
     }
 
     void OpenGLRenderer::SetMatrices ( const OpenGLBuffer& aMatricesBuffer ) const

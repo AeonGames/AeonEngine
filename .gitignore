@@ -76,3 +76,6 @@ game/**/*.png
 .DS_Store
 
 doxygen.log
+
+# Local reference papers (never committed)
+docs/*.pdf

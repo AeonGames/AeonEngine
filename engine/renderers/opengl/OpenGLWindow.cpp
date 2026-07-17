@@ -191,19 +191,22 @@ namespace AeonGames
         throw std::runtime_error ( "Invalid Index Size." );
     }
 
-    static const std::unordered_map<Topology, GLenum> TopologyMap
+    // Dense lookup table indexed by Topology (a contiguous enum), replacing a
+    // per-draw std::unordered_map::at hash lookup with a direct array index.
+    static constexpr std::array < GLenum, PATCH_LIST + 1 > TopologyMap
     {
-        {POINT_LIST, GL_POINTS},
-        {LINE_STRIP, GL_LINE_STRIP},
-        {LINE_LIST, GL_LINES},
-        {TRIANGLE_STRIP, GL_TRIANGLE_STRIP},
-        {TRIANGLE_FAN, GL_TRIANGLE_FAN},
-        {TRIANGLE_LIST, GL_TRIANGLES},
-        {LINE_LIST_WITH_ADJACENCY, GL_LINES_ADJACENCY},
-        {LINE_STRIP_WITH_ADJACENCY, GL_LINE_STRIP_ADJACENCY},
-        {TRIANGLE_LIST_WITH_ADJACENCY, GL_TRIANGLES_ADJACENCY},
-        {TRIANGLE_STRIP_WITH_ADJACENCY, GL_TRIANGLE_STRIP_ADJACENCY},
-        {PATCH_LIST, GL_PATCHES},
+        GL_TRIANGLES,                // UNDEFINED (unused; safe default)
+        GL_POINTS,                   // POINT_LIST
+        GL_LINE_STRIP,               // LINE_STRIP
+        GL_LINES,                    // LINE_LIST
+        GL_TRIANGLE_STRIP,           // TRIANGLE_STRIP
+        GL_TRIANGLE_FAN,             // TRIANGLE_FAN
+        GL_TRIANGLES,                // TRIANGLE_LIST
+        GL_LINES_ADJACENCY,          // LINE_LIST_WITH_ADJACENCY
+        GL_LINE_STRIP_ADJACENCY,     // LINE_STRIP_WITH_ADJACENCY
+        GL_TRIANGLES_ADJACENCY,      // TRIANGLE_LIST_WITH_ADJACENCY
+        GL_TRIANGLE_STRIP_ADJACENCY, // TRIANGLE_STRIP_WITH_ADJACENCY
+        GL_PATCHES,                  // PATCH_LIST
     };
 
 #if defined(__unix__)
@@ -520,7 +523,7 @@ namespace AeonGames
             if ( pooled )
             {
                 glDrawElementsInstancedBaseVertexBaseInstance (
-                    TopologyMap.at ( aTopology ),
+                    TopologyMap[aTopology],
                     ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
                     GL_UNSIGNED_INT,
                     reinterpret_cast<const uint8_t*> ( 0 ) + ( static_cast<size_t> ( gl_mesh->GetFirstIndex() ) + aVertexStart ) * sizeof ( uint32_t ),
@@ -530,7 +533,7 @@ namespace AeonGames
             }
             else
             {
-                glDrawElementsInstancedBaseInstance ( TopologyMap.at ( aTopology ), ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
+                glDrawElementsInstancedBaseInstance ( TopologyMap[aTopology], ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount(),
                                                       GetIndexType ( aMesh ), reinterpret_cast<const uint8_t*> ( 0 ) + aMesh.GetIndexSize() *aVertexStart, aInstanceCount, aFirstInstance );
             }
             OPENGL_CHECK_ERROR_NO_THROW;
@@ -538,7 +541,7 @@ namespace AeonGames
         else
         {
             const GLint first = pooled ? static_cast<GLint> ( gl_mesh->GetBaseVertex() ) + static_cast<GLint> ( aVertexStart ) : static_cast<GLint> ( aVertexStart );
-            glDrawArraysInstancedBaseInstance ( TopologyMap.at ( aTopology ), first, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
+            glDrawArraysInstancedBaseInstance ( TopologyMap[aTopology], first, ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetVertexCount(), aInstanceCount, aFirstInstance );
             OPENGL_CHECK_ERROR_NO_THROW;
         }
     }

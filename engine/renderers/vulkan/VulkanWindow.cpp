@@ -3910,19 +3910,22 @@ namespace AeonGames
         mFrameIndex = ( mFrameIndex + 1 ) % kFramesInFlight;
     }
 
-    static const std::unordered_map<Topology, VkPrimitiveTopology> TopologyMap
+    // Dense lookup table indexed by Topology (a contiguous enum), replacing a
+    // per-draw std::unordered_map::at hash lookup with a direct array index.
+    static constexpr std::array < VkPrimitiveTopology, PATCH_LIST + 1 > TopologyMap
     {
-        {POINT_LIST, VK_PRIMITIVE_TOPOLOGY_POINT_LIST},
-        {LINE_STRIP, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP},
-        {LINE_LIST, VK_PRIMITIVE_TOPOLOGY_LINE_LIST},
-        {TRIANGLE_STRIP, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP},
-        {TRIANGLE_FAN, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN},
-        {TRIANGLE_LIST, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST},
-        {LINE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY},
-        {LINE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY},
-        {TRIANGLE_LIST_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY},
-        {TRIANGLE_STRIP_WITH_ADJACENCY, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY},
-        {PATCH_LIST, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST}
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,                 // UNDEFINED (unused; safe default)
+        VK_PRIMITIVE_TOPOLOGY_POINT_LIST,                    // POINT_LIST
+        VK_PRIMITIVE_TOPOLOGY_LINE_STRIP,                    // LINE_STRIP
+        VK_PRIMITIVE_TOPOLOGY_LINE_LIST,                     // LINE_LIST
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP,                // TRIANGLE_STRIP
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN,                  // TRIANGLE_FAN
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST,                 // TRIANGLE_LIST
+        VK_PRIMITIVE_TOPOLOGY_LINE_LIST_WITH_ADJACENCY,      // LINE_LIST_WITH_ADJACENCY
+        VK_PRIMITIVE_TOPOLOGY_LINE_STRIP_WITH_ADJACENCY,     // LINE_STRIP_WITH_ADJACENCY
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST_WITH_ADJACENCY,  // TRIANGLE_LIST_WITH_ADJACENCY
+        VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP_WITH_ADJACENCY, // TRIANGLE_STRIP_WITH_ADJACENCY
+        VK_PRIMITIVE_TOPOLOGY_PATCH_LIST,                    // PATCH_LIST
     };
 
     void VulkanWindow::Render ( const Matrix4x4& aModelMatrix,
@@ -4168,7 +4171,7 @@ namespace AeonGames
             break;
         }
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
-        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( Topology::TRIANGLE_LIST ) );
+        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST );
         switch ( aRenderPass )
         {
         case RenderPass::ShadowPass:
@@ -4338,7 +4341,7 @@ namespace AeonGames
         for ( const CulledShadingBatch& batch : mCulledShadingBatches )
         {
             vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, batch.mPipeline->GetVkPipeline() );
-            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( Topology::TRIANGLE_LIST ) );
+            vkCmdSetPrimitiveTopology ( mVkCommandBuffer, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST );
             BindShadingPassSets ( batch.mPipeline );
             // The cull compaction wrote these as the shading InstanceMatrices /
             // InstanceMaterials arrays, indexed by gl_InstanceIndex.
@@ -4418,7 +4421,7 @@ namespace AeonGames
             break;
         }
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
-        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap.at ( aTopology ) );
+        vkCmdSetPrimitiveTopology ( mVkCommandBuffer, TopologyMap[aTopology] );
         // Bind the engine-owned descriptor sets this pass needs. Shared with the
         // sibling draw path so the set list has a single definition.
         switch ( aRenderPass )
