@@ -65,6 +65,26 @@ namespace AeonGames
         return mTopologyClass;
     }
 
+    const PipelineRasterState& Pipeline::GetRasterState() const
+    {
+        return mRasterState;
+    }
+
+    const PipelineDepthStencilState& Pipeline::GetDepthStencilState() const
+    {
+        return mDepthStencilState;
+    }
+
+    const PipelineBlendState& Pipeline::GetBlendState() const
+    {
+        return mBlendState;
+    }
+
+    const PipelineMultisampleState& Pipeline::GetMultisampleState() const
+    {
+        return mMultisampleState;
+    }
+
 #if 0
     const std::string& Pipeline::GetVertexShaderCode() const
     {
@@ -273,6 +293,10 @@ namespace AeonGames
 
     void Pipeline::LoadFromPBMsg ( const PipelineMsg& aPipelineMsg )
     {
+        mRasterState = {};
+        mDepthStencilState = {};
+        mBlendState = {};
+        mMultisampleState = {};
         for ( auto& variants : mShaderVariants )
         {
             variants.clear();
@@ -295,6 +319,62 @@ namespace AeonGames
             std::vector<std::string>& stages = mComputeVariants[entry.first];
             stages.assign ( entry.second.stage().begin(), entry.second.stage().end() );
         }
+        if ( aPipelineMsg.has_raster_state() )
+        {
+            const auto& state = aPipelineMsg.raster_state();
+            mRasterState.cull_mode = static_cast<PipelineCullMode> ( state.cull_mode() );
+            mRasterState.front_face = static_cast<PipelineFrontFace> ( state.front_face() );
+            mRasterState.polygon_mode = static_cast<PipelinePolygonMode> ( state.polygon_mode() );
+            mRasterState.depth_clamp = static_cast<PipelineToggle> ( state.depth_clamp() );
+            mRasterState.rasterizer_discard = static_cast<PipelineToggle> ( state.rasterizer_discard() );
+            mRasterState.depth_bias = static_cast<PipelineToggle> ( state.depth_bias() );
+            mRasterState.depth_bias_constant = state.depth_bias_constant();
+            mRasterState.depth_bias_clamp = state.depth_bias_clamp();
+            mRasterState.depth_bias_slope = state.depth_bias_slope();
+            mRasterState.line_width = state.line_width();
+        }
+        if ( aPipelineMsg.has_depth_stencil() )
+        {
+            const auto& state = aPipelineMsg.depth_stencil();
+            mDepthStencilState.depth_test = static_cast<PipelineToggle> ( state.depth_test() );
+            mDepthStencilState.depth_write = static_cast<PipelineToggle> ( state.depth_write() );
+            mDepthStencilState.depth_compare = static_cast<PipelineCompareOp> ( state.depth_compare() );
+            mDepthStencilState.depth_bounds_test = static_cast<PipelineToggle> ( state.depth_bounds_test() );
+            mDepthStencilState.min_depth_bounds = state.min_depth_bounds();
+            mDepthStencilState.max_depth_bounds = state.max_depth_bounds();
+            mDepthStencilState.stencil_test = static_cast<PipelineToggle> ( state.stencil_test() );
+            mDepthStencilState.stencil_compare = static_cast<PipelineCompareOp> ( state.stencil_compare() );
+            mDepthStencilState.stencil_front_fail = static_cast<PipelineStencilOp> ( state.stencil_front_fail() );
+            mDepthStencilState.stencil_front_depth_fail = static_cast<PipelineStencilOp> ( state.stencil_front_depth_fail() );
+            mDepthStencilState.stencil_front_pass = static_cast<PipelineStencilOp> ( state.stencil_front_pass() );
+            mDepthStencilState.stencil_back_fail = static_cast<PipelineStencilOp> ( state.stencil_back_fail() );
+            mDepthStencilState.stencil_back_depth_fail = static_cast<PipelineStencilOp> ( state.stencil_back_depth_fail() );
+            mDepthStencilState.stencil_back_pass = static_cast<PipelineStencilOp> ( state.stencil_back_pass() );
+            mDepthStencilState.stencil_reference = state.stencil_reference();
+            mDepthStencilState.stencil_compare_mask = state.stencil_compare_mask();
+            mDepthStencilState.stencil_write_mask = state.stencil_write_mask();
+        }
+        if ( aPipelineMsg.has_blend() )
+        {
+            const auto& state = aPipelineMsg.blend();
+            mBlendState.enabled = static_cast<PipelineToggle> ( state.enabled() );
+            mBlendState.color_write_mask = state.color_write_mask();
+            mBlendState.source_color = static_cast<PipelineBlendFactor> ( state.source_color() );
+            mBlendState.destination_color = static_cast<PipelineBlendFactor> ( state.destination_color() );
+            mBlendState.color_operation = static_cast<PipelineBlendOp> ( state.color_operation() );
+            mBlendState.source_alpha = static_cast<PipelineBlendFactor> ( state.source_alpha() );
+            mBlendState.destination_alpha = static_cast<PipelineBlendFactor> ( state.destination_alpha() );
+            mBlendState.alpha_operation = static_cast<PipelineBlendOp> ( state.alpha_operation() );
+        }
+        if ( aPipelineMsg.has_multisample() )
+        {
+            const auto& state = aPipelineMsg.multisample();
+            mMultisampleState.sample_count = static_cast<PipelineSampleCount> ( state.sample_count() );
+            mMultisampleState.sample_shading = static_cast<PipelineToggle> ( state.sample_shading() );
+            mMultisampleState.min_sample_shading = state.min_sample_shading();
+            mMultisampleState.alpha_to_coverage = static_cast<PipelineToggle> ( state.alpha_to_coverage() );
+            mMultisampleState.alpha_to_one = static_cast<PipelineToggle> ( state.alpha_to_one() );
+        }
         if ( aPipelineMsg.has_topology_class() )
         {
             mTopologyClass = static_cast<uint32_t> ( aPipelineMsg.topology_class() );
@@ -313,5 +393,9 @@ namespace AeonGames
             variants.clear();
         }
         mComputeVariants.clear();
+        mRasterState = {};
+        mDepthStencilState = {};
+        mBlendState = {};
+        mMultisampleState = {};
     }
 }

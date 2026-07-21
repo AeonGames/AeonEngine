@@ -104,6 +104,83 @@ namespace AeonGames
         COUNT     /**< Number of shader types. */
     };
 
+    enum class PipelineToggle : uint8_t { DISABLED, ENABLED };
+    enum class PipelineCullMode : uint8_t { BACK, FRONT, NONE };
+    enum class PipelineFrontFace : uint8_t { COUNTER_CLOCKWISE, CLOCKWISE };
+    enum class PipelinePolygonMode : uint8_t { FILL, LINE, POINT };
+    enum class PipelineCompareOp : uint8_t
+    {
+        LESS_OR_EQUAL, NEVER, LESS, EQUAL, GREATER, NOT_EQUAL, GREATER_OR_EQUAL, ALWAYS
+    };
+    enum class PipelineBlendFactor : uint8_t
+    {
+        ONE, ZERO, SOURCE_ALPHA, ONE_MINUS_SOURCE_ALPHA, DESTINATION_ALPHA,
+        ONE_MINUS_DESTINATION_ALPHA, DESTINATION_COLOR, ONE_MINUS_DESTINATION_COLOR
+    };
+    enum class PipelineBlendOp : uint8_t { ADD, SUBTRACT, REVERSE_SUBTRACT, MIN, MAX };
+    enum class PipelineStencilOp : uint8_t
+    {
+        KEEP, ZERO, REPLACE, INCREMENT_AND_CLAMP, DECREMENT_AND_CLAMP, INVERT,
+        INCREMENT_AND_WRAP, DECREMENT_AND_WRAP
+    };
+    enum class PipelineSampleCount : uint8_t { ONE, TWO, FOUR, EIGHT, SIXTEEN, THIRTY_TWO, SIXTY_FOUR };
+
+    struct PipelineRasterState
+    {
+        PipelineCullMode cull_mode{PipelineCullMode::BACK};
+        PipelineFrontFace front_face{PipelineFrontFace::COUNTER_CLOCKWISE};
+        PipelinePolygonMode polygon_mode{PipelinePolygonMode::FILL};
+        PipelineToggle depth_clamp{PipelineToggle::DISABLED};
+        PipelineToggle rasterizer_discard{PipelineToggle::DISABLED};
+        PipelineToggle depth_bias{PipelineToggle::ENABLED};
+        float depth_bias_constant{0.0f};
+        float depth_bias_clamp{0.0f};
+        float depth_bias_slope{0.0f};
+        float line_width{1.0f};
+    };
+
+    struct PipelineDepthStencilState
+    {
+        PipelineToggle depth_test{PipelineToggle::ENABLED};
+        PipelineToggle depth_write{PipelineToggle::ENABLED};
+        PipelineCompareOp depth_compare{PipelineCompareOp::LESS_OR_EQUAL};
+        PipelineToggle depth_bounds_test{PipelineToggle::DISABLED};
+        float min_depth_bounds{0.0f};
+        float max_depth_bounds{1.0f};
+        PipelineToggle stencil_test{PipelineToggle::DISABLED};
+        PipelineCompareOp stencil_compare{PipelineCompareOp::ALWAYS};
+        PipelineStencilOp stencil_front_fail{PipelineStencilOp::KEEP};
+        PipelineStencilOp stencil_front_depth_fail{PipelineStencilOp::KEEP};
+        PipelineStencilOp stencil_front_pass{PipelineStencilOp::KEEP};
+        PipelineStencilOp stencil_back_fail{PipelineStencilOp::KEEP};
+        PipelineStencilOp stencil_back_depth_fail{PipelineStencilOp::KEEP};
+        PipelineStencilOp stencil_back_pass{PipelineStencilOp::KEEP};
+        uint32_t stencil_reference{0};
+        uint32_t stencil_compare_mask{0xffffffffu};
+        uint32_t stencil_write_mask{0xffffffffu};
+    };
+
+    struct PipelineBlendState
+    {
+        PipelineToggle enabled{PipelineToggle::ENABLED};
+        uint32_t color_write_mask{0xf};
+        PipelineBlendFactor source_color{PipelineBlendFactor::SOURCE_ALPHA};
+        PipelineBlendFactor destination_color{PipelineBlendFactor::ONE_MINUS_SOURCE_ALPHA};
+        PipelineBlendOp color_operation{PipelineBlendOp::ADD};
+        PipelineBlendFactor source_alpha{PipelineBlendFactor::ONE};
+        PipelineBlendFactor destination_alpha{PipelineBlendFactor::ZERO};
+        PipelineBlendOp alpha_operation{PipelineBlendOp::ADD};
+    };
+
+    struct PipelineMultisampleState
+    {
+        PipelineSampleCount sample_count{PipelineSampleCount::ONE};
+        PipelineToggle sample_shading{PipelineToggle::DISABLED};
+        float min_sample_shading{0.0f};
+        PipelineToggle alpha_to_coverage{PipelineToggle::ENABLED};
+        PipelineToggle alpha_to_one{PipelineToggle::DISABLED};
+    };
+
     /** Map from ShaderType enum values to human-readable string names. */
     const std::unordered_map<ShaderType, const char*> ShaderTypeToString
     {
@@ -142,6 +219,10 @@ namespace AeonGames
          * @return Bitmask indicating the topology class.
          */
         DLL uint32_t GetTopologyClass() const;
+        DLL const PipelineRasterState& GetRasterState() const;
+        DLL const PipelineDepthStencilState& GetDepthStencilState() const;
+        DLL const PipelineBlendState& GetBlendState() const;
+        DLL const PipelineMultisampleState& GetMultisampleState() const;
 #if 0
         DLL const std::string& GetVertexShaderCode() const;
         DLL const std::string& GetFragmentShaderCode() const;
@@ -200,6 +281,10 @@ namespace AeonGames
         std::array<std::unordered_map<std::string, std::string>, ShaderType::COUNT> mShaderVariants {};
         std::unordered_map<std::string, std::vector<std::string>> mComputeVariants {};
         uint32_t mTopologyClass{ TOPOLOGY_CLASS_TRIANGLE };
+        PipelineRasterState mRasterState{};
+        PipelineDepthStencilState mDepthStencilState{};
+        PipelineBlendState mBlendState{};
+        PipelineMultisampleState mMultisampleState{};
     };
 }
 #endif

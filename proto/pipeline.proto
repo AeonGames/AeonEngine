@@ -16,6 +16,132 @@ syntax = "proto3";
 package AeonGames;
 
 message PipelineMsg {
+	enum Toggle
+	{
+		DISABLED = 0;
+		ENABLED  = 1;
+	};
+	enum CullMode
+	{
+		CULL_BACK  = 0;
+		CULL_FRONT = 1;
+		CULL_NONE  = 2;
+	};
+	enum FrontFace
+	{
+		FRONT_COUNTER_CLOCKWISE = 0;
+		FRONT_CLOCKWISE         = 1;
+	};
+	enum PolygonMode
+	{
+		POLYGON_FILL  = 0;
+		POLYGON_LINE  = 1;
+		POLYGON_POINT = 2;
+	};
+	enum CompareOp
+	{
+		COMPARE_LESS_OR_EQUAL = 0;
+		COMPARE_NEVER         = 1;
+		COMPARE_LESS          = 2;
+		COMPARE_EQUAL         = 3;
+		COMPARE_GREATER       = 4;
+		COMPARE_NOT_EQUAL     = 5;
+		COMPARE_GREATER_OR_EQUAL = 6;
+		COMPARE_ALWAYS        = 7;
+	};
+	enum BlendFactor
+	{
+		BLEND_ONE                    = 0;
+		BLEND_ZERO                   = 1;
+		BLEND_SOURCE_ALPHA           = 2;
+		BLEND_ONE_MINUS_SOURCE_ALPHA = 3;
+		BLEND_DESTINATION_ALPHA      = 4;
+		BLEND_ONE_MINUS_DESTINATION_ALPHA = 5;
+		BLEND_DESTINATION_COLOR      = 6;
+		BLEND_ONE_MINUS_DESTINATION_COLOR = 7;
+	};
+	enum BlendOp
+	{
+		BLEND_ADD              = 0;
+		BLEND_SUBTRACT         = 1;
+		BLEND_REVERSE_SUBTRACT = 2;
+		BLEND_MIN              = 3;
+		BLEND_MAX              = 4;
+	};
+	enum StencilOp
+	{
+		STENCIL_KEEP                 = 0;
+		STENCIL_ZERO                 = 1;
+		STENCIL_REPLACE              = 2;
+		STENCIL_INCREMENT_AND_CLAMP  = 3;
+		STENCIL_DECREMENT_AND_CLAMP  = 4;
+		STENCIL_INVERT               = 5;
+		STENCIL_INCREMENT_AND_WRAP   = 6;
+		STENCIL_DECREMENT_AND_WRAP   = 7;
+	};
+	enum SampleCount
+	{
+		SAMPLE_COUNT_1  = 0;
+		SAMPLE_COUNT_2  = 1;
+		SAMPLE_COUNT_4  = 2;
+		SAMPLE_COUNT_8  = 3;
+		SAMPLE_COUNT_16 = 4;
+		SAMPLE_COUNT_32 = 5;
+		SAMPLE_COUNT_64 = 6;
+	};
+	message RasterState
+	{
+		CullMode   cull_mode           = 1;
+		FrontFace  front_face          = 2;
+		PolygonMode polygon_mode       = 3;
+		Toggle     depth_clamp         = 4;
+		Toggle     rasterizer_discard  = 5;
+		Toggle     depth_bias          = 6;
+		float      depth_bias_constant = 7;
+		float      depth_bias_clamp    = 8;
+		float      depth_bias_slope    = 9;
+		float      line_width          = 10;
+	};
+	message DepthStencilState
+	{
+		Toggle    depth_test               = 1;
+		Toggle    depth_write              = 2;
+		CompareOp depth_compare            = 3;
+		Toggle    depth_bounds_test        = 4;
+		float     min_depth_bounds         = 5;
+		float     max_depth_bounds         = 6;
+		Toggle    stencil_test             = 7;
+		CompareOp stencil_compare          = 8;
+		StencilOp stencil_front_fail       = 9;
+		StencilOp stencil_front_depth_fail = 10;
+		StencilOp stencil_front_pass       = 11;
+		StencilOp stencil_back_fail        = 12;
+		StencilOp stencil_back_depth_fail  = 13;
+		StencilOp stencil_back_pass        = 14;
+		uint32    stencil_reference        = 15;
+		uint32    stencil_compare_mask     = 16;
+		uint32    stencil_write_mask       = 17;
+	};
+	message BlendState
+	{
+		Toggle      enabled           = 1;
+		uint32      color_write_mask  = 2;
+		BlendFactor source_color      = 3;
+		BlendFactor destination_color = 4;
+		BlendOp     color_operation   = 5;
+		BlendFactor source_alpha      = 6;
+		BlendFactor destination_alpha = 7;
+		BlendOp     alpha_operation   = 8;
+	};
+	message MultisampleState
+	{
+		SampleCount sample_count       = 1;
+		Toggle      sample_shading     = 2;
+		float       min_sample_shading = 3;
+		Toggle      alpha_to_coverage  = 4;
+		Toggle      alpha_to_one       = 5;
+	};
+
     enum TopologyClass
     {
 		DEFAULT                 = 0;
@@ -55,4 +181,8 @@ message PipelineMsg {
 	map<string, string>        tese           = 5;
 	map<string, string>        geom           = 6;
 	optional TopologyClass     topology_class = 7;
+	RasterState                raster_state   = 8;
+	DepthStencilState          depth_stencil  = 9;
+	BlendState                 blend          = 10;
+	MultisampleState           multisample    = 11;
 }
