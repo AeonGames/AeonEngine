@@ -34,6 +34,96 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static GLenum ToOpenGLCompareOp ( PipelineCompareOp aOperation )
+    {
+        switch ( aOperation )
+        {
+        case PipelineCompareOp::NEVER:
+            return GL_NEVER;
+        case PipelineCompareOp::LESS:
+            return GL_LESS;
+        case PipelineCompareOp::EQUAL:
+            return GL_EQUAL;
+        case PipelineCompareOp::GREATER:
+            return GL_GREATER;
+        case PipelineCompareOp::NOT_EQUAL:
+            return GL_NOTEQUAL;
+        case PipelineCompareOp::GREATER_OR_EQUAL:
+            return GL_GEQUAL;
+        case PipelineCompareOp::ALWAYS:
+            return GL_ALWAYS;
+        case PipelineCompareOp::LESS_OR_EQUAL:
+        default:
+            return GL_LEQUAL;
+        }
+    }
+
+    static GLenum ToOpenGLBlendFactor ( PipelineBlendFactor aFactor )
+    {
+        switch ( aFactor )
+        {
+        case PipelineBlendFactor::ZERO:
+            return GL_ZERO;
+        case PipelineBlendFactor::SOURCE_ALPHA:
+            return GL_SRC_ALPHA;
+        case PipelineBlendFactor::ONE_MINUS_SOURCE_ALPHA:
+            return GL_ONE_MINUS_SRC_ALPHA;
+        case PipelineBlendFactor::DESTINATION_ALPHA:
+            return GL_DST_ALPHA;
+        case PipelineBlendFactor::ONE_MINUS_DESTINATION_ALPHA:
+            return GL_ONE_MINUS_DST_ALPHA;
+        case PipelineBlendFactor::DESTINATION_COLOR:
+            return GL_DST_COLOR;
+        case PipelineBlendFactor::ONE_MINUS_DESTINATION_COLOR:
+            return GL_ONE_MINUS_DST_COLOR;
+        case PipelineBlendFactor::ONE:
+        default:
+            return GL_ONE;
+        }
+    }
+
+    static GLenum ToOpenGLBlendOp ( PipelineBlendOp aOperation )
+    {
+        switch ( aOperation )
+        {
+        case PipelineBlendOp::SUBTRACT:
+            return GL_FUNC_SUBTRACT;
+        case PipelineBlendOp::REVERSE_SUBTRACT:
+            return GL_FUNC_REVERSE_SUBTRACT;
+        case PipelineBlendOp::MIN:
+            return GL_MIN;
+        case PipelineBlendOp::MAX:
+            return GL_MAX;
+        case PipelineBlendOp::ADD:
+        default:
+            return GL_FUNC_ADD;
+        }
+    }
+
+    static GLenum ToOpenGLStencilOp ( PipelineStencilOp aOperation )
+    {
+        switch ( aOperation )
+        {
+        case PipelineStencilOp::ZERO:
+            return GL_ZERO;
+        case PipelineStencilOp::REPLACE:
+            return GL_REPLACE;
+        case PipelineStencilOp::INCREMENT_AND_CLAMP:
+            return GL_INCR;
+        case PipelineStencilOp::DECREMENT_AND_CLAMP:
+            return GL_DECR;
+        case PipelineStencilOp::INVERT:
+            return GL_INVERT;
+        case PipelineStencilOp::INCREMENT_AND_WRAP:
+            return GL_INCR_WRAP;
+        case PipelineStencilOp::DECREMENT_AND_WRAP:
+            return GL_DECR_WRAP;
+        case PipelineStencilOp::KEEP:
+        default:
+            return GL_KEEP;
+        }
+    }
+
     std::atomic<size_t> OpenGLRenderer::mRendererCount{0};
 #if defined(__unix__)
     Display* OpenGLRenderer::mDisplay {};
@@ -719,6 +809,154 @@ void main()
         };
         mCurrentPipeline = &it->second;
         glUseProgram ( mCurrentPipeline->GetProgramId() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+
+        const PipelineRasterState& raster_state = aPipeline.GetRasterState();
+        if ( raster_state.cull_mode == PipelineCullMode::NONE )
+        {
+            glDisable ( GL_CULL_FACE );
+        }
+        else
+        {
+            glEnable ( GL_CULL_FACE );
+            glCullFace ( raster_state.cull_mode == PipelineCullMode::FRONT ? GL_FRONT : GL_BACK );
+        }
+        glFrontFace ( raster_state.front_face == PipelineFrontFace::CLOCKWISE ? GL_CW : GL_CCW );
+        glPolygonMode ( GL_FRONT_AND_BACK,
+                        raster_state.polygon_mode == PipelinePolygonMode::LINE ? GL_LINE :
+                        raster_state.polygon_mode == PipelinePolygonMode::POINT ? GL_POINT : GL_FILL );
+        if ( raster_state.depth_clamp == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_DEPTH_CLAMP );
+        }
+        else
+        {
+            glDisable ( GL_DEPTH_CLAMP );
+        }
+        if ( raster_state.rasterizer_discard == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_RASTERIZER_DISCARD );
+        }
+        else
+        {
+            glDisable ( GL_RASTERIZER_DISCARD );
+        }
+        if ( raster_state.depth_bias == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_POLYGON_OFFSET_FILL );
+            glPolygonOffset ( raster_state.depth_bias_slope, raster_state.depth_bias_constant );
+        }
+        else
+        {
+            glDisable ( GL_POLYGON_OFFSET_FILL );
+        }
+        glLineWidth ( raster_state.line_width );
+
+        const PipelineDepthStencilState& depth_stencil_state = aPipeline.GetDepthStencilState();
+        if ( depth_stencil_state.depth_test == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_DEPTH_TEST );
+        }
+        else
+        {
+            glDisable ( GL_DEPTH_TEST );
+        }
+        glDepthMask ( depth_stencil_state.depth_write == PipelineToggle::ENABLED );
+        glDepthFunc ( [&depth_stencil_state]
+                      {
+                          switch ( depth_stencil_state.depth_compare )
+    {
+    case PipelineCompareOp::NEVER: return GL_NEVER;
+    case PipelineCompareOp::LESS: return GL_LESS;
+    case PipelineCompareOp::EQUAL: return GL_EQUAL;
+    case PipelineCompareOp::GREATER: return GL_GREATER;
+    case PipelineCompareOp::NOT_EQUAL: return GL_NOTEQUAL;
+    case PipelineCompareOp::GREATER_OR_EQUAL: return GL_GEQUAL;
+    case PipelineCompareOp::ALWAYS: return GL_ALWAYS;
+    case PipelineCompareOp::LESS_OR_EQUAL:
+    default: return GL_LEQUAL;
+    }
+                  }() );
+        if ( depth_stencil_state.stencil_test == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_STENCIL_TEST );
+        }
+        else
+        {
+            glDisable ( GL_STENCIL_TEST );
+        }
+        glStencilFuncSeparate ( GL_FRONT,
+                                ToOpenGLCompareOp ( depth_stencil_state.stencil_compare ),
+                                static_cast<GLint> ( depth_stencil_state.stencil_reference ),
+                                depth_stencil_state.stencil_compare_mask );
+        glStencilFuncSeparate ( GL_BACK,
+                                ToOpenGLCompareOp ( depth_stencil_state.stencil_compare ),
+                                static_cast<GLint> ( depth_stencil_state.stencil_reference ),
+                                depth_stencil_state.stencil_compare_mask );
+        glStencilOpSeparate ( GL_FRONT,
+                              ToOpenGLStencilOp ( depth_stencil_state.stencil_front_fail ),
+                              ToOpenGLStencilOp ( depth_stencil_state.stencil_front_depth_fail ),
+                              ToOpenGLStencilOp ( depth_stencil_state.stencil_front_pass ) );
+        glStencilOpSeparate ( GL_BACK,
+                              ToOpenGLStencilOp ( depth_stencil_state.stencil_back_fail ),
+                              ToOpenGLStencilOp ( depth_stencil_state.stencil_back_depth_fail ),
+                              ToOpenGLStencilOp ( depth_stencil_state.stencil_back_pass ) );
+        glStencilMaskSeparate ( GL_FRONT, depth_stencil_state.stencil_write_mask );
+        glStencilMaskSeparate ( GL_BACK, depth_stencil_state.stencil_write_mask );
+
+        const PipelineBlendState& blend_state = aPipeline.GetBlendState();
+        if ( blend_state.enabled == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_BLEND );
+        }
+        else
+        {
+            glDisable ( GL_BLEND );
+        }
+        glBlendFuncSeparate ( ToOpenGLBlendFactor ( blend_state.source_color ),
+                              ToOpenGLBlendFactor ( blend_state.destination_color ),
+                              ToOpenGLBlendFactor ( blend_state.source_alpha ),
+                              ToOpenGLBlendFactor ( blend_state.destination_alpha ) );
+        glBlendEquationSeparate ( ToOpenGLBlendOp ( blend_state.color_operation ),
+                                  ToOpenGLBlendOp ( blend_state.alpha_operation ) );
+        glColorMask ( ( blend_state.color_write_mask & 0x1 ) != 0,
+                      ( blend_state.color_write_mask & 0x2 ) != 0,
+                      ( blend_state.color_write_mask & 0x4 ) != 0,
+                      ( blend_state.color_write_mask & 0x8 ) != 0 );
+
+        const PipelineMultisampleState& multisample_state = aPipeline.GetMultisampleState();
+        if ( multisample_state.sample_count == PipelineSampleCount::ONE )
+        {
+            glDisable ( GL_MULTISAMPLE );
+        }
+        else
+        {
+            glEnable ( GL_MULTISAMPLE );
+        }
+        if ( multisample_state.alpha_to_coverage == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_SAMPLE_ALPHA_TO_COVERAGE );
+        }
+        else
+        {
+            glDisable ( GL_SAMPLE_ALPHA_TO_COVERAGE );
+        }
+        if ( multisample_state.alpha_to_one == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_SAMPLE_ALPHA_TO_ONE );
+        }
+        else
+        {
+            glDisable ( GL_SAMPLE_ALPHA_TO_ONE );
+        }
+        if ( multisample_state.sample_shading == PipelineToggle::ENABLED )
+        {
+            glEnable ( GL_SAMPLE_SHADING );
+        }
+        else
+        {
+            glDisable ( GL_SAMPLE_SHADING );
+        }
         OPENGL_CHECK_ERROR_NO_THROW;
     }
 
