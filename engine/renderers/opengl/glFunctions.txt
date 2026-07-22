@@ -77,6 +77,11 @@ glGetActiveUniformBlockName
 glLinkProgram
 glShaderSource
 glUseProgram
+glBlendFuncSeparate
+glBlendEquationSeparate
+glStencilFuncSeparate
+glStencilOpSeparate
+glStencilMaskSeparate
 glUniform1i
 glUniform1ui
 glUniformMatrix2fv

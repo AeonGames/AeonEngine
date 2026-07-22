@@ -140,6 +140,120 @@ namespace AeonGames
         { Pipeline::TOPOLOGY_CLASS_PATCH, VK_PRIMITIVE_TOPOLOGY_PATCH_LIST }
     };
 
+    static VkCullModeFlags ToVulkanCullMode ( PipelineCullMode aMode )
+    {
+        switch ( aMode )
+        {
+        case PipelineCullMode::FRONT:
+            return VK_CULL_MODE_FRONT_BIT;
+        case PipelineCullMode::NONE:
+            return VK_CULL_MODE_NONE;
+        case PipelineCullMode::BACK:
+        default:
+            return VK_CULL_MODE_BACK_BIT;
+        }
+    }
+
+    static VkFrontFace ToVulkanFrontFace ( PipelineFrontFace aFrontFace )
+    {
+        return aFrontFace == PipelineFrontFace::CLOCKWISE ? VK_FRONT_FACE_CLOCKWISE : VK_FRONT_FACE_COUNTER_CLOCKWISE;
+    }
+
+    static VkPolygonMode ToVulkanPolygonMode ( PipelinePolygonMode aMode )
+    {
+        switch ( aMode )
+        {
+        case PipelinePolygonMode::LINE:
+            return VK_POLYGON_MODE_LINE;
+        case PipelinePolygonMode::POINT:
+            return VK_POLYGON_MODE_POINT;
+        case PipelinePolygonMode::FILL:
+        default:
+            return VK_POLYGON_MODE_FILL;
+        }
+    }
+
+    static VkCompareOp ToVulkanCompareOp ( PipelineCompareOp aOperation )
+    {
+        static constexpr std::array<VkCompareOp, 8> operations
+        {
+            VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_NEVER, VK_COMPARE_OP_LESS,
+            VK_COMPARE_OP_EQUAL, VK_COMPARE_OP_GREATER, VK_COMPARE_OP_NOT_EQUAL,
+            VK_COMPARE_OP_GREATER_OR_EQUAL, VK_COMPARE_OP_ALWAYS
+        };
+        const auto index = static_cast<size_t> ( aOperation );
+        return index < operations.size() ? operations[index] : VK_COMPARE_OP_LESS_OR_EQUAL;
+    }
+
+    static VkBlendFactor ToVulkanBlendFactor ( PipelineBlendFactor aFactor )
+    {
+        static constexpr std::array<VkBlendFactor, 8> factors
+        {
+            VK_BLEND_FACTOR_ONE, VK_BLEND_FACTOR_ZERO, VK_BLEND_FACTOR_SRC_ALPHA,
+            VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA, VK_BLEND_FACTOR_DST_ALPHA,
+            VK_BLEND_FACTOR_ONE_MINUS_DST_ALPHA, VK_BLEND_FACTOR_DST_COLOR,
+            VK_BLEND_FACTOR_ONE_MINUS_DST_COLOR
+        };
+        const auto index = static_cast<size_t> ( aFactor );
+        return index < factors.size() ? factors[index] : VK_BLEND_FACTOR_ONE;
+    }
+
+    static VkBlendOp ToVulkanBlendOp ( PipelineBlendOp aOperation )
+    {
+        static constexpr std::array<VkBlendOp, 5> operations
+        {
+            VK_BLEND_OP_ADD, VK_BLEND_OP_SUBTRACT, VK_BLEND_OP_REVERSE_SUBTRACT,
+            VK_BLEND_OP_MIN, VK_BLEND_OP_MAX
+        };
+        const auto index = static_cast<size_t> ( aOperation );
+        return index < operations.size() ? operations[index] : VK_BLEND_OP_ADD;
+    }
+
+    static VkStencilOp ToVulkanStencilOp ( PipelineStencilOp aOperation )
+    {
+        static constexpr std::array<VkStencilOp, 8> operations
+        {
+            VK_STENCIL_OP_KEEP, VK_STENCIL_OP_ZERO, VK_STENCIL_OP_REPLACE,
+            VK_STENCIL_OP_INCREMENT_AND_CLAMP, VK_STENCIL_OP_DECREMENT_AND_CLAMP,
+            VK_STENCIL_OP_INVERT, VK_STENCIL_OP_INCREMENT_AND_WRAP,
+            VK_STENCIL_OP_DECREMENT_AND_WRAP
+        };
+        const auto index = static_cast<size_t> ( aOperation );
+        return index < operations.size() ? operations[index] : VK_STENCIL_OP_KEEP;
+    }
+
+    static VkSampleCountFlagBits ToVulkanSampleCount ( PipelineSampleCount aCount )
+    {
+        static constexpr std::array<VkSampleCountFlagBits, 7> counts
+        {
+            VK_SAMPLE_COUNT_1_BIT, VK_SAMPLE_COUNT_2_BIT, VK_SAMPLE_COUNT_4_BIT,
+            VK_SAMPLE_COUNT_8_BIT, VK_SAMPLE_COUNT_16_BIT, VK_SAMPLE_COUNT_32_BIT,
+            VK_SAMPLE_COUNT_64_BIT
+        };
+        const auto index = static_cast<size_t> ( aCount );
+        return index < counts.size() ? counts[index] : VK_SAMPLE_COUNT_1_BIT;
+    }
+
+    static VkStencilOpState ToVulkanStencilState ( PipelineStencilOp aFail,
+            PipelineStencilOp aDepthFail,
+            PipelineStencilOp aPass,
+            PipelineCompareOp aCompare,
+            uint32_t aReference,
+            uint32_t aCompareMask,
+            uint32_t aWriteMask )
+    {
+        return VkStencilOpState
+        {
+            .failOp = ToVulkanStencilOp ( aFail ),
+            .passOp = ToVulkanStencilOp ( aPass ),
+            .depthFailOp = ToVulkanStencilOp ( aDepthFail ),
+            .compareOp = ToVulkanCompareOp ( aCompare ),
+            .compareMask = aCompareMask,
+            .writeMask = aWriteMask,
+            .reference = aReference
+        };
+    }
+
     /// @brief Compare a VkDescriptorSetLayoutBinding with a SpvReflectDescriptorBinding for inequality.
     bool operator!= ( const VkDescriptorSetLayoutBinding& a, const SpvReflectDescriptorBinding& b )
     {
@@ -387,63 +501,81 @@ namespace AeonGames
 
         //----------------Rasterization State------------------//
         VkPipelineRasterizationStateCreateInfo pipeline_rasterization_state_create_info{};
+        const PipelineRasterState& raster_state = aPipeline.GetRasterState();
         pipeline_rasterization_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         pipeline_rasterization_state_create_info.pNext = nullptr;
         pipeline_rasterization_state_create_info.flags = 0;
-        pipeline_rasterization_state_create_info.depthClampEnable = VK_FALSE;
-        pipeline_rasterization_state_create_info.rasterizerDiscardEnable = VK_FALSE;
-        pipeline_rasterization_state_create_info.polygonMode = VK_POLYGON_MODE_FILL;
-        pipeline_rasterization_state_create_info.cullMode = VK_CULL_MODE_BACK_BIT;
-        pipeline_rasterization_state_create_info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        pipeline_rasterization_state_create_info.depthBiasEnable = VK_TRUE;
-        pipeline_rasterization_state_create_info.depthBiasConstantFactor = 0.0f;
-        pipeline_rasterization_state_create_info.depthBiasClamp = 0.0f;
-        pipeline_rasterization_state_create_info.depthBiasSlopeFactor = 0.0f;
-        pipeline_rasterization_state_create_info.lineWidth = 1.0f;
+        pipeline_rasterization_state_create_info.depthClampEnable = raster_state.depth_clamp == PipelineToggle::ENABLED;
+        pipeline_rasterization_state_create_info.rasterizerDiscardEnable = raster_state.rasterizer_discard == PipelineToggle::ENABLED;
+        pipeline_rasterization_state_create_info.polygonMode = ToVulkanPolygonMode ( raster_state.polygon_mode );
+        pipeline_rasterization_state_create_info.cullMode = ToVulkanCullMode ( raster_state.cull_mode );
+        pipeline_rasterization_state_create_info.frontFace = ToVulkanFrontFace ( raster_state.front_face );
+        pipeline_rasterization_state_create_info.depthBiasEnable = raster_state.depth_bias == PipelineToggle::ENABLED;
+        pipeline_rasterization_state_create_info.depthBiasConstantFactor = raster_state.depth_bias_constant;
+        pipeline_rasterization_state_create_info.depthBiasClamp = raster_state.depth_bias_clamp;
+        pipeline_rasterization_state_create_info.depthBiasSlopeFactor = raster_state.depth_bias_slope;
+        pipeline_rasterization_state_create_info.lineWidth = raster_state.line_width;
 
         //----------------Multisample State------------------//
         VkPipelineMultisampleStateCreateInfo pipeline_multisample_state_create_info{};
+        const PipelineMultisampleState& multisample_state = aPipeline.GetMultisampleState();
         pipeline_multisample_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
         pipeline_multisample_state_create_info.pNext = nullptr;
         pipeline_multisample_state_create_info.flags = 0;
-        pipeline_multisample_state_create_info.sampleShadingEnable = VK_FALSE;
-        pipeline_multisample_state_create_info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
-        pipeline_multisample_state_create_info.minSampleShading = 0.0f;
+        pipeline_multisample_state_create_info.sampleShadingEnable = multisample_state.sample_shading == PipelineToggle::ENABLED;
+        pipeline_multisample_state_create_info.rasterizationSamples = ToVulkanSampleCount ( multisample_state.sample_count );
+        pipeline_multisample_state_create_info.minSampleShading = multisample_state.min_sample_shading;
         pipeline_multisample_state_create_info.pSampleMask = nullptr;
-        pipeline_multisample_state_create_info.alphaToCoverageEnable = VK_TRUE;
-        pipeline_multisample_state_create_info.alphaToOneEnable = VK_FALSE;
+        pipeline_multisample_state_create_info.alphaToCoverageEnable = multisample_state.alpha_to_coverage == PipelineToggle::ENABLED;
+        pipeline_multisample_state_create_info.alphaToOneEnable = multisample_state.alpha_to_one == PipelineToggle::ENABLED;
 
         //----------------Depth Stencil State------------------//
         VkPipelineDepthStencilStateCreateInfo pipeline_depth_stencil_state_create_info{};
+        const PipelineDepthStencilState& depth_stencil_state = aPipeline.GetDepthStencilState();
         pipeline_depth_stencil_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         pipeline_depth_stencil_state_create_info.pNext = nullptr;
         pipeline_depth_stencil_state_create_info.flags = 0;
-        pipeline_depth_stencil_state_create_info.depthTestEnable = VK_TRUE;
-        pipeline_depth_stencil_state_create_info.depthWriteEnable = VK_TRUE;
+        pipeline_depth_stencil_state_create_info.depthTestEnable = depth_stencil_state.depth_test == PipelineToggle::ENABLED;
+        pipeline_depth_stencil_state_create_info.depthWriteEnable = depth_stencil_state.depth_write == PipelineToggle::ENABLED;
         // LESS_OR_EQUAL (not LESS) so the shading pass can reuse the depth
         // pre-pass depth for early-Z: a shading fragment at exactly the stored
         // pre-pass depth must pass. The skybox sits at 0.99999 (< far), so it is
         // unaffected, and opaque geometry is unchanged for distinct depths.
-        pipeline_depth_stencil_state_create_info.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-        pipeline_depth_stencil_state_create_info.depthBoundsTestEnable = VK_FALSE;
-        pipeline_depth_stencil_state_create_info.stencilTestEnable = VK_FALSE;
-        pipeline_depth_stencil_state_create_info.front = {};
-        pipeline_depth_stencil_state_create_info.back = {};
-        pipeline_depth_stencil_state_create_info.minDepthBounds = 0.0f;
-        pipeline_depth_stencil_state_create_info.maxDepthBounds = 1.0f;
+        pipeline_depth_stencil_state_create_info.depthCompareOp = ToVulkanCompareOp ( depth_stencil_state.depth_compare );
+        pipeline_depth_stencil_state_create_info.depthBoundsTestEnable = depth_stencil_state.depth_bounds_test == PipelineToggle::ENABLED;
+        pipeline_depth_stencil_state_create_info.stencilTestEnable = depth_stencil_state.stencil_test == PipelineToggle::ENABLED;
+        pipeline_depth_stencil_state_create_info.front = ToVulkanStencilState (
+                depth_stencil_state.stencil_front_fail,
+                depth_stencil_state.stencil_front_depth_fail,
+                depth_stencil_state.stencil_front_pass,
+                depth_stencil_state.stencil_compare,
+                depth_stencil_state.stencil_reference,
+                depth_stencil_state.stencil_compare_mask,
+                depth_stencil_state.stencil_write_mask );
+        pipeline_depth_stencil_state_create_info.back = ToVulkanStencilState (
+                depth_stencil_state.stencil_back_fail,
+                depth_stencil_state.stencil_back_depth_fail,
+                depth_stencil_state.stencil_back_pass,
+                depth_stencil_state.stencil_compare,
+                depth_stencil_state.stencil_reference,
+                depth_stencil_state.stencil_compare_mask,
+                depth_stencil_state.stencil_write_mask );
+        pipeline_depth_stencil_state_create_info.minDepthBounds = depth_stencil_state.min_depth_bounds;
+        pipeline_depth_stencil_state_create_info.maxDepthBounds = depth_stencil_state.max_depth_bounds;
 
         //----------------Color Blend State------------------//
+        const PipelineBlendState& blend_state = aPipeline.GetBlendState();
         std::vector<VkPipelineColorBlendAttachmentState> pipeline_color_blend_attachment_states ( mColorAttachmentCount );
         // Attachment 0 (scene colour) keeps alpha blending; any extra G-buffer
         // attachments overwrite (no blend) so packed normals / weights are exact.
-        pipeline_color_blend_attachment_states[0].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-        pipeline_color_blend_attachment_states[0].blendEnable = VK_TRUE;
-        pipeline_color_blend_attachment_states[0].srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-        pipeline_color_blend_attachment_states[0].dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-        pipeline_color_blend_attachment_states[0].colorBlendOp = VK_BLEND_OP_ADD;
-        pipeline_color_blend_attachment_states[0].srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-        pipeline_color_blend_attachment_states[0].dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-        pipeline_color_blend_attachment_states[0].alphaBlendOp = VK_BLEND_OP_ADD;
+        pipeline_color_blend_attachment_states[0].colorWriteMask = blend_state.color_write_mask & 0xf;
+        pipeline_color_blend_attachment_states[0].blendEnable = blend_state.enabled == PipelineToggle::ENABLED;
+        pipeline_color_blend_attachment_states[0].srcColorBlendFactor = ToVulkanBlendFactor ( blend_state.source_color );
+        pipeline_color_blend_attachment_states[0].dstColorBlendFactor = ToVulkanBlendFactor ( blend_state.destination_color );
+        pipeline_color_blend_attachment_states[0].colorBlendOp = ToVulkanBlendOp ( blend_state.color_operation );
+        pipeline_color_blend_attachment_states[0].srcAlphaBlendFactor = ToVulkanBlendFactor ( blend_state.source_alpha );
+        pipeline_color_blend_attachment_states[0].dstAlphaBlendFactor = ToVulkanBlendFactor ( blend_state.destination_alpha );
+        pipeline_color_blend_attachment_states[0].alphaBlendOp = ToVulkanBlendOp ( blend_state.alpha_operation );
         for ( uint32_t a = 1; a < mColorAttachmentCount; ++a )
         {
             pipeline_color_blend_attachment_states[a].colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
