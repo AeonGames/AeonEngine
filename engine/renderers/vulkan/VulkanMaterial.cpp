@@ -48,6 +48,86 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static VkFilter ToVulkanFilter ( Material::SamplerFilter aFilter )
+    {
+        return aFilter == Material::SamplerFilter::NEAREST ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+    }
+
+    static VkSamplerMipmapMode ToVulkanMipmapMode ( Material::SamplerMipmapMode aMode )
+    {
+        return aMode == Material::SamplerMipmapMode::NEAREST ? VK_SAMPLER_MIPMAP_MODE_NEAREST : VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    }
+
+    static VkSamplerAddressMode ToVulkanAddressMode ( Material::SamplerAddressMode aMode )
+    {
+        switch ( aMode )
+        {
+        case Material::SamplerAddressMode::MIRRORED_REPEAT:
+            return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case Material::SamplerAddressMode::CLAMP_TO_EDGE:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case Material::SamplerAddressMode::CLAMP_TO_BORDER:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        case Material::SamplerAddressMode::REPEAT:
+        default:
+            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        }
+    }
+
+    static VkCompareOp ToVulkanCompareOp ( Material::SamplerCompareOp aOperation )
+    {
+        static constexpr std::array<VkCompareOp, 8> operations
+        {
+            VK_COMPARE_OP_NEVER, VK_COMPARE_OP_LESS, VK_COMPARE_OP_EQUAL,
+            VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_GREATER, VK_COMPARE_OP_NOT_EQUAL,
+            VK_COMPARE_OP_GREATER_OR_EQUAL, VK_COMPARE_OP_ALWAYS
+        };
+        const auto index = static_cast<size_t> ( aOperation );
+        return index < operations.size() ? operations[index] : VK_COMPARE_OP_NEVER;
+    }
+
+    static VkBorderColor ToVulkanBorderColor ( Material::SamplerBorderColor aColor )
+    {
+        switch ( aColor )
+        {
+        case Material::SamplerBorderColor::OPAQUE_BLACK:
+            return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        case Material::SamplerBorderColor::OPAQUE_WHITE:
+            return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        case Material::SamplerBorderColor::TRANSPARENT_BLACK:
+        default:
+            return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        }
+    }
+
+    static VkSampler CreateMaterialSampler ( const VulkanRenderer& aRenderer, const Material::SamplerState& aState )
+    {
+        VkSamplerCreateInfo create_info{};
+        create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        create_info.magFilter = ToVulkanFilter ( aState.mag_filter );
+        create_info.minFilter = ToVulkanFilter ( aState.min_filter );
+        create_info.mipmapMode = ToVulkanMipmapMode ( aState.mipmap_mode );
+        create_info.addressModeU = ToVulkanAddressMode ( aState.address_mode_u );
+        create_info.addressModeV = ToVulkanAddressMode ( aState.address_mode_v );
+        create_info.addressModeW = ToVulkanAddressMode ( aState.address_mode_w );
+        create_info.mipLodBias = aState.mip_lod_bias;
+        create_info.anisotropyEnable = aState.anisotropy_enable ? VK_TRUE : VK_FALSE;
+        create_info.maxAnisotropy = aState.anisotropy_enable ? aState.max_anisotropy : 1.0f;
+        create_info.compareEnable = aState.compare_enable ? VK_TRUE : VK_FALSE;
+        create_info.compareOp = ToVulkanCompareOp ( aState.compare_op );
+        create_info.minLod = aState.min_lod;
+        create_info.maxLod = aState.max_lod;
+        create_info.borderColor = ToVulkanBorderColor ( aState.border_color );
+        VkSampler sampler = VK_NULL_HANDLE;
+        if ( VkResult result = vkCreateSampler ( aRenderer.GetDevice(), &create_info, nullptr, &sampler ) )
+        {
+            std::ostringstream stream;
+            stream << "Create material sampler failed: ( " << GetVulkanResultString ( result ) << " )";
+            throw std::runtime_error ( stream.str().c_str() );
+        }
+        return sampler;
+    }
+
     VulkanMaterial::VulkanMaterial ( VulkanRenderer&  aVulkanRenderer, const Material& aMaterial ) :
         mVulkanRenderer { aVulkanRenderer },
         mMaterial { &aMaterial },
@@ -57,6 +137,21 @@ namespace AeonGames
         {
             std::cout << LogLevel::Error << "VulkanMaterial: Already initialized." << std::endl;
             throw std::runtime_error ( "VulkanMaterial: Already initialized." );
+        }
+
+        for ( size_t slot = 0; slot < mSamplers.size(); ++slot )
+        {
+            Material::SamplerState state{};
+            const uint32_t slot_crc = crc32i ( kMaterialSamplerSlots[slot].name, std::strlen ( kMaterialSamplerSlots[slot].name ) );
+            for ( const auto& sampler : mMaterial->GetSamplers() )
+            {
+                if ( std::get<0> ( sampler ) == slot_crc )
+                {
+                    state = std::get<2> ( sampler );
+                    break;
+                }
+            }
+            mSamplers[slot] = CreateMaterialSampler ( mVulkanRenderer, state );
         }
 
         std::vector<VkDescriptorPoolSize> descriptor_pool_sizes{};
@@ -192,15 +287,17 @@ namespace AeonGames
                 // does not declare it.
                 const char* slot_name = kMaterialSamplerSlots[i].name;
                 const uint32_t slot_crc = crc32i ( slot_name, std::strlen ( slot_name ) );
-                const VkDescriptorImageInfo* image_info = mVulkanRenderer.GetMaterialSamplerFallbackDescriptorImageInfo ( i );
+                const VkDescriptorImageInfo* source_image_info = mVulkanRenderer.GetMaterialSamplerFallbackDescriptorImageInfo ( i );
                 for ( const auto& sampler : mMaterial->GetSamplers() )
                 {
                     if ( std::get<0> ( sampler ) == slot_crc )
                     {
-                        image_info = mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( sampler ).Get<Texture>() );
+                        source_image_info = mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( sampler ).Get<Texture>() );
                         break;
                     }
                 }
+                mDescriptorImageInfos[i] = *source_image_info;
+                mDescriptorImageInfos[i].sampler = mSamplers[i];
                 write_descriptor_sets.emplace_back();
                 auto& write_descriptor_set = write_descriptor_sets.back();
                 write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -212,7 +309,7 @@ namespace AeonGames
                 write_descriptor_set.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                 write_descriptor_set.descriptorCount = 1;
                 write_descriptor_set.pBufferInfo = nullptr;
-                write_descriptor_set.pImageInfo = image_info;
+                write_descriptor_set.pImageInfo = &mDescriptorImageInfos[i];
                 write_descriptor_set.pTexelBufferView = nullptr;
             }
         }
@@ -269,6 +366,14 @@ namespace AeonGames
             vkDestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mVkDescriptorPool, nullptr );
         }
         mUniformBuffer.Finalize();
+        for ( VkSampler& sampler : mSamplers )
+        {
+            if ( sampler != VK_NULL_HANDLE )
+            {
+                vkDestroySampler ( mVulkanRenderer.GetDevice(), sampler, nullptr );
+                sampler = VK_NULL_HANDLE;
+            }
+        }
     }
 
     VulkanMaterial::~VulkanMaterial()
@@ -281,10 +386,14 @@ namespace AeonGames
         mMaterial{aVulkanMaterial.mMaterial},
         mUniformBuffer{std::move ( aVulkanMaterial.mUniformBuffer ) }
     {
+        mSamplers = aVulkanMaterial.mSamplers;
+        mDescriptorImageInfos = aVulkanMaterial.mDescriptorImageInfos;
         std::swap ( mVkDescriptorPool, aVulkanMaterial.mVkDescriptorPool );
         std::swap ( mUniformDescriptorSet, aVulkanMaterial.mUniformDescriptorSet );
         std::swap ( mSamplerDescriptorSet, aVulkanMaterial.mSamplerDescriptorSet );
         std::swap ( mBindlessMaterialIndex, aVulkanMaterial.mBindlessMaterialIndex );
+        aVulkanMaterial.mSamplers.fill ( VK_NULL_HANDLE );
+        aVulkanMaterial.mMaterial = nullptr;
     }
 
     void VulkanMaterial::Bind ( VkCommandBuffer aVkCommandBuffer, const VulkanPipeline& aPipeline  ) const

@@ -29,11 +29,114 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static GLenum ToOpenGLFilter ( Material::SamplerFilter aFilter )
+    {
+        return aFilter == Material::SamplerFilter::NEAREST ? GL_NEAREST : GL_LINEAR;
+    }
+
+    static GLenum ToOpenGLMinFilter ( Material::SamplerFilter aFilter, Material::SamplerMipmapMode aMode, bool aMipmapEnable )
+    {
+        if ( !aMipmapEnable )
+        {
+            return ToOpenGLFilter ( aFilter );
+        }
+        if ( aFilter == Material::SamplerFilter::NEAREST )
+        {
+            return aMode == Material::SamplerMipmapMode::NEAREST ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR;
+        }
+        return aMode == Material::SamplerMipmapMode::NEAREST ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR;
+    }
+
+    static GLenum ToOpenGLAddressMode ( Material::SamplerAddressMode aMode )
+    {
+        switch ( aMode )
+        {
+        case Material::SamplerAddressMode::MIRRORED_REPEAT:
+            return GL_MIRRORED_REPEAT;
+        case Material::SamplerAddressMode::CLAMP_TO_EDGE:
+            return GL_CLAMP_TO_EDGE;
+        case Material::SamplerAddressMode::CLAMP_TO_BORDER:
+            return GL_CLAMP_TO_BORDER;
+        case Material::SamplerAddressMode::REPEAT:
+        default:
+            return GL_REPEAT;
+        }
+    }
+
+    static GLenum ToOpenGLCompareOp ( Material::SamplerCompareOp aOperation )
+    {
+        switch ( aOperation )
+        {
+        case Material::SamplerCompareOp::LESS:
+            return GL_LESS;
+        case Material::SamplerCompareOp::EQUAL:
+            return GL_EQUAL;
+        case Material::SamplerCompareOp::LESS_OR_EQUAL:
+            return GL_LEQUAL;
+        case Material::SamplerCompareOp::GREATER:
+            return GL_GREATER;
+        case Material::SamplerCompareOp::NOT_EQUAL:
+            return GL_NOTEQUAL;
+        case Material::SamplerCompareOp::GREATER_OR_EQUAL:
+            return GL_GEQUAL;
+        case Material::SamplerCompareOp::ALWAYS:
+            return GL_ALWAYS;
+        case Material::SamplerCompareOp::NEVER:
+        default:
+            return GL_NEVER;
+        }
+    }
+
+    static void ConfigureOpenGLSampler ( GLuint aSampler, const Material::SamplerState& aState )
+    {
+        glSamplerParameteri ( aSampler, GL_TEXTURE_MIN_FILTER,
+                              static_cast<GLint> ( ToOpenGLMinFilter ( aState.min_filter, aState.mipmap_mode, aState.mipmap_enable ) ) );
+        glSamplerParameteri ( aSampler, GL_TEXTURE_MAG_FILTER,
+                              static_cast<GLint> ( ToOpenGLFilter ( aState.mag_filter ) ) );
+        glSamplerParameteri ( aSampler, GL_TEXTURE_WRAP_S, static_cast<GLint> ( ToOpenGLAddressMode ( aState.address_mode_u ) ) );
+        glSamplerParameteri ( aSampler, GL_TEXTURE_WRAP_T, static_cast<GLint> ( ToOpenGLAddressMode ( aState.address_mode_v ) ) );
+        glSamplerParameteri ( aSampler, GL_TEXTURE_WRAP_R, static_cast<GLint> ( ToOpenGLAddressMode ( aState.address_mode_w ) ) );
+        glSamplerParameterf ( aSampler, GL_TEXTURE_LOD_BIAS, aState.mip_lod_bias );
+        glSamplerParameterf ( aSampler, GL_TEXTURE_MIN_LOD, aState.min_lod );
+        glSamplerParameterf ( aSampler, GL_TEXTURE_MAX_LOD, aState.max_lod );
+        if ( aState.anisotropy_enable )
+        {
+            glSamplerParameterf ( aSampler, GL_TEXTURE_MAX_ANISOTROPY, aState.max_anisotropy );
+        }
+        glSamplerParameteri ( aSampler, GL_TEXTURE_COMPARE_MODE,
+                              aState.compare_enable ? GL_COMPARE_REF_TO_TEXTURE : GL_NONE );
+        glSamplerParameteri ( aSampler, GL_TEXTURE_COMPARE_FUNC,
+                              static_cast<GLint> ( ToOpenGLCompareOp ( aState.compare_op ) ) );
+        const GLfloat border_color[] =
+        {
+            aState.border_color == Material::SamplerBorderColor::OPAQUE_WHITE ? 1.0f : 0.0f,
+            aState.border_color == Material::SamplerBorderColor::OPAQUE_WHITE ? 1.0f : 0.0f,
+            aState.border_color == Material::SamplerBorderColor::OPAQUE_WHITE ? 1.0f : 0.0f,
+            aState.border_color == Material::SamplerBorderColor::TRANSPARENT_BLACK ? 0.0f : 1.0f
+        };
+        glSamplerParameterfv ( aSampler, GL_TEXTURE_BORDER_COLOR, border_color );
+    }
+
     OpenGLMaterial::OpenGLMaterial ( OpenGLRenderer& aOpenGLRenderer, const Material& aMaterial ) :
         mOpenGLRenderer{aOpenGLRenderer},
         mMaterial{&aMaterial},
         mUniformBuffer{}
     {
+        glGenSamplers ( static_cast<GLsizei> ( mSamplers.size() ), mSamplers.data() );
+        for ( size_t slot = 0; slot < mSamplers.size(); ++slot )
+        {
+            Material::SamplerState state{};
+            const uint32_t slot_crc = crc32i ( kMaterialSamplerSlots[slot].name, std::strlen ( kMaterialSamplerSlots[slot].name ) );
+            for ( const auto& sampler : aMaterial.GetSamplers() )
+            {
+                if ( std::get<0> ( sampler ) == slot_crc )
+                {
+                    state = std::get<2> ( sampler );
+                    break;
+                }
+            }
+            ConfigureOpenGLSampler ( mSamplers[slot], state );
+        }
         if ( aMaterial.GetUniformBuffer().size() )
         {
             mUniformBuffer.Initialize ( static_cast<GLsizei> ( aMaterial.GetUniformBuffer().size() ), GL_STATIC_DRAW, aMaterial.GetUniformBuffer().data() );
@@ -91,6 +194,7 @@ namespace AeonGames
 
     OpenGLMaterial::~OpenGLMaterial ( )
     {
+        glDeleteSamplers ( static_cast<GLsizei> ( mSamplers.size() ), mSamplers.data() );
         mOpenGLRenderer.UnregisterBindlessMaterial ( mBindlessMaterialIndex );
         // A moved-from material owns nothing: its resources were transferred to
         // the moved-to object. Releasing them here would unload textures and
@@ -116,11 +220,13 @@ namespace AeonGames
         mOpenGLRenderer{aOpenGLMaterial.mOpenGLRenderer},
         mMaterial{aOpenGLMaterial.mMaterial},
         mUniformBuffer{std::move ( aOpenGLMaterial.mUniformBuffer ) },
+        mSamplers{aOpenGLMaterial.mSamplers},
         mBindlessMaterialIndex{aOpenGLMaterial.mBindlessMaterialIndex}
     {
         // Transfer ownership: the moved-from material must not release the
         // textures / bindless record now owned by this instance.
         aOpenGLMaterial.mMaterial = nullptr;
+        aOpenGLMaterial.mSamplers.fill ( 0 );
         aOpenGLMaterial.mBindlessMaterialIndex = UINT32_MAX;
     }
 
@@ -177,7 +283,9 @@ namespace AeonGames
                 ResourceId fallback{ "Texture"_crc32, kMaterialSamplerSlots[slot].fallback_path };
                 texture_id = mOpenGLRenderer.GetTextureId ( *fallback.Get<Texture>() );
             }
-            glBindTextureUnit ( aPipeline.GetSamplerLocation ( slot_crc ), texture_id );
+            const GLuint texture_unit = aPipeline.GetSamplerLocation ( slot_crc );
+            glBindTextureUnit ( texture_unit, texture_id );
+            glBindSampler ( texture_unit, mSamplers[slot] );
             OPENGL_CHECK_ERROR_THROW;
         }
 

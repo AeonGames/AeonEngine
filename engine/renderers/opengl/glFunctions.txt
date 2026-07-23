@@ -77,6 +77,12 @@ glGetActiveUniformBlockName
 glLinkProgram
 glShaderSource
 glUseProgram
+glGenSamplers
+glDeleteSamplers
+glBindSampler
+glSamplerParameteri
+glSamplerParameterf
+glSamplerParameterfv
 glBlendFuncSeparate
 glBlendEquationSeparate
 glStencilFuncSeparate
