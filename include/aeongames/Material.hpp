@@ -37,12 +37,38 @@ namespace AeonGames
     class Material final : public Resource
     {
     public:
+        enum class SamplerFilter : uint8_t { LINEAR, NEAREST };
+        enum class SamplerMipmapMode : uint8_t { LINEAR, NEAREST };
+        enum class SamplerAddressMode : uint8_t { REPEAT, MIRRORED_REPEAT, CLAMP_TO_EDGE, CLAMP_TO_BORDER };
+        enum class SamplerCompareOp : uint8_t
+        {
+            NEVER, LESS, EQUAL, LESS_OR_EQUAL, GREATER, NOT_EQUAL, GREATER_OR_EQUAL, ALWAYS
+        };
+        enum class SamplerBorderColor : uint8_t { TRANSPARENT_BLACK, OPAQUE_BLACK, OPAQUE_WHITE };
+        struct SamplerState
+        {
+            SamplerFilter min_filter{SamplerFilter::LINEAR};
+            SamplerFilter mag_filter{SamplerFilter::LINEAR};
+            SamplerMipmapMode mipmap_mode{SamplerMipmapMode::LINEAR};
+            SamplerAddressMode address_mode_u{SamplerAddressMode::REPEAT};
+            SamplerAddressMode address_mode_v{SamplerAddressMode::REPEAT};
+            SamplerAddressMode address_mode_w{SamplerAddressMode::REPEAT};
+            bool anisotropy_enable{false};
+            float max_anisotropy{1.0f};
+            float mip_lod_bias{0.0f};
+            float min_lod{0.0f};
+            float max_lod{1.0f};
+            bool compare_enable{false};
+            SamplerCompareOp compare_op{SamplerCompareOp::NEVER};
+            SamplerBorderColor border_color{SamplerBorderColor::TRANSPARENT_BLACK};
+            bool mipmap_enable{false};
+        };
         /** @brief Variant type holding any supported uniform value. */
         using UniformValue = std::variant<uint32_t, int32_t, float, Vector2, Vector3, Vector4, Matrix4x4>;
         /** @brief Key-value pair mapping a uniform name to its value. */
         using UniformKeyValue = std::tuple<std::string, UniformValue>;
         /** @brief Key-value pair mapping a sampler binding index to an image resource id. */
-        using SamplerKeyValue = std::tuple<uint32_t, ResourceId>;
+        using SamplerKeyValue = std::tuple<uint32_t, ResourceId, SamplerState>;
         /** @brief Default constructor. */
         DLL Material();
         /// The Copy Contsructor is used for virtual copying.
@@ -85,6 +111,7 @@ namespace AeonGames
          *  @param aValue Resource id of the image to bind.
          */
         DLL void SetSampler ( const std::string& aName, const ResourceId& aValue );
+        DLL void SetSampler ( const std::string& aName, const ResourceId& aValue, const SamplerState& aState );
         ///@}
         ///@name Property and Sampler Getters
         ///@{
@@ -96,7 +123,7 @@ namespace AeonGames
         /** @brief Get all sampler bindings.
          *  @return Const reference to the vector of sampler key-value pairs.
          */
-        DLL const std::vector<std::tuple<uint32_t, ResourceId >> & GetSamplers() const;
+        DLL const std::vector<SamplerKeyValue>& GetSamplers() const;
         ///@}
         /** @brief Get the raw uniform buffer.
          *  @return Const reference to the uniform data byte vector.

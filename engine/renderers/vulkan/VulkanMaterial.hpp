@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_VULKANMATERIAL_HPP
 #define AEONGAMES_VULKANMATERIAL_HPP
 #include <cstdint>
+#include <array>
 #include <string>
 #include <vector>
 #include <vulkan/vulkan.h>
@@ -54,6 +55,8 @@ namespace AeonGames
         VkDescriptorSet mUniformDescriptorSet{VK_NULL_HANDLE};
         VkDescriptorSet mSamplerDescriptorSet{VK_NULL_HANDLE};
         VulkanBuffer mUniformBuffer;
+        std::array<VkSampler, 6> mSamplers{};
+        std::array<VkDescriptorImageInfo, 6> mDescriptorImageInfos{};
         // Index of this material's record in the renderer's global material
         // storage buffer; assigned at construction, released on destruction.
         uint32_t mBindlessMaterialIndex{UINT32_MAX};

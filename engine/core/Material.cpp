@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -103,7 +103,25 @@ namespace AeonGames
         mSamplers.reserve ( aMaterialMsg.sampler().size() );
         for ( auto& i : aMaterialMsg.sampler() )
         {
-            std::get<1> ( mSamplers.emplace_back ( crc32i ( i.name().c_str(), i.name().size() ), ResourceId{"Texture"_crc32, GetReferenceMsgId ( i.image() ) } ) ).Store();
+            SamplerState state{};
+            state.min_filter = static_cast<SamplerFilter> ( i.min_filter() );
+            state.mag_filter = static_cast<SamplerFilter> ( i.mag_filter() );
+            state.mipmap_mode = static_cast<SamplerMipmapMode> ( i.mipmap_mode() );
+            state.address_mode_u = static_cast<SamplerAddressMode> ( i.address_mode_u() );
+            state.address_mode_v = static_cast<SamplerAddressMode> ( i.address_mode_v() );
+            state.address_mode_w = static_cast<SamplerAddressMode> ( i.address_mode_w() );
+            state.anisotropy_enable = i.anisotropy_enable();
+            state.max_anisotropy = i.max_anisotropy() == 0.0f ? 1.0f : i.max_anisotropy();
+            state.mip_lod_bias = i.mip_lod_bias();
+            state.min_lod = i.min_lod();
+            state.max_lod = i.max_lod() == 0.0f ? 1.0f : i.max_lod();
+            state.compare_enable = i.compare_enable();
+            state.compare_op = static_cast<SamplerCompareOp> ( i.compare_op() );
+            state.border_color = static_cast<SamplerBorderColor> ( i.border_color() );
+            state.mipmap_enable = i.mipmap_enable();
+            std::get<1> ( mSamplers.emplace_back ( crc32i ( i.name().c_str(), i.name().size() ),
+                                                   ResourceId{"Texture"_crc32, GetReferenceMsgId ( i.image() ) },
+                                                   state ) ).Store();
         }
     }
 
@@ -147,7 +165,7 @@ namespace AeonGames
         mSamplers.reserve ( aSamplers.size() );
         for ( auto& i : aSamplers )
         {
-            std::get<1> ( mSamplers.emplace_back ( std::get<0> ( i ), std::get<1> ( i ) ) ).Store();
+            std::get<1> ( mSamplers.emplace_back ( std::get<0> ( i ), std::get<1> ( i ), std::get<2> ( i ) ) ).Store();
         }
     }
 
@@ -242,7 +260,22 @@ namespace AeonGames
         }
     }
 
-    const std::vector<std::tuple<uint32_t, ResourceId >> & Material::GetSamplers() const
+    void Material::SetSampler ( const std::string& aName, const ResourceId& aValue, const SamplerState& aState )
+    {
+        uint32_t name_hash = crc32i ( aName.c_str(), aName.size() );
+        auto i = std::find_if ( mSamplers.begin(), mSamplers.end(),
+                                [name_hash] ( const SamplerKeyValue & aTuple )
+        {
+            return std::get<0> ( aTuple ) == name_hash;
+        } );
+        if ( i != mSamplers.end() )
+        {
+            std::get<1> ( *i ) = aValue;
+            std::get<2> ( *i ) = aState;
+        }
+    }
+
+    const std::vector<Material::SamplerKeyValue>& Material::GetSamplers() const
     {
         return mSamplers;
     }

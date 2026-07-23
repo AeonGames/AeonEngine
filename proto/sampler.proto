@@ -1,4 +1,4 @@
-// Copyright (C) 2018,2021 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2018,2021,2026 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,6 +18,55 @@ package AeonGames;
 import "reference.proto";
 
 message SamplerMsg {
+	enum Filter
+	{
+		FILTER_LINEAR  = 0;
+		FILTER_NEAREST = 1;
+	};
+	enum MipmapMode
+	{
+		MIPMAP_LINEAR  = 0;
+		MIPMAP_NEAREST = 1;
+	};
+	enum AddressMode
+	{
+		ADDRESS_REPEAT          = 0;
+		ADDRESS_MIRRORED_REPEAT = 1;
+		ADDRESS_CLAMP_TO_EDGE   = 2;
+		ADDRESS_CLAMP_TO_BORDER = 3;
+	};
+	enum CompareOp
+	{
+		COMPARE_NEVER         = 0;
+		COMPARE_LESS          = 1;
+		COMPARE_EQUAL         = 2;
+		COMPARE_LESS_OR_EQUAL = 3;
+		COMPARE_GREATER       = 4;
+		COMPARE_NOT_EQUAL     = 5;
+		COMPARE_GREATER_OR_EQUAL = 6;
+		COMPARE_ALWAYS        = 7;
+	};
+	enum BorderColor
+	{
+		BORDER_TRANSPARENT_BLACK = 0;
+		BORDER_OPAQUE_BLACK      = 1;
+		BORDER_OPAQUE_WHITE      = 2;
+	};
 	string name = 1;
 	ReferenceMsg image = 2;
+	Filter min_filter = 3;
+	Filter mag_filter = 4;
+	MipmapMode mipmap_mode = 5;
+	AddressMode address_mode_u = 6;
+	AddressMode address_mode_v = 7;
+	AddressMode address_mode_w = 8;
+	bool anisotropy_enable = 9;
+	float max_anisotropy = 10;
+	float mip_lod_bias = 11;
+	float min_lod = 12;
+	float max_lod = 13;
+	bool compare_enable = 14;
+	CompareOp compare_op = 15;
+	BorderColor border_color = 16;
+	bool mipmap_enable = 17;
 }

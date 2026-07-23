@@ -52,6 +52,7 @@ set(TEST_SRCS
     CollisionTests.cpp
     ComputeTests.cpp
     PipelineTests.cpp
+    SamplerTests.cpp
     OctreeTests.cpp
     HdrDecoderTests.cpp
     CubePrefilterTests.cpp

@@ -15,6 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_OPENGLMATERIAL_HPP
 #define AEONGAMES_OPENGLMATERIAL_HPP
+#include <array>
 #include <cstdint>
 #include "OpenGLBuffer.hpp"
 
@@ -47,6 +48,7 @@ namespace AeonGames
         OpenGLRenderer& mOpenGLRenderer;
         const Material* mMaterial;
         OpenGLBuffer mUniformBuffer{};
+        std::array<GLuint, 6> mSamplers{};
         uint32_t mBindlessMaterialIndex{UINT32_MAX};
     };
 }
