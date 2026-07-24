@@ -133,6 +133,7 @@ namespace AeonGames
         mMaterial { &aMaterial },
         mUniformBuffer { mVulkanRenderer }
     {
+        mBindlessSamplerSlots.fill ( UINT32_MAX );
         if ( mVkDescriptorPool != VK_NULL_HANDLE || mUniformDescriptorSet != VK_NULL_HANDLE || mSamplerDescriptorSet != VK_NULL_HANDLE )
         {
             std::cout << LogLevel::Error << "VulkanMaterial: Already initialized." << std::endl;
@@ -288,16 +289,27 @@ namespace AeonGames
                 const char* slot_name = kMaterialSamplerSlots[i].name;
                 const uint32_t slot_crc = crc32i ( slot_name, std::strlen ( slot_name ) );
                 const VkDescriptorImageInfo* source_image_info = mVulkanRenderer.GetMaterialSamplerFallbackDescriptorImageInfo ( i );
+                const Texture* bindless_texture = nullptr;
+                Material::SamplerState bindless_state{};
                 for ( const auto& sampler : mMaterial->GetSamplers() )
                 {
                     if ( std::get<0> ( sampler ) == slot_crc )
                     {
-                        source_image_info = mVulkanRenderer.GetTextureDescriptorImageInfo ( *std::get<1> ( sampler ).Get<Texture>() );
+                        bindless_texture = std::get<1> ( sampler ).Get<Texture>();
+                        bindless_state = std::get<2> ( sampler );
+                        source_image_info = mVulkanRenderer.GetTextureDescriptorImageInfo ( *bindless_texture );
                         break;
                     }
                 }
+                if ( bindless_texture == nullptr )
+                {
+                    ResourceId fallback{ "Texture"_crc32, kMaterialSamplerSlots[i].fallback_path };
+                    bindless_texture = fallback.Get<Texture>();
+                    bindless_state = {};
+                }
                 mDescriptorImageInfos[i] = *source_image_info;
                 mDescriptorImageInfos[i].sampler = mSamplers[i];
+                mBindlessSamplerSlots[i] = mVulkanRenderer.AcquireBindlessSamplerSlot ( *bindless_texture, bindless_state );
                 write_descriptor_sets.emplace_back();
                 auto& write_descriptor_set = write_descriptor_sets.back();
                 write_descriptor_set.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -328,17 +340,7 @@ namespace AeonGames
         GpuMaterial record{};
         for ( uint32_t i = 0; i < sampler_binding_count; ++i )
         {
-            const char* slot_name = kMaterialSamplerSlots[i].name;
-            const uint32_t slot_crc = crc32i ( slot_name, std::strlen ( slot_name ) );
-            uint32_t bindless_slot = mVulkanRenderer.GetMaterialSamplerFallbackBindlessSlot ( i );
-            for ( const auto& sampler : mMaterial->GetSamplers() )
-            {
-                if ( std::get<0> ( sampler ) == slot_crc )
-                {
-                    bindless_slot = mVulkanRenderer.GetTextureBindlessSlot ( *std::get<1> ( sampler ).Get<Texture>() );
-                    break;
-                }
-            }
+            const uint32_t bindless_slot = mBindlessSamplerSlots[i];
             record.texture_refs[i][0] = bindless_slot;
             record.texture_refs[i][1] = 0;
         }
@@ -358,8 +360,36 @@ namespace AeonGames
 
     void VulkanMaterial::Finalize ()
     {
+        if ( mMaterial == nullptr )
+        {
+            return;
+        }
         // Release the global material-buffer slot, then the descriptor pool.
         mVulkanRenderer.UnregisterBindlessMaterial ( mBindlessMaterialIndex );
+        for ( size_t slot = 0; slot < mBindlessSamplerSlots.size(); ++slot )
+        {
+            const uint32_t slot_crc = crc32i ( kMaterialSamplerSlots[slot].name, std::strlen ( kMaterialSamplerSlots[slot].name ) );
+            const Texture* texture = nullptr;
+            Material::SamplerState state{};
+            if ( mMaterial != nullptr )
+            {
+                for ( const auto& sampler : mMaterial->GetSamplers() )
+                {
+                    if ( std::get<0> ( sampler ) == slot_crc )
+                    {
+                        texture = std::get<1> ( sampler ).Get<Texture>();
+                        state = std::get<2> ( sampler );
+                        break;
+                    }
+                }
+            }
+            if ( texture == nullptr )
+            {
+                ResourceId fallback{ "Texture"_crc32, kMaterialSamplerSlots[slot].fallback_path };
+                texture = fallback.Get<Texture>();
+            }
+            mVulkanRenderer.ReleaseBindlessSamplerSlot ( *texture, state );
+        }
         // Finalize Descriptor Pool
         if ( mVkDescriptorPool != VK_NULL_HANDLE )
         {
@@ -388,11 +418,13 @@ namespace AeonGames
     {
         mSamplers = aVulkanMaterial.mSamplers;
         mDescriptorImageInfos = aVulkanMaterial.mDescriptorImageInfos;
+        mBindlessSamplerSlots = aVulkanMaterial.mBindlessSamplerSlots;
         std::swap ( mVkDescriptorPool, aVulkanMaterial.mVkDescriptorPool );
         std::swap ( mUniformDescriptorSet, aVulkanMaterial.mUniformDescriptorSet );
         std::swap ( mSamplerDescriptorSet, aVulkanMaterial.mSamplerDescriptorSet );
         std::swap ( mBindlessMaterialIndex, aVulkanMaterial.mBindlessMaterialIndex );
         aVulkanMaterial.mSamplers.fill ( VK_NULL_HANDLE );
+        aVulkanMaterial.mBindlessSamplerSlots.fill ( UINT32_MAX );
         aVulkanMaterial.mMaterial = nullptr;
     }
 

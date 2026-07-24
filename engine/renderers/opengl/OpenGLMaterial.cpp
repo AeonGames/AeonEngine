@@ -177,7 +177,17 @@ namespace AeonGames
                 {
                     texture = fallback.Get<Texture>();
                 }
-                const GLuint64 handle = mOpenGLRenderer.GetTextureHandle ( *texture );
+                Material::SamplerState state{};
+                for ( const auto& sampler : samplers )
+                {
+                    if ( std::get<0> ( sampler ) == slot_crc )
+                    {
+                        state = std::get<2> ( sampler );
+                        break;
+                    }
+                }
+                const GLuint64 handle = mOpenGLRenderer.AcquireBindlessSamplerHandle ( *texture, state );
+                mBindlessHandles[slot] = handle;
                 record.texture_refs[slot][0] = static_cast<uint32_t> ( handle & 0xFFFFFFFFu );
                 record.texture_refs[slot][1] = static_cast<uint32_t> ( handle >> 32 );
             }
@@ -204,6 +214,27 @@ namespace AeonGames
         {
             return;
         }
+        for ( size_t slot = 0; slot < kMaterialSamplerSlots.size(); ++slot )
+        {
+            const uint32_t slot_crc = crc32i ( kMaterialSamplerSlots[slot].name, std::strlen ( kMaterialSamplerSlots[slot].name ) );
+            const Texture* texture = nullptr;
+            Material::SamplerState state{};
+            for ( const auto& sampler : mMaterial->GetSamplers() )
+            {
+                if ( std::get<0> ( sampler ) == slot_crc )
+                {
+                    texture = std::get<1> ( sampler ).Get<Texture>();
+                    state = std::get<2> ( sampler );
+                    break;
+                }
+            }
+            if ( texture == nullptr )
+            {
+                ResourceId fallback{ "Texture"_crc32, kMaterialSamplerSlots[slot].fallback_path };
+                texture = fallback.Get<Texture>();
+            }
+            mOpenGLRenderer.ReleaseBindlessSamplerHandle ( *texture, state );
+        }
         // Unload linked textures
         for ( auto& i : mMaterial->GetSamplers() )
         {
@@ -221,12 +252,14 @@ namespace AeonGames
         mMaterial{aOpenGLMaterial.mMaterial},
         mUniformBuffer{std::move ( aOpenGLMaterial.mUniformBuffer ) },
         mSamplers{aOpenGLMaterial.mSamplers},
+        mBindlessHandles{aOpenGLMaterial.mBindlessHandles},
         mBindlessMaterialIndex{aOpenGLMaterial.mBindlessMaterialIndex}
     {
         // Transfer ownership: the moved-from material must not release the
         // textures / bindless record now owned by this instance.
         aOpenGLMaterial.mMaterial = nullptr;
         aOpenGLMaterial.mSamplers.fill ( 0 );
+        aOpenGLMaterial.mBindlessHandles.fill ( 0 );
         aOpenGLMaterial.mBindlessMaterialIndex = UINT32_MAX;
     }
 
