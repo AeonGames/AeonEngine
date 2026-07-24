@@ -118,6 +118,8 @@ namespace AeonGames
         ///        texture, loading it on demand. Zero when the bindless path is
         ///        unavailable.
         GLuint64 GetTextureHandle ( const Texture& aTexture );
+        GLuint64 AcquireBindlessSamplerHandle ( const Texture& aTexture, const Material::SamplerState& aState );
+        void ReleaseBindlessSamplerHandle ( const Texture& aTexture, const Material::SamplerState& aState );
         /// @brief True when the GL_ARB_bindless_texture path is active; gates the
         ///        resident-handle / global material SSBO rendering path.
         bool HasBindlessTexture() const;
@@ -267,6 +269,49 @@ namespace AeonGames
         uint32_t mBindlessMaterialCapacity{};
         uint32_t mBindlessMaterialHighWater{};
         std::vector<uint32_t> mBindlessMaterialFreeSlots{};
+        struct BindlessSamplerKey
+        {
+            size_t texture_id{};
+            Material::SamplerState state{};
+            bool operator == ( const BindlessSamplerKey& aOther ) const
+            {
+                return texture_id == aOther.texture_id && state == aOther.state;
+            }
+        };
+        struct BindlessSamplerEntry
+        {
+            GLuint sampler{};
+            GLuint64 handle{};
+            uint32_t references{};
+        };
+        struct BindlessSamplerKeyHash
+        {
+            size_t operator() ( const BindlessSamplerKey& aKey ) const
+            {
+                size_t hash = std::hash<size_t> {} ( aKey.texture_id );
+                auto combine = [&hash] ( size_t value )
+                {
+                    hash ^= value + 0x9e3779b9u + ( hash << 6 ) + ( hash >> 2 );
+                };
+                combine ( static_cast<size_t> ( aKey.state.min_filter ) );
+                combine ( static_cast<size_t> ( aKey.state.mag_filter ) );
+                combine ( static_cast<size_t> ( aKey.state.mipmap_mode ) );
+                combine ( static_cast<size_t> ( aKey.state.address_mode_u ) );
+                combine ( static_cast<size_t> ( aKey.state.address_mode_v ) );
+                combine ( static_cast<size_t> ( aKey.state.address_mode_w ) );
+                combine ( std::hash<bool> {} ( aKey.state.anisotropy_enable ) );
+                combine ( std::hash<float> {} ( aKey.state.max_anisotropy ) );
+                combine ( std::hash<float> {} ( aKey.state.mip_lod_bias ) );
+                combine ( std::hash<float> {} ( aKey.state.min_lod ) );
+                combine ( std::hash<float> {} ( aKey.state.max_lod ) );
+                combine ( std::hash<bool> {} ( aKey.state.compare_enable ) );
+                combine ( static_cast<size_t> ( aKey.state.compare_op ) );
+                combine ( static_cast<size_t> ( aKey.state.border_color ) );
+                combine ( std::hash<bool> {} ( aKey.state.mipmap_enable ) );
+                return hash;
+            }
+        };
+        std::unordered_map<BindlessSamplerKey, BindlessSamplerEntry, BindlessSamplerKeyHash> mBindlessSamplerCache{};
         ///@}
         // Shared geometry pool for static (non-skinned) meshes: one growable
         // vertex buffer per vertex stride plus one growable uint32 index buffer.

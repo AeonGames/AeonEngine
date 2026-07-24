@@ -119,6 +119,8 @@ namespace AeonGames
         /// @brief Bindless slot of the canonical fallback texture for material
         ///        sampler slot @p aSlot, bound when a material omits that sampler.
         uint32_t GetMaterialSamplerFallbackBindlessSlot ( size_t aSlot ) const;
+        uint32_t AcquireBindlessSamplerSlot ( const Texture& aTexture, const Material::SamplerState& aState ) const;
+        void ReleaseBindlessSamplerSlot ( const Texture& aTexture, const Material::SamplerState& aState ) const;
         /// @brief Write a material record into the global material storage buffer
         ///        and return its index (fetched per draw to read the factors and
         ///        texture slots). Called by VulkanMaterial at load.
@@ -326,6 +328,49 @@ namespace AeonGames
         uint32_t mBindlessTextureCapacity{ 0 };
         mutable uint32_t mBindlessTextureHighWater{ 0 };
         mutable std::vector<uint32_t> mBindlessTextureFreeSlots{};
+        struct BindlessSamplerKey
+        {
+            size_t texture_id{};
+            Material::SamplerState state{};
+            bool operator == ( const BindlessSamplerKey& aOther ) const
+            {
+                return texture_id == aOther.texture_id && state == aOther.state;
+            }
+        };
+        struct BindlessSamplerEntry
+        {
+            VkSampler sampler{VK_NULL_HANDLE};
+            uint32_t slot{UINT32_MAX};
+            uint32_t references{};
+        };
+        struct BindlessSamplerKeyHash
+        {
+            size_t operator() ( const BindlessSamplerKey& aKey ) const
+            {
+                size_t hash = std::hash<size_t> {} ( aKey.texture_id );
+                auto combine = [&hash] ( size_t value )
+                {
+                    hash ^= value + 0x9e3779b9u + ( hash << 6 ) + ( hash >> 2 );
+                };
+                combine ( static_cast<size_t> ( aKey.state.min_filter ) );
+                combine ( static_cast<size_t> ( aKey.state.mag_filter ) );
+                combine ( static_cast<size_t> ( aKey.state.mipmap_mode ) );
+                combine ( static_cast<size_t> ( aKey.state.address_mode_u ) );
+                combine ( static_cast<size_t> ( aKey.state.address_mode_v ) );
+                combine ( static_cast<size_t> ( aKey.state.address_mode_w ) );
+                combine ( std::hash<bool> {} ( aKey.state.anisotropy_enable ) );
+                combine ( std::hash<float> {} ( aKey.state.max_anisotropy ) );
+                combine ( std::hash<float> {} ( aKey.state.mip_lod_bias ) );
+                combine ( std::hash<float> {} ( aKey.state.min_lod ) );
+                combine ( std::hash<float> {} ( aKey.state.max_lod ) );
+                combine ( std::hash<bool> {} ( aKey.state.compare_enable ) );
+                combine ( static_cast<size_t> ( aKey.state.compare_op ) );
+                combine ( static_cast<size_t> ( aKey.state.border_color ) );
+                combine ( std::hash<bool> {} ( aKey.state.mipmap_enable ) );
+                return hash;
+            }
+        };
+        mutable std::unordered_map<BindlessSamplerKey, BindlessSamplerEntry, BindlessSamplerKeyHash> mBindlessSamplerCache{};
         // Global material storage buffer (descriptor set 0, binding 1): one
         // GpuMaterial record per loaded material, indexed per draw by a material
         // index. Host-visible + coherent, written when materials load; the

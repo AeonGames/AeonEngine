@@ -62,6 +62,17 @@ namespace AeonGames
             SamplerCompareOp compare_op{SamplerCompareOp::NEVER};
             SamplerBorderColor border_color{SamplerBorderColor::TRANSPARENT_BLACK};
             bool mipmap_enable{false};
+
+            bool operator == ( const SamplerState& aOther ) const
+            {
+                return min_filter == aOther.min_filter && mag_filter == aOther.mag_filter &&
+                       mipmap_mode == aOther.mipmap_mode && address_mode_u == aOther.address_mode_u &&
+                       address_mode_v == aOther.address_mode_v && address_mode_w == aOther.address_mode_w &&
+                       anisotropy_enable == aOther.anisotropy_enable && max_anisotropy == aOther.max_anisotropy &&
+                       mip_lod_bias == aOther.mip_lod_bias && min_lod == aOther.min_lod && max_lod == aOther.max_lod &&
+                       compare_enable == aOther.compare_enable && compare_op == aOther.compare_op &&
+                       border_color == aOther.border_color && mipmap_enable == aOther.mipmap_enable;
+            }
         };
         /** @brief Variant type holding any supported uniform value. */
         using UniformValue = std::variant<uint32_t, int32_t, float, Vector2, Vector3, Vector4, Matrix4x4>;

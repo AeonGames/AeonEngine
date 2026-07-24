@@ -57,6 +57,7 @@ namespace AeonGames
         VulkanBuffer mUniformBuffer;
         std::array<VkSampler, 6> mSamplers{};
         std::array<VkDescriptorImageInfo, 6> mDescriptorImageInfos{};
+        std::array<uint32_t, 6> mBindlessSamplerSlots{};
         // Index of this material's record in the renderer's global material
         // storage buffer; assigned at construction, released on destruction.
         uint32_t mBindlessMaterialIndex{UINT32_MAX};

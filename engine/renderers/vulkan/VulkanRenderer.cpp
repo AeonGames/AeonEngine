@@ -47,6 +47,58 @@ limitations under the License.
 
 namespace AeonGames
 {
+    static VkFilter ToBindlessFilter ( Material::SamplerFilter aFilter )
+    {
+        return aFilter == Material::SamplerFilter::NEAREST ? VK_FILTER_NEAREST : VK_FILTER_LINEAR;
+    }
+
+    static VkSamplerMipmapMode ToBindlessMipmapMode ( Material::SamplerMipmapMode aMode )
+    {
+        return aMode == Material::SamplerMipmapMode::NEAREST ? VK_SAMPLER_MIPMAP_MODE_NEAREST : VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    }
+
+    static VkSamplerAddressMode ToBindlessAddressMode ( Material::SamplerAddressMode aMode )
+    {
+        switch ( aMode )
+        {
+        case Material::SamplerAddressMode::MIRRORED_REPEAT:
+            return VK_SAMPLER_ADDRESS_MODE_MIRRORED_REPEAT;
+        case Material::SamplerAddressMode::CLAMP_TO_EDGE:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
+        case Material::SamplerAddressMode::CLAMP_TO_BORDER:
+            return VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        case Material::SamplerAddressMode::REPEAT:
+        default:
+            return VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        }
+    }
+
+    static VkCompareOp ToBindlessCompareOp ( Material::SamplerCompareOp aOperation )
+    {
+        static constexpr std::array<VkCompareOp, 8> operations
+        {
+            VK_COMPARE_OP_NEVER, VK_COMPARE_OP_LESS, VK_COMPARE_OP_EQUAL,
+            VK_COMPARE_OP_LESS_OR_EQUAL, VK_COMPARE_OP_GREATER, VK_COMPARE_OP_NOT_EQUAL,
+            VK_COMPARE_OP_GREATER_OR_EQUAL, VK_COMPARE_OP_ALWAYS
+        };
+        const auto index = static_cast<size_t> ( aOperation );
+        return index < operations.size() ? operations[index] : VK_COMPARE_OP_NEVER;
+    }
+
+    static VkBorderColor ToBindlessBorderColor ( Material::SamplerBorderColor aColor )
+    {
+        switch ( aColor )
+        {
+        case Material::SamplerBorderColor::OPAQUE_BLACK:
+            return VK_BORDER_COLOR_FLOAT_OPAQUE_BLACK;
+        case Material::SamplerBorderColor::OPAQUE_WHITE:
+            return VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        case Material::SamplerBorderColor::TRANSPARENT_BLACK:
+        default:
+            return VK_BORDER_COLOR_FLOAT_TRANSPARENT_BLACK;
+        }
+    }
+
     VulkanRenderer::VulkanRenderer ( void* aWindow ) :
         mMaterialStorageBuffer { *this }
     {
@@ -102,8 +154,8 @@ namespace AeonGames
         }
         FinalizeOverlay();
         mWindowStore.clear();
-        mTextureStore.clear();
         mMaterialStore.clear();
+        mTextureStore.clear();
         mPipelineStore.clear();
         mMeshStore.clear();
         FinalizeGeometry();
@@ -960,6 +1012,9 @@ namespace AeonGames
         {
             return;
         }
+        // Destroy the material first so its bindless sampler-image descriptors
+        // are released before the linked textures and their image views.
+        mMaterialStore.erase ( it );
         // Unload linked textures
         for ( auto& i : aMaterial.GetSamplers() )
         {
@@ -969,7 +1024,6 @@ namespace AeonGames
                 UnloadTexture ( *texture );
             }
         }
-        mMaterialStore.erase ( it );
     }
 
     void VulkanRenderer::LoadTexture ( const Texture& aTexture )
@@ -1133,6 +1187,14 @@ namespace AeonGames
 
     void VulkanRenderer::FinalizeBindless()
     {
+        for ( auto& entry : mBindlessSamplerCache )
+        {
+            if ( entry.second.sampler != VK_NULL_HANDLE )
+            {
+                vkDestroySampler ( mVkDevice, entry.second.sampler, nullptr );
+            }
+        }
+        mBindlessSamplerCache.clear();
         if ( mVkBindlessDescriptorPool != VK_NULL_HANDLE )
         {
             vkDestroyDescriptorPool ( mVkDevice, mVkBindlessDescriptorPool, nullptr );
@@ -1181,6 +1243,65 @@ namespace AeonGames
         {
             mBindlessTextureFreeSlots.push_back ( aSlot );
         }
+    }
+
+    uint32_t VulkanRenderer::AcquireBindlessSamplerSlot ( const Texture& aTexture, const Material::SamplerState& aState ) const
+    {
+        const BindlessSamplerKey key{aTexture.GetConsecutiveId(), aState};
+        auto it = mBindlessSamplerCache.find ( key );
+        if ( it != mBindlessSamplerCache.end() )
+        {
+            ++it->second.references;
+            return it->second.slot;
+        }
+        auto texture_it = mTextureStore.find ( aTexture.GetConsecutiveId() );
+        if ( texture_it == mTextureStore.end() )
+        {
+            throw std::runtime_error ( "Texture must be loaded before acquiring a bindless sampler slot." );
+        }
+        VkSamplerCreateInfo sampler_info{};
+        sampler_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        sampler_info.magFilter = ToBindlessFilter ( aState.mag_filter );
+        sampler_info.minFilter = ToBindlessFilter ( aState.min_filter );
+        sampler_info.mipmapMode = ToBindlessMipmapMode ( aState.mipmap_mode );
+        sampler_info.addressModeU = ToBindlessAddressMode ( aState.address_mode_u );
+        sampler_info.addressModeV = ToBindlessAddressMode ( aState.address_mode_v );
+        sampler_info.addressModeW = ToBindlessAddressMode ( aState.address_mode_w );
+        sampler_info.mipLodBias = aState.mip_lod_bias;
+        sampler_info.anisotropyEnable = aState.anisotropy_enable ? VK_TRUE : VK_FALSE;
+        sampler_info.maxAnisotropy = aState.anisotropy_enable ? aState.max_anisotropy : 1.0f;
+        sampler_info.compareEnable = aState.compare_enable ? VK_TRUE : VK_FALSE;
+        sampler_info.compareOp = ToBindlessCompareOp ( aState.compare_op );
+        sampler_info.minLod = aState.min_lod;
+        sampler_info.maxLod = aState.max_lod;
+        sampler_info.borderColor = ToBindlessBorderColor ( aState.border_color );
+        VkSampler sampler = VK_NULL_HANDLE;
+        if ( vkCreateSampler ( mVkDevice, &sampler_info, nullptr, &sampler ) != VK_SUCCESS )
+        {
+            throw std::runtime_error ( "Failed to create cached bindless sampler." );
+        }
+        VkDescriptorImageInfo image_info = texture_it->second.GetDescriptorImageInfo();
+        image_info.sampler = sampler;
+        const uint32_t slot = RegisterBindlessTexture ( image_info );
+        mBindlessSamplerCache.emplace ( key, BindlessSamplerEntry{sampler, slot, 1} );
+        return slot;
+    }
+
+    void VulkanRenderer::ReleaseBindlessSamplerSlot ( const Texture& aTexture, const Material::SamplerState& aState ) const
+    {
+        const BindlessSamplerKey key{aTexture.GetConsecutiveId(), aState};
+        auto it = mBindlessSamplerCache.find ( key );
+        if ( it == mBindlessSamplerCache.end() )
+        {
+            return;
+        }
+        if ( --it->second.references != 0 )
+        {
+            return;
+        }
+        UnregisterBindlessTexture ( it->second.slot );
+        vkDestroySampler ( mVkDevice, it->second.sampler, nullptr );
+        mBindlessSamplerCache.erase ( it );
     }
 
     uint32_t VulkanRenderer::GetTextureBindlessSlot ( const Texture& aTexture ) const

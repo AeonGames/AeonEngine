@@ -343,10 +343,19 @@ void main()
         mWindowStore.clear();
         MakeCurrent();
         FinalizeOverlay();
+        mMaterialStore.clear();
+        for ( auto& entry : mBindlessSamplerCache )
+        {
+            if ( glIsTextureHandleResidentARB ( entry.second.handle ) )
+            {
+                glMakeTextureHandleNonResidentARB ( entry.second.handle );
+            }
+            glDeleteSamplers ( 1, &entry.second.sampler );
+        }
+        mBindlessSamplerCache.clear();
         mTextureStore.clear();
         mMeshStore.clear();
         FinalizeGeometry();
-        mMaterialStore.clear();
         mMaterialStorageBuffer.Finalize();
         mPipelineStore.clear();
         wglMakeCurrent ( nullptr, nullptr );
@@ -495,10 +504,19 @@ void main()
         mWindowStore.clear();
         MakeCurrent();
         FinalizeOverlay();
+        mMaterialStore.clear();
+        for ( auto& entry : mBindlessSamplerCache )
+        {
+            if ( glIsTextureHandleResidentARB ( entry.second.handle ) )
+            {
+                glMakeTextureHandleNonResidentARB ( entry.second.handle );
+            }
+            glDeleteSamplers ( 1, &entry.second.sampler );
+        }
+        mBindlessSamplerCache.clear();
         mTextureStore.clear();
         mMeshStore.clear();
         FinalizeGeometry();
-        mMaterialStore.clear();
         mMaterialStorageBuffer.Finalize();
         mPipelineStore.clear();
         if ( mOpenGLContext != None )
@@ -1261,6 +1279,63 @@ void main()
             it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         }
         return it->second.GetHandle();
+    }
+
+    GLuint64 OpenGLRenderer::AcquireBindlessSamplerHandle ( const Texture& aTexture, const Material::SamplerState& aState )
+    {
+        const BindlessSamplerKey key{aTexture.GetConsecutiveId(), aState};
+        auto it = mBindlessSamplerCache.find ( key );
+        if ( it != mBindlessSamplerCache.end() )
+        {
+            ++it->second.references;
+            return it->second.handle;
+        }
+        const GLuint texture_id = GetTextureId ( aTexture );
+        GLuint sampler = 0;
+        glGenSamplers ( 1, &sampler );
+        glSamplerParameteri ( sampler, GL_TEXTURE_MIN_FILTER,
+                              aState.mipmap_enable
+                              ? ( aState.min_filter == Material::SamplerFilter::NEAREST
+                                  ? ( aState.mipmap_mode == Material::SamplerMipmapMode::NEAREST ? GL_NEAREST_MIPMAP_NEAREST : GL_NEAREST_MIPMAP_LINEAR )
+                                  : ( aState.mipmap_mode == Material::SamplerMipmapMode::NEAREST ? GL_LINEAR_MIPMAP_NEAREST : GL_LINEAR_MIPMAP_LINEAR ) )
+                              : ( aState.min_filter == Material::SamplerFilter::NEAREST ? GL_NEAREST : GL_LINEAR ) );
+        glSamplerParameteri ( sampler, GL_TEXTURE_MAG_FILTER, aState.mag_filter == Material::SamplerFilter::NEAREST ? GL_NEAREST : GL_LINEAR );
+        const GLenum address_modes[] { GL_REPEAT, GL_MIRRORED_REPEAT, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_BORDER };
+        glSamplerParameteri ( sampler, GL_TEXTURE_WRAP_S, address_modes[static_cast<size_t> ( aState.address_mode_u )] );
+        glSamplerParameteri ( sampler, GL_TEXTURE_WRAP_T, address_modes[static_cast<size_t> ( aState.address_mode_v )] );
+        glSamplerParameteri ( sampler, GL_TEXTURE_WRAP_R, address_modes[static_cast<size_t> ( aState.address_mode_w )] );
+        glSamplerParameterf ( sampler, GL_TEXTURE_LOD_BIAS, aState.mip_lod_bias );
+        glSamplerParameterf ( sampler, GL_TEXTURE_MIN_LOD, aState.min_lod );
+        glSamplerParameterf ( sampler, GL_TEXTURE_MAX_LOD, aState.max_lod );
+        if ( aState.anisotropy_enable )
+        {
+            glSamplerParameterf ( sampler, GL_TEXTURE_MAX_ANISOTROPY, aState.max_anisotropy );
+        }
+        glSamplerParameteri ( sampler, GL_TEXTURE_COMPARE_MODE, aState.compare_enable ? GL_COMPARE_REF_TO_TEXTURE : GL_NONE );
+        const GLuint64 handle = glGetTextureSamplerHandleARB ( texture_id, sampler );
+        glMakeTextureHandleResidentARB ( handle );
+        mBindlessSamplerCache.emplace ( key, BindlessSamplerEntry{sampler, handle, 1} );
+        return handle;
+    }
+
+    void OpenGLRenderer::ReleaseBindlessSamplerHandle ( const Texture& aTexture, const Material::SamplerState& aState )
+    {
+        const BindlessSamplerKey key{aTexture.GetConsecutiveId(), aState};
+        auto it = mBindlessSamplerCache.find ( key );
+        if ( it == mBindlessSamplerCache.end() )
+        {
+            return;
+        }
+        if ( --it->second.references != 0 )
+        {
+            return;
+        }
+        if ( glIsTextureHandleResidentARB ( it->second.handle ) )
+        {
+            glMakeTextureHandleNonResidentARB ( it->second.handle );
+        }
+        glDeleteSamplers ( 1, &it->second.sampler );
+        mBindlessSamplerCache.erase ( it );
     }
 
     bool OpenGLRenderer::HasBindlessTexture() const

@@ -49,6 +49,7 @@ namespace AeonGames
         const Material* mMaterial;
         OpenGLBuffer mUniformBuffer{};
         std::array<GLuint, 6> mSamplers{};
+        std::array<GLuint64, 6> mBindlessHandles{};
         uint32_t mBindlessMaterialIndex{UINT32_MAX};
     };
 }
