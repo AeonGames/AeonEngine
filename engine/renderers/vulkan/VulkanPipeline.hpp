@@ -19,9 +19,11 @@ limitations under the License.
 #include <string>
 #include <array>
 #include <vector>
+#include <span>
 #include <limits>
 #include <vulkan/vulkan.h>
 #include "aeongames/Pipeline.hpp"
+#include "aeongames/Mesh.hpp"
 #include "VulkanDescriptorSet.hpp"
 
 // Forward declarations
@@ -39,6 +41,9 @@ namespace AeonGames
         ///        against (e.g. the multiview point shadow pass); VK_NULL_HANDLE
         ///        uses the renderer's main render pass.
         VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, VkRenderPass aRenderPass = VK_NULL_HANDLE );
+        VulkanPipeline ( const VulkanRenderer& aVulkanRenderer, const Pipeline& aPipeline,
+                         std::span<const Mesh::AttributeTuple> aMeshAttributes,
+                         uint32_t aMeshStride, VkRenderPass aRenderPass = VK_NULL_HANDLE );
         ~VulkanPipeline();
         /// @brief Move constructor.
         VulkanPipeline ( VulkanPipeline&& aVulkanPipeline );
@@ -75,6 +80,8 @@ namespace AeonGames
         void ReflectPushConstants ( SpvReflectShaderModule& module, ShaderType aType );
         const VulkanRenderer& mVulkanRenderer;
         const Pipeline* mPipeline{nullptr};
+        std::span<const Mesh::AttributeTuple> mMeshAttributes{};
+        uint32_t mMeshStride{0};
         VkPipelineLayout mVkPipelineLayout{ VK_NULL_HANDLE };
         VkPipeline mVkPipeline{ VK_NULL_HANDLE };
         std::vector<VkPipeline> mVkComputePipelines{};

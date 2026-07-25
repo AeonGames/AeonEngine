@@ -27,6 +27,7 @@ limitations under the License.
 #include "VulkanPipeline.hpp"
 #include "VulkanRenderer.hpp"
 #include "VulkanUtilities.hpp"
+#include "aeongames/Mesh.hpp"
 #include "SPIR-V/CompilerLinker.hpp"
 #include <spirv_reflect.h>
 
@@ -115,6 +116,32 @@ namespace AeonGames
         { VK_FORMAT_R64G64B64A64_SINT, static_cast<uint32_t> ( sizeof ( int64_t ) * 4 ) },
         { VK_FORMAT_R64G64B64A64_SFLOAT, static_cast<uint32_t> ( sizeof ( float ) * 4 ) }
     };
+
+    static VkFormat MeshAttributeToVulkanFormat ( const Mesh::AttributeTuple& aAttribute )
+    {
+        const uint32_t size = std::get<1> ( aAttribute );
+        const bool normalized = ( std::get<3> ( aAttribute ) & Mesh::AttributeFlag::NORMALIZED ) != 0;
+        const bool integer = ( std::get<3> ( aAttribute ) & Mesh::AttributeFlag::INTEGER ) != 0;
+        const Mesh::AttributeType type = std::get<2> ( aAttribute );
+        if ( type == Mesh::FLOAT )
+        {
+            return size == 1 ? VK_FORMAT_R32_SFLOAT : size == 2 ? VK_FORMAT_R32G32_SFLOAT :
+                   size == 3 ? VK_FORMAT_R32G32B32_SFLOAT : VK_FORMAT_R32G32B32A32_SFLOAT;
+        }
+        if ( type == Mesh::UNSIGNED_BYTE )
+        {
+            if ( integer ) return VK_FORMAT_R8G8B8A8_UINT;
+            if ( normalized ) return VK_FORMAT_R8G8B8A8_UNORM;
+            return VK_FORMAT_R8G8B8A8_UINT;
+        }
+        if ( type == Mesh::UNSIGNED_SHORT )
+        {
+            if ( integer ) return size == 1 ? VK_FORMAT_R16_UINT : VK_FORMAT_R16G16_UINT;
+            if ( normalized ) return size == 1 ? VK_FORMAT_R16_UNORM : VK_FORMAT_R16G16_UNORM;
+            return size == 1 ? VK_FORMAT_R16_UINT : VK_FORMAT_R16G16_UINT;
+        }
+        return VK_FORMAT_UNDEFINED;
+    }
 
     static const std::unordered_map<SpvReflectDescriptorType, VkDescriptorType> SpvReflectToVulkanDescriptorType
     {
@@ -267,6 +294,9 @@ namespace AeonGames
         mVulkanRenderer{aVulkanPipeline.mVulkanRenderer}
     {
         std::swap ( mPipeline, aVulkanPipeline.mPipeline );
+        mMeshAttributes = aVulkanPipeline.mMeshAttributes;
+        aVulkanPipeline.mMeshAttributes = {};
+        std::swap ( mMeshStride, aVulkanPipeline.mMeshStride );
         std::swap ( mVkPipelineLayout, aVulkanPipeline.mVkPipelineLayout );
         std::swap ( mVkPipeline, aVulkanPipeline.mVkPipeline );
         mVkComputePipelines.swap ( aVulkanPipeline.mVkComputePipelines );
@@ -300,7 +330,14 @@ namespace AeonGames
     };
 
     VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline, VkRenderPass aRenderPass ) :
-        mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline}
+        VulkanPipeline { aVulkanRenderer, aPipeline, {}, 0, aRenderPass }
+    {}
+
+    VulkanPipeline::VulkanPipeline ( const VulkanRenderer&  aVulkanRenderer, const Pipeline& aPipeline,
+                                     std::span<const Mesh::AttributeTuple> aMeshAttributes,
+                                     uint32_t aMeshStride, VkRenderPass aRenderPass ) :
+        mVulkanRenderer { aVulkanRenderer }, mPipeline{&aPipeline},
+        mMeshAttributes{aMeshAttributes}, mMeshStride{aMeshStride}
     {
         // Graphics stages (vert/frag/tesc/tese/geom) are compiled and linked
         // together into a single graphics pipeline. Each compute stage is an
@@ -764,7 +801,9 @@ namespace AeonGames
                 i = VK_NULL_HANDLE;
             }
         }
+        mMeshAttributes = {};
     }
+
 
     VulkanPipeline::~VulkanPipeline()
     {
@@ -843,13 +882,21 @@ namespace AeonGames
                 const uint32_t name_crc{crc32i ( i->name, strlen ( i->name ) ) };
                 // Override format for weight attributes - they use 8-bit data even though shader declares 32-bit
                 VkFormat format;
-                if ( name_crc == Mesh::WEIGHT_INDEX )
+                const Mesh::AttributeTuple* mesh_attribute = nullptr;
+                if ( !mMeshAttributes.empty() )
                 {
-                    format = VK_FORMAT_R8G8B8A8_UINT; // uint8_t indices
+                    for ( const auto& attribute : mMeshAttributes )
+                    {
+                        if ( std::get<0> ( attribute ) == name_crc )
+                        {
+                            mesh_attribute = &attribute;
+                            break;
+                        }
+                    }
                 }
-                else if ( name_crc == Mesh::WEIGHT_VALUE )
+                if ( mesh_attribute != nullptr )
                 {
-                    format = VK_FORMAT_R8G8B8A8_UNORM; // normalized uint8_t weights (0-255 -> 0.0-1.0)
+                    format = MeshAttributeToVulkanFormat ( *mesh_attribute );
                 }
                 else
                 {
@@ -869,6 +916,30 @@ namespace AeonGames
                     0
                 } );
             }
+        }
+        if ( !mMeshAttributes.empty() )
+        {
+            mVertexStride = mMeshStride;
+            for ( auto& attr : mVertexAttributes )
+            {
+                const auto variable = std::find_if ( input_vars.begin(), input_vars.end(),
+                                                     [&attr] ( const SpvReflectInterfaceVariable * aVariable )
+                {
+                    return aVariable->location == attr.location;
+                } );
+                if ( variable != input_vars.end() )
+                {
+                    for ( const auto& mesh_attribute : mMeshAttributes )
+                    {
+                        if ( std::get<0> ( mesh_attribute ) == crc32i ( ( *variable )->name, strlen ( ( *variable )->name ) ) )
+                        {
+                            attr.offset = std::get<4> ( mesh_attribute );
+                            break;
+                        }
+                    }
+                }
+            }
+            return;
         }
         for ( auto& attr : mVertexAttributes )
         {

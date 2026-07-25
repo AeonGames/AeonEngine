@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2016-2018,2021,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2016-2018,2021,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 #include "aeongames/ProtoBufClasses.hpp"
+#include <algorithm>
 #include "aeongames/ProtoBufHelpers.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -43,6 +44,11 @@ namespace AeonGames
     uint32_t Mesh::GetIndexSize () const
     {
         return mIndexSize;
+    }
+
+    uint32_t Mesh::GetAttributeOffset ( const AttributeTuple& aAttribute ) const
+    {
+        return std::get<4> ( aAttribute );
     }
 
     uint32_t Mesh::GetIndexCount() const
@@ -97,10 +103,14 @@ namespace AeonGames
 
     size_t Mesh::GetStride () const
     {
+        if ( mVertexStride != 0 )
+        {
+            return mVertexStride;
+        }
         size_t stride = 0;
         for ( const auto& i : mAttributes )
         {
-            stride += GetAttributeTotalSize ( i );
+            stride = std::max ( stride, static_cast<size_t> ( std::get<4> ( i ) ) + GetAttributeTotalSize ( i ) );
         }
         return stride;
     }
@@ -129,16 +139,22 @@ namespace AeonGames
         mVertexCount = aMeshMsg.vertexcount();
         mIndexCount = aMeshMsg.indexcount();
         mIndexSize = aMeshMsg.indexsize();
+        mVertexStride = 0;
         mAttributes.reserve ( aMeshMsg.attribute().size() );
+        uint32_t packed_offset = 0;
         for ( const auto& i : aMeshMsg.attribute() )
         {
+            const uint32_t offset = i.has_offset() ? i.offset() : packed_offset;
             mAttributes.emplace_back (
                 static_cast<AttributeSemantic> ( i.semantic() ),
                 static_cast<AttributeSize> ( i.size() ),
                 static_cast<AttributeType> ( i.type() ),
-                static_cast<AttributeFlags> ( i.flags() )
+                static_cast<AttributeFlags> ( i.flags() ),
+                offset
             );
+            packed_offset = std::max ( packed_offset, offset + static_cast<uint32_t> ( GetAttributeTotalSize ( mAttributes.back() ) ) );
         }
+        mVertexStride = aMeshMsg.has_vertexstride() && aMeshMsg.vertexstride() != 0 ? aMeshMsg.vertexstride() : packed_offset;
 
         mVertexBuffer.clear();
         mVertexBuffer.reserve ( aMeshMsg.vertexbuffer().size() );
@@ -155,6 +171,7 @@ namespace AeonGames
         mVertexCount = 0;
         mIndexCount = 0;
         mIndexSize = 0;
+        mVertexStride = 0;
 
         mAttributes.clear();
         mVertexBuffer.clear();

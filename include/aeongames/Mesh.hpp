@@ -103,7 +103,7 @@ namespace AeonGames
         /** @brief Type alias for vertex attribute flag bits. */
         using AttributeFlags      = uint8_t;
         /** @brief Tuple describing a single vertex attribute (semantic, component count, type, flags). */
-        using AttributeTuple = std::tuple<AttributeSemantic, AttributeSize, AttributeType, AttributeFlags>;
+        using AttributeTuple = std::tuple<AttributeSemantic, AttributeSize, AttributeType, AttributeFlags, uint32_t>;
         /** @brief Default constructor. */
         DLL Mesh();
         /** @brief Destructor. */
@@ -123,6 +123,8 @@ namespace AeonGames
          *  @return Const reference to the attribute tuple vector.
          */
         DLL const std::vector<AttributeTuple>& GetAttributes() const;
+        /** @brief Get the byte offset of an attribute within one vertex. */
+        DLL uint32_t GetAttributeOffset ( const AttributeTuple& aAttribute ) const;
         /** @brief Get the size in bytes of a single index.
          *  @return Index element size.
          */
@@ -159,6 +161,7 @@ namespace AeonGames
         uint32_t mVertexCount{};
         uint32_t mIndexSize{};
         uint32_t mIndexCount{};
+        uint32_t mVertexStride{};
     };
     /** @brief Compute the total byte size of a single vertex attribute.
      *  @param aAttributeTuple Tuple describing the attribute.

@@ -938,6 +938,32 @@ namespace AeonGames
         return nullptr;
     }
 
+    const VulkanPipeline* VulkanRenderer::GetVulkanPipeline ( const Pipeline& aPipeline, const Mesh& aMesh, VkRenderPass aRenderPass )
+    {
+        size_t key = aPipeline.GetConsecutiveId();
+        const auto combine = [&key] ( size_t value )
+        {
+            key ^= value + 0x9e3779b97f4a7c15ull + ( key << 6 ) + ( key >> 2 );
+        };
+        combine ( aRenderPass == VK_NULL_HANDLE ? 0 : reinterpret_cast<size_t> ( aRenderPass ) );
+        combine ( aMesh.GetStride() );
+        for ( const auto& attribute : aMesh.GetAttributes() )
+        {
+            combine ( static_cast<size_t> ( std::get<0> ( attribute ) ) );
+            combine ( std::get<1> ( attribute ) );
+            combine ( static_cast<size_t> ( std::get<2> ( attribute ) ) );
+            combine ( std::get<3> ( attribute ) );
+            combine ( std::get<4> ( attribute ) );
+        }
+        auto it = mPipelineStore.find ( key );
+        if ( it == mPipelineStore.end() )
+        {
+            it = mPipelineStore.emplace ( key, VulkanPipeline{*this, aPipeline, aMesh.GetAttributes(),
+                                          static_cast<uint32_t> ( aMesh.GetStride() ), aRenderPass} ).first;
+        }
+        return &it->second;
+    }
+
     const VulkanMaterial* VulkanRenderer::GetVulkanMaterial ( const Material& aMaterial )
     {
         auto it = mMaterialStore.find ( aMaterial.GetConsecutiveId() );

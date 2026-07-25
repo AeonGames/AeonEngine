@@ -4161,13 +4161,15 @@ namespace AeonGames
         switch ( aRenderPass )
         {
         case RenderPass::ShadowPass:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline,
+                       *aMeshes.front(),
+                       mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
             break;
         case RenderPass::DepthPrePass:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline, *aMeshes.front() );
             break;
         default:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline, *aMeshes.front() );
             break;
         }
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
@@ -4316,7 +4318,7 @@ namespace AeonGames
         Dispatch ( mCullPipeline, ( count + 63u ) / 64u, 1, 1, bindings, 0 );
         mCulledShadingBatches.push_back ( CulledShadingBatch
         {
-            mVulkanRenderer.GetVulkanPipeline ( aShadingPipeline ),
+            mVulkanRenderer.GetVulkanPipeline ( aShadingPipeline, aRepresentativeMesh ),
                            &aRepresentativeMesh, commands, draw_count, models, materials, padded
         } );
     }
@@ -4411,13 +4413,15 @@ namespace AeonGames
         switch ( aRenderPass )
         {
         case RenderPass::ShadowPass:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline, mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline,
+                       aMesh,
+                       mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
             break;
         case RenderPass::DepthPrePass:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline );
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline, aMesh );
             break;
         default:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline );
+            pipeline = mVulkanRenderer.GetVulkanPipeline ( aPipeline, aMesh );
             break;
         }
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
