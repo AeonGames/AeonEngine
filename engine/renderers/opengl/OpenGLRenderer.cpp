@@ -242,7 +242,8 @@ void main()
             gRendererWindowClass = 0;
         }
     }
-    OpenGLRenderer::OpenGLRenderer ( void* aWindow ) :
+    OpenGLRenderer::OpenGLRenderer ( void* aWindow, const RendererSettings& aSettings ) :
+        mSettings{aSettings},
         mWindowId{CreateRendererWindow() },
         mDeviceContext{GetDC ( mWindowId ) }
     {
@@ -413,7 +414,8 @@ void main()
         return result;
     }
 
-    OpenGLRenderer::OpenGLRenderer ( void* aWindow )
+    OpenGLRenderer::OpenGLRenderer ( void* aWindow, const RendererSettings& aSettings ) :
+        mSettings{aSettings}
     {
         if ( mRendererCount == 0 )
         {
@@ -1343,6 +1345,11 @@ void main()
         return mHasBindlessTexture;
     }
 
+    const RendererSettings& OpenGLRenderer::GetSettings() const
+    {
+        return mSettings;
+    }
+
     void OpenGLRenderer::InitializeBindlessMaterials()
     {
         if ( !mHasBindlessTexture )
@@ -1352,7 +1359,11 @@ void main()
         // Capacity mirrors the Vulkan global material storage buffer (4096
         // records). Records are written on material load and read per draw,
         // selected by the MaterialIndex uniform.
-        mBindlessMaterialCapacity = 4096;
+        mBindlessMaterialCapacity = mSettings.mBindlessMaterialCapacity;
+        if ( mBindlessMaterialCapacity == 0 )
+        {
+            throw std::runtime_error ( "OpenGLRenderer: bindless material capacity must be non-zero." );
+        }
         mMaterialStorageBuffer.Initialize ( static_cast<GLsizei> ( mBindlessMaterialCapacity * sizeof ( GpuMaterial ) ), GL_DYNAMIC_DRAW, nullptr );
     }
 

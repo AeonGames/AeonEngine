@@ -78,6 +78,15 @@ namespace AeonGames
         Vector4 mOctreeColor{0.3f, 0.5f, 0.95f, 1.0f};    /**< Octree cell wireframe color (blue). */
         Vector4 mCameraFrustumColor{0.95f, 0.8f, 0.2f, 1.0f}; /**< Camera frustum wireframe color (yellow). */
     };
+    /** @brief Runtime policy values for renderer-owned resource capacities. */
+    struct RendererSettings
+    {
+        uint32_t mBindlessTextureCapacity{16384};
+        uint32_t mBindlessMaterialCapacity{4096};
+        size_t mUniformPoolInitialCapacity{8u * 1024u * 1024u};
+        size_t mVulkanUniformPoolInitialCapacity{64u * 1024u};
+        size_t mStoragePoolInitialCapacity{8u * 1024u * 1024u};
+    };
     /** Abstract base class for rendering backends.
      *
      * Defines the interface for loading and unloading GPU resources, managing
