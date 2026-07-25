@@ -247,7 +247,7 @@ namespace AeonGames
          *  matrix for the current frame. Selects the first directional light
          *  submitted this frame and fits an orthographic light view-projection
          *  around the camera's view frustum (truncated to the shadow coverage
-         *  distance) so the fixed-resolution shadow map is spent on what the
+         *  distance) so the configured-resolution shadow map is spent on what the
          *  camera can see; the depth range still spans the whole scene so
          *  casters between the sun and the visible region are included. Writes
          *  the matrix and returns true when a caster exists; returns false

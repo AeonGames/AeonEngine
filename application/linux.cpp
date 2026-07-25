@@ -166,7 +166,8 @@ namespace AeonGames
         return mods;
     }
 
-    Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen ) :
+    Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
+                     bool aFullScreen, const RendererSettings& aRendererSettings ) :
         mDisplay{XOpenDisplay ( nullptr ) }
     {
         ::Window root = DefaultRootWindow ( mDisplay );
@@ -197,7 +198,7 @@ namespace AeonGames
         XFree ( xvi );
         XStoreName ( mDisplay, mWindowId, "AeonGames" );
         XFlush ( mDisplay );
-        mRenderer = ConstructRenderer ( aRendererName, reinterpret_cast<void*> ( mWindowId ) );
+        mRenderer = ConstructRenderer ( aRendererName, reinterpret_cast<void*> ( mWindowId ), aRendererSettings );
         EnumerateGuiOverlayConstructors ( [this] ( const StringId & aIdentifier ) -> bool
         {
             mGuiOverlay = ConstructGuiOverlay ( aIdentifier, reinterpret_cast<void*> ( mWindowId ) );

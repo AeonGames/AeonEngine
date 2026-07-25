@@ -401,7 +401,8 @@ namespace AeonGames
         return 0;
     }
 
-    Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
+    Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
+                     bool aFullScreen, const RendererSettings& aRendererSettings )
     {
         DWORD dwExStyle{WS_EX_APPWINDOW | WS_EX_WINDOWEDGE};
         DWORD dwStyle{WS_OVERLAPPEDWINDOW | WS_CLIPSIBLINGS | WS_CLIPCHILDREN};
@@ -468,7 +469,7 @@ namespace AeonGames
                                      GetModuleHandle ( nullptr ),
                                      nullptr );
         SetWindowLongPtr ( static_cast<HWND> ( mWindowId ), GWLP_USERDATA, ( LONG_PTR ) this );
-        mRenderer = ConstructRenderer ( aRendererName, mWindowId );
+        mRenderer = ConstructRenderer ( aRendererName, mWindowId, aRendererSettings );
         EnumerateGuiOverlayConstructors ( [this] ( const StringId & aIdentifier ) -> bool
         {
             mGuiOverlay = ConstructGuiOverlay ( aIdentifier, mWindowId );

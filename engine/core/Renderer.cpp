@@ -35,6 +35,32 @@ namespace AeonGames
 {
     Renderer::~Renderer() = default;
 
+    std::unique_ptr<Renderer> ConstructRenderer ( uint32_t aIdentifier, void* aWindow, const RendererSettings& aSettings )
+    {
+        return Factory<Renderer, void*, RendererSettings>::Construct ( aIdentifier, aWindow, aSettings );
+    }
+
+    std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier, void* aWindow, const RendererSettings& aSettings )
+    {
+        return Factory<Renderer, void*, RendererSettings>::Construct ( aIdentifier, aWindow, aSettings );
+    }
+
+    std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier, void* aWindow, const RendererSettings& aSettings )
+    {
+        return ConstructRenderer ( aIdentifier.GetId(), aWindow, aSettings );
+    }
+
+    bool RegisterRendererConstructorWithSettings ( const StringId& aIdentifier,
+            const std::function<std::unique_ptr<Renderer> ( void*, RendererSettings ) >& aConstructor )
+    {
+        return Factory<Renderer, void*, RendererSettings>::RegisterConstructor ( aIdentifier, aConstructor );
+    }
+
+    bool UnregisterRendererConstructorWithSettings ( const StringId& aIdentifier )
+    {
+        return Factory<Renderer, void*, RendererSettings>::UnregisterConstructor ( aIdentifier );
+    }
+
     void Renderer::RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay )
     {
         if ( !IsValidWindow ( aWindowId ) )

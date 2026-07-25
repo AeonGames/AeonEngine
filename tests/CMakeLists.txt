@@ -54,6 +54,7 @@ set(TEST_SRCS
     PipelineTests.cpp
     SamplerTests.cpp
     MeshLayoutTests.cpp
+    ShadowSettingsTests.cpp
     OctreeTests.cpp
     HdrDecoderTests.cpp
     CubePrefilterTests.cpp
