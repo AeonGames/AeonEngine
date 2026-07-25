@@ -1854,6 +1854,7 @@ namespace AeonGames
 
     void VulkanWindow::InitializeShadowMap()
     {
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         const VkDevice device = mVulkanRenderer.GetDevice();
         const bool has_stencil =
             ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
@@ -1868,8 +1869,8 @@ namespace AeonGames
             image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             image_create_info.format = format;
             image_create_info.imageType = VK_IMAGE_TYPE_2D;
-            image_create_info.extent.width = SHADOW_MAP_RESOLUTION;
-            image_create_info.extent.height = SHADOW_MAP_RESOLUTION;
+            image_create_info.extent.width = settings.mDirectionalShadowMapResolution;
+            image_create_info.extent.height = settings.mDirectionalShadowMapResolution;
             image_create_info.extent.depth = 1;
             image_create_info.mipLevels = 1;
             image_create_info.arrayLayers = 1;
@@ -2020,8 +2021,8 @@ namespace AeonGames
             framebuffer_create_info.renderPass = mVkShadowRenderPass;
             framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( framebuffer_attachments.size() );
             framebuffer_create_info.pAttachments = framebuffer_attachments.data();
-            framebuffer_create_info.width = SHADOW_MAP_RESOLUTION;
-            framebuffer_create_info.height = SHADOW_MAP_RESOLUTION;
+            framebuffer_create_info.width = settings.mDirectionalShadowMapResolution;
+            framebuffer_create_info.height = settings.mDirectionalShadowMapResolution;
             framebuffer_create_info.layers = 1;
             vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkShadowFramebuffer[frame] );
         }
@@ -2121,6 +2122,7 @@ namespace AeonGames
 
     void VulkanWindow::InitializeSpotShadowMap()
     {
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         const VkDevice device = mVulkanRenderer.GetDevice();
         const bool has_stencil =
             ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
@@ -2136,8 +2138,8 @@ namespace AeonGames
             image_create_info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
             image_create_info.format = format;
             image_create_info.imageType = VK_IMAGE_TYPE_2D;
-            image_create_info.extent.width = SPOT_SHADOW_MAP_RESOLUTION;
-            image_create_info.extent.height = SPOT_SHADOW_MAP_RESOLUTION;
+            image_create_info.extent.width = settings.mSpotShadowMapResolution;
+            image_create_info.extent.height = settings.mSpotShadowMapResolution;
             image_create_info.extent.depth = 1;
             image_create_info.mipLevels = 1;
             image_create_info.arrayLayers = array_layers;
@@ -2223,8 +2225,8 @@ namespace AeonGames
                 framebuffer_create_info.renderPass = mVkShadowRenderPass;
                 framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( framebuffer_attachments.size() );
                 framebuffer_create_info.pAttachments = framebuffer_attachments.data();
-                framebuffer_create_info.width = SPOT_SHADOW_MAP_RESOLUTION;
-                framebuffer_create_info.height = SPOT_SHADOW_MAP_RESOLUTION;
+                framebuffer_create_info.width = settings.mSpotShadowMapResolution;
+                framebuffer_create_info.height = settings.mSpotShadowMapResolution;
                 framebuffer_create_info.layers = 1;
                 vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkSpotShadowFramebuffers[frame][slot] );
             }
@@ -2429,6 +2431,7 @@ namespace AeonGames
 
     void VulkanWindow::InitializePointShadowMap()
     {
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         const VkDevice device = mVulkanRenderer.GetDevice();
         const bool has_stencil =
             ( mVkDepthStencilFormat == VK_FORMAT_D32_SFLOAT_S8_UINT ||
@@ -2444,8 +2447,8 @@ namespace AeonGames
             image_create_info.flags = flags;
             image_create_info.format = format;
             image_create_info.imageType = VK_IMAGE_TYPE_2D;
-            image_create_info.extent.width = POINT_SHADOW_MAP_RESOLUTION;
-            image_create_info.extent.height = POINT_SHADOW_MAP_RESOLUTION;
+            image_create_info.extent.width = settings.mPointShadowMapResolution;
+            image_create_info.extent.height = settings.mPointShadowMapResolution;
             image_create_info.extent.depth = 1;
             image_create_info.mipLevels = 1;
             image_create_info.arrayLayers = array_layers;
@@ -2586,8 +2589,8 @@ namespace AeonGames
             framebuffer_create_info.renderPass = mVkPointShadowRenderPass;
             framebuffer_create_info.attachmentCount = static_cast<uint32_t> ( framebuffer_attachments.size() );
             framebuffer_create_info.pAttachments = framebuffer_attachments.data();
-            framebuffer_create_info.width = POINT_SHADOW_MAP_RESOLUTION;
-            framebuffer_create_info.height = POINT_SHADOW_MAP_RESOLUTION;
+            framebuffer_create_info.width = settings.mPointShadowMapResolution;
+            framebuffer_create_info.height = settings.mPointShadowMapResolution;
             framebuffer_create_info.layers = 1;
             vkCreateFramebuffer ( device, &framebuffer_create_info, nullptr, &mVkPointShadowFramebuffers[caster] );
         }
@@ -2832,6 +2835,7 @@ namespace AeonGames
 
     void VulkanWindow::BeginShadowPass ( const Matrix4x4& aLightViewProjection )
     {
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         // Lazily load the renderer-owned shadow depth pipeline, substituted for
         // the scene's draw pipelines during the shadow pass.
         if ( !mShadowDepthLoaded )
@@ -2842,7 +2846,7 @@ namespace AeonGames
         // Upload this frame's light view-projection and shadow parameters.
         GpuShadowParams shadow_params{};
         shadow_params.light_view_projection = aLightViewProjection;
-        shadow_params.params[0] = 1.0f / static_cast<float> ( SHADOW_MAP_RESOLUTION );
+        shadow_params.params[0] = 1.0f / static_cast<float> ( settings.mDirectionalShadowMapResolution );
         shadow_params.params[1] = 0.0015f;
         shadow_params.params[2] = 1.0f;
         shadow_params.params[3] = 1.0f; // enabled
@@ -2864,13 +2868,13 @@ namespace AeonGames
         render_pass_begin_info.renderPass = mVkShadowRenderPass;
         render_pass_begin_info.framebuffer = mVkShadowFramebuffer[mFrameIndex];
         render_pass_begin_info.renderArea.offset = { 0, 0 };
-        render_pass_begin_info.renderArea.extent = { SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION };
+        render_pass_begin_info.renderArea.extent = { settings.mDirectionalShadowMapResolution, settings.mDirectionalShadowMapResolution };
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
 
-        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( SHADOW_MAP_RESOLUTION ), static_cast<float> ( SHADOW_MAP_RESOLUTION ), 0.0f, 1.0f };
-        VkRect2D shadow_scissor{ { 0, 0 }, { SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION } };
+        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( settings.mDirectionalShadowMapResolution ), static_cast<float> ( settings.mDirectionalShadowMapResolution ), 0.0f, 1.0f };
+        VkRect2D shadow_scissor{ { 0, 0 }, { settings.mDirectionalShadowMapResolution, settings.mDirectionalShadowMapResolution } };
         vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &shadow_viewport );
         vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &shadow_scissor );
         // Slope-scaled depth bias pushes caster depths away from the light so
@@ -2930,6 +2934,7 @@ namespace AeonGames
 
     void VulkanWindow::BeginSpotShadowPass ( uint32_t aSlot, const Matrix4x4& aLightViewProjection )
     {
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         if ( aSlot >= MAX_SPOT_SHADOW_CASTERS )
         {
             return;
@@ -2964,13 +2969,13 @@ namespace AeonGames
         render_pass_begin_info.renderPass = mVkShadowRenderPass;
         render_pass_begin_info.framebuffer = mVkSpotShadowFramebuffers[mFrameIndex][aSlot];
         render_pass_begin_info.renderArea.offset = { 0, 0 };
-        render_pass_begin_info.renderArea.extent = { SPOT_SHADOW_MAP_RESOLUTION, SPOT_SHADOW_MAP_RESOLUTION };
+        render_pass_begin_info.renderArea.extent = { settings.mSpotShadowMapResolution, settings.mSpotShadowMapResolution };
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
 
-        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( SPOT_SHADOW_MAP_RESOLUTION ), static_cast<float> ( SPOT_SHADOW_MAP_RESOLUTION ), 0.0f, 1.0f };
-        VkRect2D shadow_scissor{ { 0, 0 }, { SPOT_SHADOW_MAP_RESOLUTION, SPOT_SHADOW_MAP_RESOLUTION } };
+        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( settings.mSpotShadowMapResolution ), static_cast<float> ( settings.mSpotShadowMapResolution ), 0.0f, 1.0f };
+        VkRect2D shadow_scissor{ { 0, 0 }, { settings.mSpotShadowMapResolution, settings.mSpotShadowMapResolution } };
         vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &shadow_viewport );
         vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &shadow_scissor );
         vkCmdSetDepthBias ( mVkCommandBuffer, 4.0f, 0.0f, 2.5f );
@@ -3023,6 +3028,7 @@ namespace AeonGames
 
     void VulkanWindow::BeginPointShadowPass ( uint32_t aCaster )
     {
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         if ( aCaster >= MAX_POINT_SHADOW_CASTERS )
         {
             return;
@@ -3093,13 +3099,13 @@ namespace AeonGames
         render_pass_begin_info.renderPass = mVkPointShadowRenderPass;
         render_pass_begin_info.framebuffer = mVkPointShadowFramebuffers[aCaster];
         render_pass_begin_info.renderArea.offset = { 0, 0 };
-        render_pass_begin_info.renderArea.extent = { POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION };
+        render_pass_begin_info.renderArea.extent = { settings.mPointShadowMapResolution, settings.mPointShadowMapResolution };
         render_pass_begin_info.clearValueCount = static_cast<uint32_t> ( clear_values.size() );
         render_pass_begin_info.pClearValues = clear_values.data();
         vkCmdBeginRenderPass ( mVkCommandBuffer, &render_pass_begin_info, VK_SUBPASS_CONTENTS_INLINE );
 
-        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION ), static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION ), 0.0f, 1.0f };
-        VkRect2D shadow_scissor{ { 0, 0 }, { POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION } };
+        VkViewport shadow_viewport{ 0.0f, 0.0f, static_cast<float> ( settings.mPointShadowMapResolution ), static_cast<float> ( settings.mPointShadowMapResolution ), 0.0f, 1.0f };
+        VkRect2D shadow_scissor{ { 0, 0 }, { settings.mPointShadowMapResolution, settings.mPointShadowMapResolution } };
         vkCmdSetViewport ( mVkCommandBuffer, 0, 1, &shadow_viewport );
         vkCmdSetScissor ( mVkCommandBuffer, 0, 1, &shadow_scissor );
         vkCmdSetDepthBias ( mVkCommandBuffer, 4.0f, 0.0f, 2.5f );

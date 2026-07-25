@@ -261,7 +261,8 @@ namespace AeonGames
          *  frame; only its aspect ratio is read (invariant to the backend depth
          *  flip), so either backend's matrix works. */
         DLL bool GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection,
-                                              const Matrix4x4& aCameraProjection ) const;
+                                              const Matrix4x4& aCameraProjection,
+                                              uint32_t aShadowMapResolution = SHADOW_MAP_RESOLUTION ) const;
         /** @brief Select the spot lights that should cast a shadow this frame
          *  and fill their per-caster shadow data. Picks up to
          *  @ref MAX_SPOT_SHADOW_CASTERS spot lights from the frame light list
@@ -276,7 +277,8 @@ namespace AeonGames
          *  view-projections (engine convention, no per-backend depth flip), the
          *  caster light indices and the filtering params (count in params[3]).
          *  @return The number of spot shadow casters selected (0 when none). */
-        DLL uint32_t GetSpotShadowCasters ( GpuSpotShadowParams& aSpotShadowParams ) const;
+        DLL uint32_t GetSpotShadowCasters ( GpuSpotShadowParams& aSpotShadowParams,
+                                            uint32_t aShadowMapResolution = SPOT_SHADOW_MAP_RESOLUTION ) const;
         /** @brief Select the point lights that should cast a shadow this frame
          *  and fill their per-caster shadow data. Picks up to
          *  @ref MAX_POINT_SHADOW_CASTERS point lights from the frame light list
@@ -290,7 +292,8 @@ namespace AeonGames
          *  view-projections (engine convention, no per-backend depth flip), the
          *  caster positions/radii and the filtering params (count in params[3]).
          *  @return The number of point shadow casters selected (0 when none). */
-        DLL uint32_t GetPointShadowCasters ( GpuPointShadowParams& aPointShadowParams ) const;
+        DLL uint32_t GetPointShadowCasters ( GpuPointShadowParams& aPointShadowParams,
+                                             uint32_t aShadowMapResolution = POINT_SHADOW_MAP_RESOLUTION ) const;
         /**@}*/
 
         /** @name Visibility culling */

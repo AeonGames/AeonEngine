@@ -902,6 +902,7 @@ namespace AeonGames
 
     void OpenGLWindow::InitializeShadowMap()
     {
+        const RendererSettings& settings = mOpenGLRenderer.GetSettings();
         // Sampleable depth texture used as the directional shadow map. Hardware
         // depth comparison (sampler2DShadow) is enabled so the fragment shader
         // can PCF-filter the depth test in a single texture() lookup.
@@ -909,7 +910,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D, mShadowDepthTexture );
         glTexImage2D ( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F,
-                       SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION, 0,
+                       settings.mDirectionalShadowMapResolution, settings.mDirectionalShadowMapResolution, 0,
                        GL_DEPTH_COMPONENT, GL_FLOAT, nullptr );
         OPENGL_CHECK_ERROR_THROW;
         glTexParameteri ( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -959,6 +960,7 @@ namespace AeonGames
 
     void OpenGLWindow::BeginShadowPass ( const Matrix4x4& aLightViewProjection )
     {
+        const RendererSettings& settings = mOpenGLRenderer.GetSettings();
         // Lazily load the renderer-owned depth-only pipeline that substitutes
         // the scene's draw pipelines during the shadow pass.
         if ( !mShadowDepthLoaded )
@@ -974,7 +976,7 @@ namespace AeonGames
         mShadowParams.WriteMemory ( 0, sizeof ( params ), &params );
 
         glBindFramebuffer ( GL_FRAMEBUFFER, mShadowFrameBuffer );
-        glViewport ( 0, 0, SHADOW_MAP_RESOLUTION, SHADOW_MAP_RESOLUTION );
+        glViewport ( 0, 0, settings.mDirectionalShadowMapResolution, settings.mDirectionalShadowMapResolution );
         glClear ( GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
         // Slope-scaled depth bias pushes caster depths away from the light so
@@ -998,6 +1000,7 @@ namespace AeonGames
 
     void OpenGLWindow::InitializeSpotShadowMap()
     {
+        const RendererSettings& settings = mOpenGLRenderer.GetSettings();
         // Sampleable depth texture ARRAY: one layer per spot shadow caster.
         // Hardware depth comparison (sampler2DArrayShadow) is enabled so the
         // shading fragment shader PCF-filters each layer in one texture() lookup.
@@ -1005,7 +1008,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_2D_ARRAY, mSpotShadowDepthTexture );
         glTexImage3D ( GL_TEXTURE_2D_ARRAY, 0, GL_DEPTH_COMPONENT32F,
-                       SPOT_SHADOW_MAP_RESOLUTION, SPOT_SHADOW_MAP_RESOLUTION,
+                       settings.mSpotShadowMapResolution, settings.mSpotShadowMapResolution,
                        MAX_SPOT_SHADOW_CASTERS, 0,
                        GL_DEPTH_COMPONENT, GL_FLOAT, nullptr );
         OPENGL_CHECK_ERROR_THROW;
@@ -1192,6 +1195,7 @@ namespace AeonGames
 
     void OpenGLWindow::BeginSpotShadowPass ( uint32_t aSlot, const Matrix4x4& aLightViewProjection )
     {
+        const RendererSettings& settings = mOpenGLRenderer.GetSettings();
         // Lazily load the renderer-owned depth-only pipeline (shared with the
         // directional pass) that substitutes the scene's draw pipelines.
         if ( !mShadowDepthLoaded )
@@ -1211,7 +1215,7 @@ namespace AeonGames
         // Attach only this caster's array layer so the pass renders into it.
         glFramebufferTextureLayer ( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                                     mSpotShadowDepthTexture, 0, static_cast<GLint> ( aSlot ) );
-        glViewport ( 0, 0, SPOT_SHADOW_MAP_RESOLUTION, SPOT_SHADOW_MAP_RESOLUTION );
+        glViewport ( 0, 0, settings.mSpotShadowMapResolution, settings.mSpotShadowMapResolution );
         glClear ( GL_DEPTH_BUFFER_BIT );
         glEnable ( GL_DEPTH_TEST );
         // Slope-scaled depth bias to fight self-shadow acne, as in the
@@ -1234,6 +1238,7 @@ namespace AeonGames
 
     void OpenGLWindow::InitializePointShadowMap()
     {
+        const RendererSettings& settings = mOpenGLRenderer.GetSettings();
         // Sampleable depth CUBE MAP ARRAY: one cube (six faces) per caster, so
         // the shading pass samples by world direction and the GPU selects the
         // face and filters seamlessly across face edges.
@@ -1242,7 +1247,7 @@ namespace AeonGames
         OPENGL_CHECK_ERROR_THROW;
         glBindTexture ( GL_TEXTURE_CUBE_MAP_ARRAY, mPointShadowDepthTexture );
         glTexImage3D ( GL_TEXTURE_CUBE_MAP_ARRAY, 0, GL_DEPTH_COMPONENT32F,
-                       POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION,
+                       settings.mPointShadowMapResolution, settings.mPointShadowMapResolution,
                        POINT_SHADOW_FACES * MAX_POINT_SHADOW_CASTERS, 0,
                        GL_DEPTH_COMPONENT, GL_FLOAT, nullptr );
         OPENGL_CHECK_ERROR_THROW;
@@ -1297,6 +1302,7 @@ namespace AeonGames
 
     void OpenGLWindow::BeginPointShadowPass ( uint32_t aCaster )
     {
+        const RendererSettings& settings = mOpenGLRenderer.GetSettings();
         if ( !mPointShadowDepthLoaded )
         {
             mPointShadowDepthPipeline.LoadFromFile ( "shaders/point_shadow_depth" );
@@ -1321,7 +1327,7 @@ namespace AeonGames
         // Attach the whole cube-map array as a layered target; the geometry
         // shader's gl_Layer selects the caster's six faces.
         glFramebufferTexture ( GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, mPointShadowDepthTexture, 0 );
-        glViewport ( 0, 0, POINT_SHADOW_MAP_RESOLUTION, POINT_SHADOW_MAP_RESOLUTION );
+        glViewport ( 0, 0, settings.mPointShadowMapResolution, settings.mPointShadowMapResolution );
         // The layered attachment covers every caster's layers, so clear the whole
         // array once, before the first caster, to avoid wiping a caster already
         // rendered this frame.

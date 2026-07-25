@@ -89,6 +89,9 @@ namespace AeonGames
         uint32_t mPrefilteredEnvironmentFaceSize{128};
         uint32_t mPrefilteredEnvironmentMipCount{6};
         uint32_t mSkyboxEnvironmentFaceSize{512};
+        uint32_t mDirectionalShadowMapResolution{2048};
+        uint32_t mSpotShadowMapResolution{1024};
+        uint32_t mPointShadowMapResolution{1024};
     };
     /** Abstract base class for rendering backends.
      *
@@ -140,6 +143,8 @@ namespace AeonGames
          * @param aTexture The texture to unload.
          */
         virtual void UnloadTexture ( const Texture& aTexture ) = 0;
+        /** @brief Get backend resource-policy settings used for this renderer. */
+        virtual const RendererSettings& GetSettings() const = 0;
         ///@}
 
         ///@name Window surface related functions
