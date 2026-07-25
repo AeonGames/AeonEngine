@@ -92,7 +92,8 @@ namespace AeonGames
             return -1;
         }
     }
-    Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight, bool aFullScreen )
+    Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
+                     bool aFullScreen, const RendererSettings& aRendererSettings )
     {
         @autoreleasepool
         {
@@ -123,7 +124,7 @@ namespace AeonGames
             mNSView = [mNSWindow contentView];
             [mNSView setWantsLayer:YES];
 
-            mRenderer = ConstructRenderer ( aRendererName, ( __bridge void* ) mNSView );
+            mRenderer = ConstructRenderer ( aRendererName, ( __bridge void* ) mNSView, aRendererSettings );
             EnumerateGuiOverlayConstructors ( [this] ( const StringId & aIdentifier ) -> bool
             {
                 mGuiOverlay = ConstructGuiOverlay ( aIdentifier, ( __bridge void* ) mNSView );

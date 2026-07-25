@@ -748,8 +748,15 @@ namespace AeonGames
      * @return A unique_ptr to the newly created Renderer.
      */
     DLL std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier, void* aWindow );
+    /** Constructs a Renderer with explicit backend resource-policy settings. */
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( uint32_t aIdentifier, void* aWindow, const RendererSettings& aSettings );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier, void* aWindow, const RendererSettings& aSettings );
+    DLL std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier, void* aWindow, const RendererSettings& aSettings );
     /** Registers a Renderer loader for a specific identifier.*/
     DLL bool RegisterRendererConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Renderer> ( void* ) >& aConstructor );
+    DLL bool RegisterRendererConstructorWithSettings ( const StringId& aIdentifier,
+            const std::function<std::unique_ptr<Renderer> ( void*, RendererSettings ) >& aConstructor );
+    DLL bool UnregisterRendererConstructorWithSettings ( const StringId& aIdentifier );
     /** Unregisters a Renderer loader for a specific identifier.*/
     DLL bool UnregisterRendererConstructor ( const StringId& aIdentifier );
     /** Enumerates Renderer loader identifiers via an enumerator functor.*/

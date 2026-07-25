@@ -77,7 +77,8 @@ namespace AeonGames
      *  };
      *  @endcode
      *
-     *  @c params.x is 1/SHADOW_MAP_RESOLUTION (one texel in shadow UV space),
+    *  @c params.x is the inverse configured shadow-map resolution (one texel
+    *  in shadow UV space),
      *  @c params.y is a constant depth bias added in the comparison to fight
      *  shadow acne, @c params.z is the PCF kernel radius in texels, and
      *  @c params.w is > 0.5 when a directional shadow caster is active this
