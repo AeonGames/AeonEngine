@@ -49,7 +49,7 @@ namespace AeonGames
     {
     public:
         /// @brief Construct from a native window handle.
-        VulkanRenderer ( void* aWindow );
+        VulkanRenderer ( void* aWindow, const RendererSettings& aSettings = {} );
         ~VulkanRenderer() final;
         /// @brief Registered renderer name ("Vulkan"); selects per-renderer
         ///        pipeline shader variants.
@@ -234,6 +234,7 @@ namespace AeonGames
         Display* GetDisplay() const;
 #endif
         bool HasPrimitiveTopologyListRestart() const;
+        const RendererSettings& GetSettings() const;
     private:
         void InitializeInstance();
         void InitializeDevice();
@@ -286,6 +287,7 @@ namespace AeonGames
         // device has been rebuilt. Guards the per-frame entry points so no work
         // is recorded against dead handles between loss and recovery.
         bool mDeviceLost { false };
+        RendererSettings mSettings{};
         // Earliest time the next recovery may be attempted. After a failed
         // rebuild (the GPU is often still mid-reset, so vkCreateDevice returns
         // VK_ERROR_DEVICE_LOST) recovery backs off instead of hammering the

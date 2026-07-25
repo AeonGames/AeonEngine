@@ -87,8 +87,8 @@ namespace AeonGames
         mPointShadowDepthMatrices.reserve ( kFramesInFlight );
         for ( uint32_t i = 0; i < kFramesInFlight; ++i )
         {
-            mMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 64_kb );
-            mStorageMemoryPoolBuffers.emplace_back ( mVulkanRenderer, 8_mb );
+            mMemoryPoolBuffers.emplace_back ( mVulkanRenderer, mVulkanRenderer.GetSettings().mVulkanUniformPoolInitialCapacity );
+            mStorageMemoryPoolBuffers.emplace_back ( mVulkanRenderer, mVulkanRenderer.GetSettings().mStoragePoolInitialCapacity );
             mMatrices.emplace_back ( mVulkanRenderer );
             mLights.emplace_back ( mVulkanRenderer );
             mClusterParams.emplace_back ( mVulkanRenderer );

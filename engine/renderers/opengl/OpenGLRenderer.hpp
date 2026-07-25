@@ -50,7 +50,7 @@ namespace AeonGames
     {
     public:
         /// @brief Construct from a native window handle.
-        OpenGLRenderer ( void* aWindow );
+        OpenGLRenderer ( void* aWindow, const RendererSettings& aSettings = {} );
         ~OpenGLRenderer();
         /// @brief Registered renderer name ("OpenGL"); selects per-renderer
         ///        pipeline shader variants.
@@ -123,6 +123,7 @@ namespace AeonGames
         /// @brief True when the GL_ARB_bindless_texture path is active; gates the
         ///        resident-handle / global material SSBO rendering path.
         bool HasBindlessTexture() const;
+        const RendererSettings& GetSettings() const;
         /// @brief Write a material record into the global bindless material SSBO
         ///        and return its index (selected per draw by the MaterialIndex
         ///        uniform to pick the record).
@@ -244,6 +245,7 @@ namespace AeonGames
         void SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass ) final;
         /// @brief True when aWindowId names an attached window.
         bool IsValidWindow ( void* aWindowId ) const final;
+        RendererSettings mSettings{};
 #if defined(_WIN32)
         HWND mWindowId {};
         HDC mDeviceContext{};

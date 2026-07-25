@@ -220,8 +220,8 @@ namespace AeonGames
     {
         mOpenGLRenderer.MakeCurrent ( mWindowId );
         mFrameBuffer.Initialize();
-        mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
-        mStorageMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
+        mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( mOpenGLRenderer.GetSettings().mUniformPoolInitialCapacity ) );
+        mStorageMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( mOpenGLRenderer.GetSettings().mStoragePoolInitialCapacity ) );
         XWindowAttributes xwa;
         XGetWindowAttributes ( mDisplay, mWindowId, &xwa );
         glViewport ( xwa.x, xwa.y, xwa.width, xwa.height );
@@ -331,8 +331,8 @@ namespace AeonGames
         SetPixelFormat ( mDeviceContext, pf, &pfd );
         mOpenGLRenderer.MakeCurrent ( mDeviceContext );
         mFrameBuffer.Initialize();
-        mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
-        mStorageMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( 8_mb ) );
+        mMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( mOpenGLRenderer.GetSettings().mUniformPoolInitialCapacity ) );
+        mStorageMemoryPoolBuffer.Initialize ( static_cast<GLsizei> ( mOpenGLRenderer.GetSettings().mStoragePoolInitialCapacity ) );
         glViewport ( 0, 0, rect.right - rect.left, rect.bottom - rect.top );
         OPENGL_CHECK_ERROR_THROW;
         Initialize();

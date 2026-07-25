@@ -99,7 +99,8 @@ namespace AeonGames
         }
     }
 
-    VulkanRenderer::VulkanRenderer ( void* aWindow ) :
+    VulkanRenderer::VulkanRenderer ( void* aWindow, const RendererSettings& aSettings ) :
+        mSettings{aSettings},
         mMaterialStorageBuffer { *this }
     {
         try
@@ -249,6 +250,11 @@ namespace AeonGames
     bool VulkanRenderer::HasPrimitiveTopologyListRestart() const
     {
         return mHasPrimitiveTopologyListRestart;
+    }
+
+    const RendererSettings& VulkanRenderer::GetSettings() const
+    {
+        return mSettings;
     }
 
     uint32_t VulkanRenderer::GetMemoryTypeIndex ( VkMemoryPropertyFlags aVkMemoryPropertyFlags ) const
@@ -1102,8 +1108,11 @@ namespace AeonGames
         // Cap the global combined-image-sampler array at a generous size clamped
         // to the device's update-after-bind limits (a combined image sampler
         // consumes one sampled-image and one sampler descriptor).
-        constexpr uint32_t kBindlessTextureHardCap = 16384;
-        uint32_t capacity = kBindlessTextureHardCap;
+        uint32_t capacity = mSettings.mBindlessTextureCapacity;
+        if ( capacity == 0 )
+        {
+            throw std::runtime_error ( "VulkanRenderer: bindless texture capacity must be non-zero." );
+        }
         if ( mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSampledImages < capacity )
         {
             capacity = mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSampledImages;
@@ -1117,7 +1126,11 @@ namespace AeonGames
             throw std::runtime_error ( "Device reports no update-after-bind sampled images; bindless textures unsupported." );
         }
         mBindlessTextureCapacity = capacity;
-        mBindlessMaterialCapacity = 4096;
+        mBindlessMaterialCapacity = mSettings.mBindlessMaterialCapacity;
+        if ( mBindlessMaterialCapacity == 0 )
+        {
+            throw std::runtime_error ( "VulkanRenderer: bindless material capacity must be non-zero." );
+        }
 
         // Global material storage buffer: one GpuMaterial record per material,
         // fetched per draw by a material index. Host-visible + coherent so the
