@@ -176,7 +176,7 @@ namespace AeonGames
     }
 
     bool Scene::GetDirectionalShadowMatrix ( Matrix4x4& aLightViewProjection,
-            const Matrix4x4& aCameraProjection ) const
+            const Matrix4x4& aCameraProjection, uint32_t aShadowMapResolution ) const
     {
         // Pick the first directional light submitted this frame as the caster.
         const GpuLight* caster = nullptr;
@@ -317,7 +317,7 @@ namespace AeonGames
         // shadow-texel increments along the light's two lateral axes. Those axes
         // are the columns of the light rotation that map a world vector onto
         // light-space X and Z, read directly out of the world->light matrix.
-        const float texel = ( 2.0f * radius ) / static_cast<float> ( SHADOW_MAP_RESOLUTION );
+        const float texel = ( 2.0f * radius ) / static_cast<float> ( aShadowMapResolution );
         const Vector3 light_right { light_view[0], light_view[4], light_view[8] };
         const Vector3 light_up    { light_view[2], light_view[6], light_view[10] };
         const float proj_right = Dot ( frustum_center, light_right );
@@ -361,7 +361,7 @@ namespace AeonGames
         return true;
     }
 
-    uint32_t Scene::GetSpotShadowCasters ( GpuSpotShadowParams& aSpotShadowParams ) const
+    uint32_t Scene::GetSpotShadowCasters ( GpuSpotShadowParams& aSpotShadowParams, uint32_t aShadowMapResolution ) const
     {
         // Start from the "no casters" state: zero matrices, zero positions, and
         // refill the filtering params below. Slots left zero never match a real
@@ -445,14 +445,14 @@ namespace AeonGames
                 Vector4 { eye.GetX(), eye.GetY(), eye.GetZ(), 0.0f };
             ++count;
         }
-        aSpotShadowParams.params[0] = 1.0f / static_cast<float> ( SPOT_SHADOW_MAP_RESOLUTION );
+        aSpotShadowParams.params[0] = 1.0f / static_cast<float> ( aShadowMapResolution );
         aSpotShadowParams.params[1] = 0.0015f;
         aSpotShadowParams.params[2] = 1.0f;
         aSpotShadowParams.params[3] = static_cast<float> ( count );
         return count;
     }
 
-    uint32_t Scene::GetPointShadowCasters ( GpuPointShadowParams& aPointShadowParams ) const
+    uint32_t Scene::GetPointShadowCasters ( GpuPointShadowParams& aPointShadowParams, uint32_t aShadowMapResolution ) const
     {
         aPointShadowParams = GpuPointShadowParams{};
         uint32_t count = 0;
@@ -526,7 +526,7 @@ namespace AeonGames
                 Vector4 { eye.GetX(), eye.GetY(), eye.GetZ(), radius };
             ++count;
         }
-        aPointShadowParams.params[0] = 1.0f / static_cast<float> ( POINT_SHADOW_MAP_RESOLUTION );
+        aPointShadowParams.params[0] = 1.0f / static_cast<float> ( aShadowMapResolution );
         // Depth bias is in normalized radial-distance units (the depth pass
         // stores length(frag-light)/radius), so it is larger than the NDC bias
         // the directional/spot maps use.

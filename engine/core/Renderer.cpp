@@ -72,7 +72,7 @@ namespace AeonGames
             // the depth vertex shader, so the directional pass must write it LAST
             // to leave the directional matrix in place for the shading pass.
             GpuSpotShadowParams spot_shadow_params{};
-            const uint32_t spot_caster_count = aScene.GetSpotShadowCasters ( spot_shadow_params );
+            const uint32_t spot_caster_count = aScene.GetSpotShadowCasters ( spot_shadow_params, GetSettings().mSpotShadowMapResolution );
             SetSpotShadowParams ( aWindowId, spot_shadow_params );
             for ( uint32_t slot = 0; slot < spot_caster_count; ++slot )
             {
@@ -96,7 +96,7 @@ namespace AeonGames
             // rendered once and then sampled for free every frame, even while the
             // camera moves.
             GpuPointShadowParams point_shadow_params{};
-            const uint32_t point_caster_count = aScene.GetPointShadowCasters ( point_shadow_params );
+            const uint32_t point_caster_count = aScene.GetPointShadowCasters ( point_shadow_params, GetSettings().mPointShadowMapResolution );
             SetPointShadowParams ( aWindowId, point_shadow_params );
             const uint64_t shadow_geometry_signature = aScene.GetShadowGeometrySignature();
             auto& point_cache = mPointShadowCache[aWindowId];
@@ -135,7 +135,7 @@ namespace AeonGames
             // light's orthographic frustum here. Reusing the camera frustum would
             // make casters outside the view pop in and out as the camera moves.
             Matrix4x4 light_view_projection;
-            if ( aScene.GetDirectionalShadowMatrix ( light_view_projection, GetProjectionMatrix ( aWindowId ) ) )
+            if ( aScene.GetDirectionalShadowMatrix ( light_view_projection, GetProjectionMatrix ( aWindowId ), GetSettings().mDirectionalShadowMapResolution ) )
             {
                 aScene.BuildRenderQueue ( Frustum ( light_view_projection ) );
                 BeginShadowPass ( aWindowId, light_view_projection );
