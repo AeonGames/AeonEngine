@@ -98,17 +98,6 @@ namespace AeonGames
     // shading. Must match `layout(binding = N) uniform samplerCube
     // PrefilteredEnvironment;` in the GL path of the shading fragment shaders.
     static constexpr GLuint PREFILTERED_ENV_TEXTURE_UNIT = 11;
-    // Edge length of the prefiltered specular cube map's mip 0 faces. Small
-    // because roughness blurs away detail; mip 0 stays mirror-sharp.
-    static constexpr uint32_t PREFILTERED_ENV_FACE_SIZE = 128;
-    // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
-    // last mip = fully rough), matched by the shader's textureQueryLevels.
-    static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
-    // Edge length of the skybox environment cube map's faces. Larger than the
-    // prefiltered cube because the skybox is viewed directly (sharp), not blurred
-    // by roughness; a single mip (no prefilter) resampled from the equirect HDR.
-    static constexpr uint32_t SKYBOX_ENV_FACE_SIZE = 512;
-
     void OpenGLWindow::Initialize()
     {
         mMatrices.Initialize ( sizeof ( float ) * 16 * 2, GL_DYNAMIC_DRAW );
@@ -1081,6 +1070,7 @@ namespace AeonGames
 
     void OpenGLWindow::SetEnvironmentMap ( const Texture* aEnvironmentMap )
     {
+        const RendererSettings& settings = mOpenGLRenderer.GetSettings();
         // Lazily create the 1x1 fallback prefiltered cube map on the first call
         // so the shading pass can always bind PREFILTERED_ENV_TEXTURE_UNIT; the
         // fragment shader treats a 1x1 map as "no environment" and falls back to
@@ -1139,18 +1129,18 @@ namespace AeonGames
         // seamless edges, no pole distortion) for the skybox. A single sharp mip
         // (PrefilterEnvironmentCube with mip count 1 is a plain resample).
         std::vector<std::vector<float>> env_faces;
-        if ( PrefilterEnvironmentCube ( *aEnvironmentMap, SKYBOX_ENV_FACE_SIZE, 1, env_faces ) )
+        if ( PrefilterEnvironmentCube ( *aEnvironmentMap, settings.mSkyboxEnvironmentFaceSize, 1, env_faces ) )
         {
             if ( mEnvironmentCubeTexture == 0 )
             {
                 glGenTextures ( 1, &mEnvironmentCubeTexture );
             }
             glBindTexture ( GL_TEXTURE_CUBE_MAP, mEnvironmentCubeTexture );
-            const size_t face_floats = static_cast<size_t> ( SKYBOX_ENV_FACE_SIZE ) * SKYBOX_ENV_FACE_SIZE * 4;
+            const size_t face_floats = static_cast<size_t> ( settings.mSkyboxEnvironmentFaceSize ) * settings.mSkyboxEnvironmentFaceSize * 4;
             for ( GLenum face = 0; face < 6; ++face )
             {
                 glTexImage2D ( GL_TEXTURE_CUBE_MAP_POSITIVE_X + face, 0, GL_RGBA16F,
-                               SKYBOX_ENV_FACE_SIZE, SKYBOX_ENV_FACE_SIZE, 0, GL_RGBA, GL_FLOAT,
+                               settings.mSkyboxEnvironmentFaceSize, settings.mSkyboxEnvironmentFaceSize, 0, GL_RGBA, GL_FLOAT,
                                env_faces[0].data() + face * face_floats );
             }
             glTexParameteri ( GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
@@ -1167,13 +1157,13 @@ namespace AeonGames
         // into the (mutable, mipmapped) RGBA16F cube the shading pass samples
         // along the reflection vector at a roughness-selected LOD.
         std::vector<std::vector<float>> prefiltered;
-        if ( PrefilterEnvironmentCube ( *aEnvironmentMap, PREFILTERED_ENV_FACE_SIZE,
-                                        PREFILTERED_ENV_MIP_COUNT, prefiltered ) )
+        if ( PrefilterEnvironmentCube ( *aEnvironmentMap, settings.mPrefilteredEnvironmentFaceSize,
+                                        settings.mPrefilteredEnvironmentMipCount, prefiltered ) )
         {
             glBindTexture ( GL_TEXTURE_CUBE_MAP, mPrefilteredEnvTexture );
             for ( uint32_t level = 0; level < prefiltered.size(); ++level )
             {
-                const GLsizei face_size = std::max<GLsizei> ( 1, PREFILTERED_ENV_FACE_SIZE >> level );
+                const GLsizei face_size = std::max<GLsizei> ( 1, settings.mPrefilteredEnvironmentFaceSize >> level );
                 const size_t face_floats = static_cast<size_t> ( face_size ) * face_size * 4;
                 for ( GLenum face = 0; face < 6; ++face )
                 {

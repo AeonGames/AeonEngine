@@ -86,6 +86,9 @@ namespace AeonGames
         size_t mUniformPoolInitialCapacity{8u * 1024u * 1024u};
         size_t mVulkanUniformPoolInitialCapacity{64u * 1024u};
         size_t mStoragePoolInitialCapacity{8u * 1024u * 1024u};
+        uint32_t mPrefilteredEnvironmentFaceSize{128};
+        uint32_t mPrefilteredEnvironmentMipCount{6};
+        uint32_t mSkyboxEnvironmentFaceSize{512};
     };
     /** Abstract base class for rendering backends.
      *

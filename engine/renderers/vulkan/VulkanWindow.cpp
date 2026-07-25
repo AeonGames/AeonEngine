@@ -56,17 +56,6 @@ extern "C" void* GetMetalLayerFromNSView ( void* nsview_ptr );
 
 namespace AeonGames
 {
-    // Edge length of the GGX-prefiltered specular cube map's mip 0 faces; small
-    // because roughness blurs away detail. Mip 0 stays mirror-sharp.
-    static constexpr uint32_t PREFILTERED_ENV_FACE_SIZE = 128;
-    // Number of roughness levels in the prefiltered mip chain (mip 0 = mirror,
-    // last mip = fully rough), matched by the shader's textureQueryLevels.
-    static constexpr uint32_t PREFILTERED_ENV_MIP_COUNT = 6;
-    // Edge length of the skybox environment cube map's faces. Larger than the
-    // prefiltered cube because the skybox is viewed directly (sharp), not blurred
-    // by roughness; a single mip (no prefilter) resampled from the equirect HDR.
-    static constexpr uint32_t SKYBOX_ENV_FACE_SIZE = 512;
-
     VulkanWindow::VulkanWindow ( VulkanRenderer&  aVulkanRenderer, void* aWindowId ) :
         mVulkanRenderer { aVulkanRenderer }, mWindowId{aWindowId}
     {
@@ -1476,6 +1465,7 @@ namespace AeonGames
     void VulkanWindow::UpdatePrefilteredEnvironmentImage ( const Texture* aEnvironmentMap )
     {
         const VkDevice device = mVulkanRenderer.GetDevice();
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         // CPU mip data: the real GGX-prefiltered chain when an environment is
         // provided, otherwise a single 1x1 opaque-black texel (the "no env"
         // sentinel the shader detects via textureSize).
@@ -1483,10 +1473,10 @@ namespace AeonGames
         uint32_t face_size = 1;
         uint32_t mip_count = 1;
         if ( aEnvironmentMap != nullptr &&
-             PrefilterEnvironmentCube ( *aEnvironmentMap, PREFILTERED_ENV_FACE_SIZE,
-                                        PREFILTERED_ENV_MIP_COUNT, mips ) )
+             PrefilterEnvironmentCube ( *aEnvironmentMap, settings.mPrefilteredEnvironmentFaceSize,
+                                        settings.mPrefilteredEnvironmentMipCount, mips ) )
         {
-            face_size = PREFILTERED_ENV_FACE_SIZE;
+            face_size = settings.mPrefilteredEnvironmentFaceSize;
             mip_count = static_cast<uint32_t> ( mips.size() );
         }
         else
@@ -1703,6 +1693,7 @@ namespace AeonGames
             return;
         }
         const VkDevice device = mVulkanRenderer.GetDevice();
+        const RendererSettings& settings = mVulkanRenderer.GetSettings();
         // Compile the skybox pipeline the first time a scene provides an env.
         if ( !mSkyboxLoaded )
         {
@@ -1723,11 +1714,11 @@ namespace AeonGames
         // angular resolution, seamless edges, no pole distortion). One sharp mip;
         // PrefilterEnvironmentCube with mip count 1 is a plain resample.
         std::vector<std::vector<float>> env_faces;
-        if ( !PrefilterEnvironmentCube ( *aEnvironmentMap, SKYBOX_ENV_FACE_SIZE, 1, env_faces ) )
+        if ( !PrefilterEnvironmentCube ( *aEnvironmentMap, settings.mSkyboxEnvironmentFaceSize, 1, env_faces ) )
         {
             return;
         }
-        const uint32_t face_size = SKYBOX_ENV_FACE_SIZE;
+        const uint32_t face_size = settings.mSkyboxEnvironmentFaceSize;
 
         // Device-local RGBA32F cube image (RGBA because 3-channel 32F is not a
         // guaranteed sampled format); six array layers, cube-compatible.
