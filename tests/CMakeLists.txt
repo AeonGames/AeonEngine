@@ -53,6 +53,7 @@ set(TEST_SRCS
     ComputeTests.cpp
     PipelineTests.cpp
     SamplerTests.cpp
+    MeshLayoutTests.cpp
     OctreeTests.cpp
     HdrDecoderTests.cpp
     CubePrefilterTests.cpp

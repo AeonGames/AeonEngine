@@ -225,6 +225,7 @@ namespace AeonGames
         VkRenderPass GetRenderPass() const;
         /// @brief Get the cached VulkanPipeline for a Pipeline resource.
         const VulkanPipeline* GetVulkanPipeline ( const Pipeline& aPipeline, VkRenderPass aRenderPass = VK_NULL_HANDLE );
+        const VulkanPipeline* GetVulkanPipeline ( const Pipeline& aPipeline, const Mesh& aMesh, VkRenderPass aRenderPass = VK_NULL_HANDLE );
         /// @brief Get the cached VulkanMaterial for a Material resource.
         const VulkanMaterial* GetVulkanMaterial ( const Material& aMaterial );
         /// @brief Get the cached VulkanMesh for a Mesh resource.

@@ -144,9 +144,9 @@ namespace AeonGames
         }
 
         const GLsizei stride = static_cast<GLsizei> ( ( aStrideOverride != 0 ) ? aStrideOverride : mMesh->GetStride() );
-        size_t offset{0};
         for ( auto& attribute : mMesh->GetAttributes() )
         {
+            const size_t offset = mMesh->GetAttributeOffset ( attribute );
             auto it = std::lower_bound ( aAttributes.begin(), aAttributes.end(), std::get<0> ( attribute ),
                                          [] ( const OpenGLVariable & a, uint32_t b )
             {
@@ -156,7 +156,6 @@ namespace AeonGames
             {
                 /* If we get here, it means the attribute is not present in aAttributes,
                     but it is present in the mesh, so skip it and continue. */
-                offset += GetAttributeTotalSize ( attribute );
                 continue;
             }
 
@@ -182,7 +181,6 @@ namespace AeonGames
                     stride,
                     reinterpret_cast<const void*> ( offset + aBaseOffset ) );
             }
-            offset += GetAttributeTotalSize ( attribute );
         }
         //---Index Buffer---
         if ( mPooled )
