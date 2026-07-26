@@ -119,9 +119,12 @@ namespace AeonGames
             state.compare_op = static_cast<SamplerCompareOp> ( i.compare_op() );
             state.border_color = static_cast<SamplerBorderColor> ( i.border_color() );
             state.mipmap_enable = i.mipmap_enable();
-            std::get<1> ( mSamplers.emplace_back ( crc32i ( i.name().c_str(), i.name().size() ),
-                                                   ResourceId{"Texture"_crc32, GetReferenceMsgId ( i.image() ) },
-                                                   state ) ).Store();
+            // The texture is referenced lazily: renderers load it on demand via
+            // ResourceId::Get<Texture>() when the material is bound. Parsing the
+            // material must not perform texture I/O, so no eager Store() here.
+            mSamplers.emplace_back ( crc32i ( i.name().c_str(), i.name().size() ),
+                                     ResourceId{"Texture"_crc32, GetReferenceMsgId ( i.image() ) },
+                                     state );
         }
     }
 
@@ -165,7 +168,9 @@ namespace AeonGames
         mSamplers.reserve ( aSamplers.size() );
         for ( auto& i : aSamplers )
         {
-            std::get<1> ( mSamplers.emplace_back ( std::get<0> ( i ), std::get<1> ( i ), std::get<2> ( i ) ) ).Store();
+            // Referenced lazily; renderers load the texture on demand. See the
+            // MaterialMsg overload above for why there is no eager Store().
+            mSamplers.emplace_back ( std::get<0> ( i ), std::get<1> ( i ), std::get<2> ( i ) );
         }
     }
 
