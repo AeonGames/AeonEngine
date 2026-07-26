@@ -147,6 +147,86 @@ namespace AeonGames
         }
     };
 
+    RendererSettings GetRendererSettings ( const std::string& aRendererName )
+    {
+        RendererSettings settings{};
+        if ( !gConfigurationMsg.has_renderer() )
+        {
+            return settings;
+        }
+        const RendererSettingsMsg& renderer = gConfigurationMsg.renderer();
+        // Backend-agnostic fields: override a default only when the field is
+        // present so an omitted key (and its proto3 zero) never clobbers the
+        // compiled-in default.
+        if ( renderer.has_bindlesstexturecapacity() )
+        {
+            settings.mBindlessTextureCapacity        = renderer.bindlesstexturecapacity();
+        }
+        if ( renderer.has_bindlessmaterialcapacity() )
+        {
+            settings.mBindlessMaterialCapacity       = renderer.bindlessmaterialcapacity();
+        }
+        if ( renderer.has_uniformpoolinitialcapacity() )
+        {
+            settings.mUniformPoolInitialCapacity     = renderer.uniformpoolinitialcapacity();
+        }
+        if ( renderer.has_storagepoolinitialcapacity() )
+        {
+            settings.mStoragePoolInitialCapacity     = renderer.storagepoolinitialcapacity();
+        }
+        if ( renderer.has_prefilteredenvironmentfacesize() )
+        {
+            settings.mPrefilteredEnvironmentFaceSize = renderer.prefilteredenvironmentfacesize();
+        }
+        if ( renderer.has_prefilteredenvironmentmipcount() )
+        {
+            settings.mPrefilteredEnvironmentMipCount = renderer.prefilteredenvironmentmipcount();
+        }
+        if ( renderer.has_skyboxenvironmentfacesize() )
+        {
+            settings.mSkyboxEnvironmentFaceSize      = renderer.skyboxenvironmentfacesize();
+        }
+        if ( renderer.has_directionalshadowmapresolution() )
+        {
+            settings.mDirectionalShadowMapResolution = renderer.directionalshadowmapresolution();
+        }
+        if ( renderer.has_spotshadowmapresolution() )
+        {
+            settings.mSpotShadowMapResolution        = renderer.spotshadowmapresolution();
+        }
+        if ( renderer.has_pointshadowmapresolution() )
+        {
+            settings.mPointShadowMapResolution       = renderer.pointshadowmapresolution();
+        }
+        // Backend-specific settings: flatten the matching plugin's name:value
+        // properties into the bag the renderer reads by crc32i(name).
+        for ( const PluginSettingsMsg& plugin : renderer.pluginsettings() )
+        {
+            if ( plugin.pluginname() != aRendererName )
+            {
+                continue;
+            }
+            for ( const PropertyMsg& property : plugin.property() )
+            {
+                const uint32_t key = crc32i ( property.name().c_str(), property.name().size() );
+                switch ( property.value_case() )
+                {
+                case PropertyMsg::kScalarUint:
+                    settings.mPluginProperties[key] = property.scalar_uint();
+                    break;
+                case PropertyMsg::kScalarInt:
+                    settings.mPluginProperties[key] = property.scalar_int();
+                    break;
+                default:
+                    std::cout << LogLevel::Warning << "Ignoring non-integer renderer setting \"" << property.name()
+                              << "\" for plugin \"" << aRendererName << "\"." << std::endl;
+                    break;
+                }
+            }
+        }
+        return settings;
+    }
+
     bool InitializeGlobalEnvironment ( int argc, char *argv[] )
     {
         if ( gInitialized )

@@ -1,4 +1,4 @@
-// Copyright (C) 2016,2018,2021 Rodrigo Jose Hernandez Cordoba
+// Copyright (C) 2016,2018,2021,2026 Rodrigo Jose Hernandez Cordoba
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,6 +14,36 @@
 
 syntax = "proto3";
 package AeonGames;
+import "property.proto";
+
+/* Backend-specific renderer settings, addressed generically by plugin name.
+   PluginName matches the renderer/plugin identifier (e.g. "Vulkan", "OpenGL");
+   each Property is a name:value pair the matching renderer plugin reads for the
+   keys it recognises. This keeps knobs that only one backend needs out of the
+   shared, backend-agnostic RendererSettingsMsg fields below. */
+message PluginSettingsMsg {
+	string PluginName             = 1;
+	repeated PropertyMsg Property = 2;
+}
+
+/* Renderer resource-policy / quality settings. The named fields are backend-
+   agnostic and honoured by every renderer; each is optional so an omitted field
+   keeps the engine's compiled-in default (a value of 0 is never assumed). Knobs
+   that do not generalise across backends live under PluginSettings instead. */
+message RendererSettingsMsg {
+	optional uint32 BindlessTextureCapacity        = 1;
+	optional uint32 BindlessMaterialCapacity       = 2;
+	optional uint64 UniformPoolInitialCapacity     = 3;
+	optional uint64 StoragePoolInitialCapacity     = 4;
+	optional uint32 PrefilteredEnvironmentFaceSize = 5;
+	optional uint32 PrefilteredEnvironmentMipCount = 6;
+	optional uint32 SkyboxEnvironmentFaceSize      = 7;
+	optional uint32 DirectionalShadowMapResolution = 8;
+	optional uint32 SpotShadowMapResolution        = 9;
+	optional uint32 PointShadowMapResolution       = 10;
+	repeated PluginSettingsMsg PluginSettings      = 11;
+}
+
 message ConfigurationMsg {
 	string PluginDirectory     = 1;
 	/* 	
@@ -32,4 +62,5 @@ message ConfigurationMsg {
 	*/
 	repeated string Plugin     = 2;
 	repeated string Package    = 3;
+	RendererSettingsMsg Renderer = 4;
 }
