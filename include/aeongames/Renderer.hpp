@@ -78,13 +78,19 @@ namespace AeonGames
         Vector4 mOctreeColor{0.3f, 0.5f, 0.95f, 1.0f};    /**< Octree cell wireframe color (blue). */
         Vector4 mCameraFrustumColor{0.95f, 0.8f, 0.2f, 1.0f}; /**< Camera frustum wireframe color (yellow). */
     };
-    /** @brief Runtime policy values for renderer-owned resource capacities. */
+    /** @brief Runtime policy values for renderer-owned resource capacities.
+     *
+     *  The named fields are backend-agnostic; every renderer honours them. Values
+     *  that only a specific backend needs -- and so should not sit in the shared
+     *  struct -- live in @ref mPluginProperties, a name-keyed bag each renderer
+     *  plugin reads for the keys it recognises (see @ref GetPluginProperty). This
+     *  lets the configuration file address backend-specific knobs generically, by
+     *  plugin name plus property name, without the engine hardcoding any backend. */
     struct RendererSettings
     {
         uint32_t mBindlessTextureCapacity{16384};
         uint32_t mBindlessMaterialCapacity{4096};
         size_t mUniformPoolInitialCapacity{8u * 1024u * 1024u};
-        size_t mVulkanUniformPoolInitialCapacity{64u * 1024u};
         size_t mStoragePoolInitialCapacity{8u * 1024u * 1024u};
         uint32_t mPrefilteredEnvironmentFaceSize{128};
         uint32_t mPrefilteredEnvironmentMipCount{6};
@@ -92,6 +98,18 @@ namespace AeonGames
         uint32_t mDirectionalShadowMapResolution{2048};
         uint32_t mSpotShadowMapResolution{1024};
         uint32_t mPointShadowMapResolution{1024};
+        /** Backend-specific settings keyed by crc32i(property name). Each renderer
+         *  plugin reads the keys it recognises; unknown keys are ignored. */
+        std::unordered_map<uint32_t, int64_t> mPluginProperties{};
+        /** @brief Look up a backend-specific integer property.
+         *  @param aKey crc32i of the property name.
+         *  @param aDefault Value returned when the key is absent.
+         *  @return The configured value, or @p aDefault when unset. */
+        int64_t GetPluginProperty ( uint32_t aKey, int64_t aDefault ) const
+        {
+            auto it = mPluginProperties.find ( aKey );
+            return it != mPluginProperties.end() ? it->second : aDefault;
+        }
     };
     /** Abstract base class for rendering backends.
      *
@@ -752,6 +770,13 @@ namespace AeonGames
     DLL std::unique_ptr<Renderer> ConstructRenderer ( uint32_t aIdentifier, void* aWindow, const RendererSettings& aSettings );
     DLL std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier, void* aWindow, const RendererSettings& aSettings );
     DLL std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier, void* aWindow, const RendererSettings& aSettings );
+    /** @brief Build the RendererSettings for a named renderer plugin from the
+     *  engine configuration loaded by InitializeGlobalEnvironment. Fields absent
+     *  from the config keep their compiled-in defaults; the returned settings also
+     *  carry the matching PluginSettings entry's per-plugin property bag.
+     *  @param aRendererName Renderer/plugin identifier, e.g. "Vulkan" or "OpenGL".
+     *  @return Settings to pass to ConstructRenderer / the Window constructor. */
+    DLL RendererSettings GetRendererSettings ( const std::string& aRendererName );
     /** Registers a Renderer loader for a specific identifier.*/
     DLL bool RegisterRendererConstructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<Renderer> ( void* ) >& aConstructor );
     DLL bool RegisterRendererConstructorWithSettings ( const StringId& aIdentifier,

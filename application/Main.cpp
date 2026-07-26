@@ -91,7 +91,8 @@ int Main ( int argc, char *argv[] )
             if ( renderer_name.empty() || renderer_name == aIdentifier.GetString() )
             {
                 active_renderer_name = aIdentifier.GetString();
-                window = std::make_unique<AeonGames::Window> ( aIdentifier.GetString(), 0, 0, 1280, 720, fullscreen );
+                window = std::make_unique<AeonGames::Window> ( aIdentifier.GetString(), 0, 0, 1280, 720, fullscreen,
+                    AeonGames::GetRendererSettings ( aIdentifier.GetString() ) );
                 return false;
             }
             return true;

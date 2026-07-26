@@ -273,7 +273,7 @@ namespace AeonGames
     {
         if ( mRenderer == nullptr )
         {
-            mRenderer = AeonGames::ConstructRenderer ( mRendererName, aWindow );
+            mRenderer = AeonGames::ConstructRenderer ( mRendererName, aWindow, AeonGames::GetRendererSettings ( mRendererName ) );
         }
         else
         {

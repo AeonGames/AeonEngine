@@ -76,7 +76,11 @@ namespace AeonGames
         mPointShadowDepthMatrices.reserve ( kFramesInFlight );
         for ( uint32_t i = 0; i < kFramesInFlight; ++i )
         {
-            mMemoryPoolBuffers.emplace_back ( mVulkanRenderer, mVulkanRenderer.GetSettings().mVulkanUniformPoolInitialCapacity );
+            // The per-frame uniform pool granularity is a Vulkan-specific knob
+            // (unlike the shared storage pool): read it from the plugin property
+            // bag by name, falling back to 64 KiB when the config omits it.
+            mMemoryPoolBuffers.emplace_back ( mVulkanRenderer,
+                                              static_cast<size_t> ( mVulkanRenderer.GetSettings().GetPluginProperty ( "UniformPoolInitialCapacity"_crc32, 64 * 1024 ) ) );
             mStorageMemoryPoolBuffers.emplace_back ( mVulkanRenderer, mVulkanRenderer.GetSettings().mStoragePoolInitialCapacity );
             mMatrices.emplace_back ( mVulkanRenderer );
             mLights.emplace_back ( mVulkanRenderer );
