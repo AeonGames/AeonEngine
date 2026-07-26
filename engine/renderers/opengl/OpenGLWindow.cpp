@@ -771,6 +771,15 @@ namespace AeonGames
         {
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
         }
+        // OpenGLRenderer::BindPipeline applies the mark pipeline's colour-write
+        // mask on every bind (all channels, since the pipeline declares no blend
+        // state), which would undo the depth pre-pass colour mask set in
+        // BeginRender. Re-assert it here -- after the pipeline bind -- so the
+        // mark pass keeps skipping its throwaway G-buffer colour writes.
+        if ( PrePassMaskColor() )
+        {
+            glColorMask ( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
+        }
     }
 
     void OpenGLWindow::BindShadowPassState() const
