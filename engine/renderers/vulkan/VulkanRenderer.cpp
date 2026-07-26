@@ -155,6 +155,10 @@ namespace AeonGames
         }
         FinalizeOverlay();
         mWindowStore.clear();
+        // Materials before textures: a material's destructor releases bindless
+        // sampler-image descriptors that reference the textures' image views, so
+        // the textures must outlive them (kept in sync with the device-loss
+        // teardown below).
         mMaterialStore.clear();
         mTextureStore.clear();
         mPipelineStore.clear();
@@ -1853,8 +1857,12 @@ namespace AeonGames
         // is rebuilt explicitly below.
         FinalizeOverlay();
         mWindowStore.clear();
-        mTextureStore.clear();
+        // Materials must be cleared before textures: a material's destructor
+        // releases its bindless sampler-image descriptors, which reference the
+        // textures' image views. Clearing textures first would destroy those
+        // views while the descriptors still point at them (mirrors ~VulkanRenderer).
         mMaterialStore.clear();
+        mTextureStore.clear();
         mPipelineStore.clear();
         mMeshStore.clear();
         FinalizeGeometry();
