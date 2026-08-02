@@ -203,7 +203,6 @@ namespace AeonGames
         std::swap ( mVkShadowColorImage, aVulkanWindow.mVkShadowColorImage );
         std::swap ( mVkShadowColorImageMemory, aVulkanWindow.mVkShadowColorImageMemory );
         std::swap ( mVkShadowColorImageView, aVulkanWindow.mVkShadowColorImageView );
-        std::swap ( mVkShadowSampler, aVulkanWindow.mVkShadowSampler );
         std::swap ( mVkShadowRenderPass, aVulkanWindow.mVkShadowRenderPass );
         std::swap ( mVkShadowFramebuffer, aVulkanWindow.mVkShadowFramebuffer );
         std::swap ( mShadowParamsDescriptorPool, aVulkanWindow.mShadowParamsDescriptorPool );
@@ -244,6 +243,10 @@ namespace AeonGames
         std::swap ( mPointShadowDepthMatricesDescriptorPool, aVulkanWindow.mPointShadowDepthMatricesDescriptorPool );
         std::swap ( mPointShadowDepthMatricesDescriptorSets, aVulkanWindow.mPointShadowDepthMatricesDescriptorSets );
         std::swap ( mPointShadowDepthMatrixStride, aVulkanWindow.mPointShadowDepthMatrixStride );
+        std::swap ( mFrameParamsDescriptorPool, aVulkanWindow.mFrameParamsDescriptorPool );
+        std::swap ( mFrameParamsDescriptorSets, aVulkanWindow.mFrameParamsDescriptorSets );
+        std::swap ( mShadowMapsDescriptorPool, aVulkanWindow.mShadowMapsDescriptorPool );
+        std::swap ( mShadowMapsDescriptorSets, aVulkanWindow.mShadowMapsDescriptorSets );
         std::swap ( mFrameLightGrid, aVulkanWindow.mFrameLightGrid );
         std::swap ( mFrameLightIndexList, aVulkanWindow.mFrameLightIndexList );
         std::swap ( mVkCommandPools, aVulkanWindow.mVkCommandPools );
@@ -1956,19 +1959,8 @@ namespace AeonGames
 
         // Comparison sampler: hardware PCF, depth <= stored => lit; sampling
         // outside the map returns the white border (1.0) so it reads as lit.
-        VkSamplerCreateInfo sampler_create_info{};
-        sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-        sampler_create_info.magFilter = VK_FILTER_LINEAR;
-        sampler_create_info.minFilter = VK_FILTER_LINEAR;
-        sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-        sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
-        sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-        sampler_create_info.compareEnable = VK_TRUE;
-        sampler_create_info.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-        sampler_create_info.maxLod = 1.0f;
-        vkCreateSampler ( device, &sampler_create_info, nullptr, &mVkShadowSampler );
+        // Device-scoped and declared immutable in every layout below, because
+        // Metal cannot bind a comparison sampler through a descriptor.
 
         // Shadow render pass. Attachment 0 (color) is throwaway; attachment 1
         // (depth) is cleared, stored, and left in SHADER_READ_ONLY for sampling.
@@ -2091,6 +2083,7 @@ namespace AeonGames
         shadow_map_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         shadow_map_layout_binding.descriptorCount = 1;
         shadow_map_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        shadow_map_layout_binding.pImmutableSamplers = mVulkanRenderer.GetShadowSamplerPtr();
         shadow_map_layout_create_info.pBindings = &shadow_map_layout_binding;
 
         mShadowMapDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1} ) );
@@ -2098,7 +2091,8 @@ namespace AeonGames
         {
             mShadowMapDescriptorSet[frame] = CreateDescriptorSet ( device, mShadowMapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( shadow_map_layout_create_info ) );
             VkDescriptorImageInfo shadow_map_image_info{};
-            shadow_map_image_info.sampler = mVkShadowSampler;
+            // The layout's immutable sampler is used; this field is ignored.
+            shadow_map_image_info.sampler = VK_NULL_HANDLE;
             shadow_map_image_info.imageView = mVkShadowDepthImageView[frame];
             shadow_map_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             VkWriteDescriptorSet shadow_map_write{};
@@ -2296,6 +2290,7 @@ namespace AeonGames
         spot_map_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         spot_map_layout_binding.descriptorCount = 1;
         spot_map_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        spot_map_layout_binding.pImmutableSamplers = mVulkanRenderer.GetShadowSamplerPtr();
         spot_map_layout_create_info.pBindings = &spot_map_layout_binding;
 
         mSpotShadowMapDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1} ) );
@@ -2303,7 +2298,8 @@ namespace AeonGames
         {
             mSpotShadowMapDescriptorSet[frame] = CreateDescriptorSet ( device, mSpotShadowMapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( spot_map_layout_create_info ) );
             VkDescriptorImageInfo spot_map_image_info{};
-            spot_map_image_info.sampler = mVkShadowSampler;
+            // The layout's immutable sampler is used; this field is ignored.
+            spot_map_image_info.sampler = VK_NULL_HANDLE;
             spot_map_image_info.imageView = mVkSpotShadowDepthArrayView[frame];
             spot_map_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
             VkWriteDescriptorSet spot_map_write{};
@@ -2658,12 +2654,14 @@ namespace AeonGames
         point_map_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         point_map_layout_binding.descriptorCount = 1;
         point_map_layout_binding.stageFlags = VK_SHADER_STAGE_ALL;
+        point_map_layout_binding.pImmutableSamplers = mVulkanRenderer.GetShadowSamplerPtr();
         point_map_layout_create_info.pBindings = &point_map_layout_binding;
 
         mPointShadowMapDescriptorPool = CreateDescriptorPool ( device, {{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1}} );
         mPointShadowMapDescriptorSet = CreateDescriptorSet ( device, mPointShadowMapDescriptorPool, mVulkanRenderer.GetDescriptorSetLayout ( point_map_layout_create_info ) );
         VkDescriptorImageInfo point_map_image_info{};
-        point_map_image_info.sampler = mVkShadowSampler;
+        // The layout's immutable sampler is used; this field is ignored.
+        point_map_image_info.sampler = VK_NULL_HANDLE;
         point_map_image_info.imageView = mVkPointShadowDepthArrayView;
         point_map_image_info.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
         VkWriteDescriptorSet point_map_write{};
@@ -2812,10 +2810,6 @@ namespace AeonGames
         if ( mVkShadowRenderPass != VK_NULL_HANDLE )
         {
             vkDestroyRenderPass ( device, mVkShadowRenderPass, nullptr );
-        }
-        if ( mVkShadowSampler != VK_NULL_HANDLE )
-        {
-            vkDestroySampler ( device, mVkShadowSampler, nullptr );
         }
         for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
         {
@@ -3191,6 +3185,113 @@ namespace AeonGames
         mClusterParams[mFrameIndex].WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
+    void VulkanWindow::InitializePackedShadingSets()
+    {
+        // MoltenVK caps a pipeline layout at 8 descriptor sets, far below the
+        // one-set-per-resource layout the shading shaders would otherwise need.
+        // clustered_phong therefore packs the window's per-frame blocks into a
+        // single set and the three shadow maps into another. Both alias the very
+        // same buffers and image views as the individual sets created above, so
+        // pipelines that still declare the resources one per set keep working
+        // unchanged; the engine picks whichever shape the shader reflected.
+        const VkDevice device = mVulkanRenderer.GetDevice();
+
+        // Layout must match clustered_phong.frag set 0 exactly, or the reflected
+        // pipeline layout and this set are not compatible.
+        std::array<VkDescriptorSetLayoutBinding, 7> frame_params_bindings{};
+        for ( uint32_t i = 0; i < frame_params_bindings.size(); ++i )
+        {
+            frame_params_bindings[i].binding = i;
+            frame_params_bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            frame_params_bindings[i].descriptorCount = 1;
+            frame_params_bindings[i].stageFlags = VK_SHADER_STAGE_ALL;
+            frame_params_bindings[i].pImmutableSamplers = nullptr;
+        }
+        // Lights is a storage buffer; it outgrew the uniform buffer size cap.
+        frame_params_bindings[kFrameParamsLightsBinding].descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+        VkDescriptorSetLayoutCreateInfo frame_params_layout_create_info{};
+        frame_params_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        frame_params_layout_create_info.bindingCount = static_cast<uint32_t> ( frame_params_bindings.size() );
+        frame_params_layout_create_info.pBindings = frame_params_bindings.data();
+
+        std::vector<VkDescriptorPoolSize> frame_params_pool_sizes ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 6} );
+        frame_params_pool_sizes.resize ( kFramesInFlight * 2, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1} );
+        mFrameParamsDescriptorPool = CreateDescriptorPool ( device, frame_params_pool_sizes );
+
+        std::array<VkDescriptorSetLayoutBinding, 3> shadow_maps_bindings{};
+        for ( uint32_t i = 0; i < shadow_maps_bindings.size(); ++i )
+        {
+            shadow_maps_bindings[i].binding = i;
+            shadow_maps_bindings[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+            shadow_maps_bindings[i].descriptorCount = 1;
+            shadow_maps_bindings[i].stageFlags = VK_SHADER_STAGE_ALL;
+            shadow_maps_bindings[i].pImmutableSamplers = mVulkanRenderer.GetShadowSamplerPtr();
+        }
+        VkDescriptorSetLayoutCreateInfo shadow_maps_layout_create_info{};
+        shadow_maps_layout_create_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        shadow_maps_layout_create_info.bindingCount = static_cast<uint32_t> ( shadow_maps_bindings.size() );
+        shadow_maps_layout_create_info.pBindings = shadow_maps_bindings.data();
+        mShadowMapsDescriptorPool = CreateDescriptorPool ( device, std::vector<VkDescriptorPoolSize> ( kFramesInFlight, VkDescriptorPoolSize{VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 3} ) );
+
+        for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
+        {
+            mFrameParamsDescriptorSets[frame] = CreateDescriptorSet ( device, mFrameParamsDescriptorPool,
+                mVulkanRenderer.GetDescriptorSetLayout ( frame_params_layout_create_info ) );
+            const std::array<const VulkanBuffer*, 7> frame_params_buffers
+            {
+                &mMatrices[frame], &mGlobals[frame], &mClusterParams[frame], &mLights[frame],
+                &mShadowParams[frame], &mSpotShadowParams[frame], &mPointShadowParams[frame]
+            };
+            std::array<VkDescriptorBufferInfo, 7> frame_params_buffer_infos{};
+            std::array<VkWriteDescriptorSet, 7> frame_params_writes{};
+            for ( uint32_t i = 0; i < frame_params_buffers.size(); ++i )
+            {
+                frame_params_buffer_infos[i].buffer = frame_params_buffers[i]->GetBuffer();
+                frame_params_buffer_infos[i].offset = 0;
+                frame_params_buffer_infos[i].range = frame_params_buffers[i]->GetSize();
+                frame_params_writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                frame_params_writes[i].dstSet = mFrameParamsDescriptorSets[frame];
+                frame_params_writes[i].dstBinding = i;
+                frame_params_writes[i].descriptorType = frame_params_bindings[i].descriptorType;
+                frame_params_writes[i].descriptorCount = 1;
+                frame_params_writes[i].pBufferInfo = &frame_params_buffer_infos[i];
+            }
+            vkUpdateDescriptorSets ( device, static_cast<uint32_t> ( frame_params_writes.size() ), frame_params_writes.data(), 0, nullptr );
+
+            mShadowMapsDescriptorSets[frame] = CreateDescriptorSet ( device, mShadowMapsDescriptorPool,
+                mVulkanRenderer.GetDescriptorSetLayout ( shadow_maps_layout_create_info ) );
+            // The point shadow array is a single (not per-frame) resource, so
+            // every frame's set points at the same view.
+            const std::array<VkImageView, 3> shadow_map_views
+            {
+                mVkShadowDepthImageView[frame], mVkSpotShadowDepthArrayView[frame], mVkPointShadowDepthArrayView
+            };
+            std::array<VkDescriptorImageInfo, 3> shadow_map_image_infos{};
+            std::array<VkWriteDescriptorSet, 3> shadow_map_writes{};
+            for ( uint32_t i = 0; i < shadow_map_views.size(); ++i )
+            {
+                shadow_map_image_infos[i].sampler = VK_NULL_HANDLE;
+                shadow_map_image_infos[i].imageView = shadow_map_views[i];
+                shadow_map_image_infos[i].imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                shadow_map_writes[i].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                shadow_map_writes[i].dstSet = mShadowMapsDescriptorSets[frame];
+                shadow_map_writes[i].dstBinding = i;
+                shadow_map_writes[i].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                shadow_map_writes[i].descriptorCount = 1;
+                shadow_map_writes[i].pImageInfo = &shadow_map_image_infos[i];
+            }
+            vkUpdateDescriptorSets ( device, static_cast<uint32_t> ( shadow_map_writes.size() ), shadow_map_writes.data(), 0, nullptr );
+        }
+    }
+
+    void VulkanWindow::FinalizePackedShadingSets()
+    {
+        DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mShadowMapsDescriptorPool );
+        mShadowMapsDescriptorPool = VK_NULL_HANDLE;
+        DestroyDescriptorPool ( mVulkanRenderer.GetDevice(), mFrameParamsDescriptorPool );
+        mFrameParamsDescriptorPool = VK_NULL_HANDLE;
+    }
+
     void VulkanWindow::Initialize()
     {
         InitializeMatrices();
@@ -3208,6 +3309,8 @@ namespace AeonGames
         InitializeSpotShadowMap();
         InitializePointShadowMap();
         InitializePrefilteredEnvironment();
+        // Needs every buffer and shadow image view above.
+        InitializePackedShadingSets();
         InitializeCommandBuffer();
     }
 
@@ -3222,6 +3325,7 @@ namespace AeonGames
             std::cerr << LogLevel::Error << "vkDeviceWaitIdle failed: " << GetVulkanResultString ( result );
         }
         FinalizeCommandBuffer();
+        FinalizePackedShadingSets();
         FinalizeFrameBuffers();
         FinalizeEnvironmentMap();
         FinalizePrefilteredEnvironment();
@@ -4037,18 +4141,43 @@ namespace AeonGames
                                           &memory_pool_buffer->GetDescriptorSet ( aAccessor.GetOffset() ), 1, &dynamic_offset );
             }
         };
-        bind ( Mesh::BindingLocations::MATRICES, mMatricesDescriptorSet );
-        bind ( Mesh::BindingLocations::LIGHTS, mLightsDescriptorSet );
-        bind ( Mesh::BindingLocations::CLUSTER_PARAMS, mClusterParamsDescriptorSet );
-        bind ( Mesh::BindingLocations::GLOBALS, mGlobalsDescriptorSet );
+        // A shader may either declare each engine resource as its own descriptor
+        // set, or pack several into one set (MoltenVK allows at most 8 sets per
+        // pipeline layout). A packed set is named after its binding 0, so a
+        // binding count above one means the packed set is bound whole and the
+        // members must not be bound individually.
+        const bool packed_frame_params =
+            aPipeline->GetDescriptorSetBindingCount ( Mesh::BindingLocations::MATRICES ) > 1;
+        const bool packed_shadow_maps =
+            aPipeline->GetDescriptorSetBindingCount ( Mesh::BindingLocations::SHADOW_MAP ) > 1;
+        if ( packed_frame_params )
+    {
+        bind ( Mesh::BindingLocations::MATRICES, mFrameParamsDescriptorSets[mFrameIndex] );
+        }
+        else
+        {
+            bind ( Mesh::BindingLocations::MATRICES, mMatricesDescriptorSet );
+            bind ( Mesh::BindingLocations::LIGHTS, mLightsDescriptorSet );
+            bind ( Mesh::BindingLocations::CLUSTER_PARAMS, mClusterParamsDescriptorSet );
+            bind ( Mesh::BindingLocations::GLOBALS, mGlobalsDescriptorSet );
+            bind ( Mesh::BindingLocations::SHADOW_PARAMS, mShadowParamsDescriptorSet );
+            bind ( Mesh::BindingLocations::SPOT_SHADOW_PARAMS, mSpotShadowParamsDescriptorSet );
+            bind ( Mesh::BindingLocations::POINT_SHADOW_PARAMS, mPointShadowParamsDescriptorSet );
+        }
+        if ( packed_shadow_maps )
+    {
+        bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapsDescriptorSets[mFrameIndex] );
+        }
+        else
+        {
+            bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapDescriptorSet[mFrameIndex] );
+            bind ( Mesh::BindingLocations::SPOT_SHADOW_MAP, mSpotShadowMapDescriptorSet[mFrameIndex] );
+            bind ( Mesh::BindingLocations::POINT_SHADOW_MAP, mPointShadowMapDescriptorSet );
+        }
+        // The light lists stay in their own sets: they live in single-frame pool
+        // buffers whose descriptor sets are owned by the pool, one per binding.
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
         bind_cluster_storage ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
-        bind ( Mesh::BindingLocations::SHADOW_PARAMS, mShadowParamsDescriptorSet );
-        bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapDescriptorSet[mFrameIndex] );
-        bind ( Mesh::BindingLocations::SPOT_SHADOW_PARAMS, mSpotShadowParamsDescriptorSet );
-        bind ( Mesh::BindingLocations::SPOT_SHADOW_MAP, mSpotShadowMapDescriptorSet[mFrameIndex] );
-        bind ( Mesh::BindingLocations::POINT_SHADOW_PARAMS, mPointShadowParamsDescriptorSet );
-        bind ( Mesh::BindingLocations::POINT_SHADOW_MAP, mPointShadowMapDescriptorSet );
         bind ( Mesh::BindingLocations::PREFILTERED_ENVIRONMENT, mPrefilteredEnvDescriptorSet );
         // The renderer-owned global bindless set (texture array + material
         // storage buffer); bound at its reflected index when the pipeline is a
@@ -4321,6 +4450,15 @@ namespace AeonGames
                                          ( padded - count ) * sizeof ( GpuCullInstance ), zero_pad.data() );
         }
         BufferAccessor commands = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( padded * sizeof ( VkDrawIndexedIndirectCommand ) );
+        if ( !mVulkanRenderer.HasDrawIndirectCount() )
+        {
+            // Without drawIndirectCount the whole padded command list is drawn,
+            // so every slot the compaction leaves untouched (culled instances,
+            // plus the tail) must read back as an inert command rather than
+            // stale pool memory. A zeroed VkDrawIndexedIndirectCommand has
+            // indexCount / instanceCount 0, which draws nothing.
+            commands.WriteMemory ( 0, padded * sizeof ( VkDrawIndexedIndirectCommand ) );
+        }
         BufferAccessor draw_count = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( sizeof ( uint32_t ) );
         BufferAccessor models = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( static_cast<size_t> ( padded ) * sizeof ( float ) * 16 );
         BufferAccessor materials = mStorageMemoryPoolBuffers[mFrameIndex].Allocate ( padded * sizeof ( uint32_t ) );
@@ -4381,12 +4519,23 @@ namespace AeonGames
             const VulkanStorageMemoryPoolBuffer* commands_pool =
                 reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( batch.mCommands.GetMemoryPoolBuffer() );
             VkBuffer commands_buffer = reinterpret_cast<const VulkanBuffer&> ( commands_pool->GetBuffer() ).GetBuffer();
-            const VulkanStorageMemoryPoolBuffer* count_pool =
-                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( batch.mCount.GetMemoryPoolBuffer() );
-            VkBuffer count_buffer = reinterpret_cast<const VulkanBuffer&> ( count_pool->GetBuffer() ).GetBuffer();
-            vkCmdDrawIndexedIndirectCount ( mVkCommandBuffer, commands_buffer, batch.mCommands.GetOffset(),
-                                            count_buffer, batch.mCount.GetOffset(), batch.mMaxDraws,
-                                            sizeof ( VkDrawIndexedIndirectCommand ) );
+            if ( mVulkanRenderer.HasDrawIndirectCount() )
+            {
+                const VulkanStorageMemoryPoolBuffer* count_pool =
+                    reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( batch.mCount.GetMemoryPoolBuffer() );
+                VkBuffer count_buffer = reinterpret_cast<const VulkanBuffer&> ( count_pool->GetBuffer() ).GetBuffer();
+                vkCmdDrawIndexedIndirectCount ( mVkCommandBuffer, commands_buffer, batch.mCommands.GetOffset(),
+                                                count_buffer, batch.mCount.GetOffset(), batch.mMaxDraws,
+                                                sizeof ( VkDrawIndexedIndirectCommand ) );
+            }
+            else
+            {
+                // No GPU-sourced draw count (MoltenVK): walk the whole padded
+                // command list. The slots the compaction did not fill were
+                // zeroed in CullShadingBatch, so the surplus commands are inert.
+                vkCmdDrawIndexedIndirect ( mVkCommandBuffer, commands_buffer, batch.mCommands.GetOffset(),
+                                           batch.mMaxDraws, sizeof ( VkDrawIndexedIndirectCommand ) );
+            }
         }
         mCulledShadingBatches.clear();
     }

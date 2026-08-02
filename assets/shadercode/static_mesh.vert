@@ -22,7 +22,7 @@ uniform Matrices
 // instanced — sources its model matrix from this buffer, indexed by the
 // instance id, so there is no separate instanced shader variant.
 #ifdef VULKAN
-layout(set = 3, binding = 0, std430)
+layout(set = 5, binding = 0, std430)
 #else
 layout(binding = 3, std430)
 #endif
@@ -42,7 +42,7 @@ readonly buffer InstanceMatrices
 // from a storage buffer now (OpenGL binding 5, the free SSBO slot after the
 // light-cull, material and instance-matrix blocks).
 #ifdef VULKAN
-layout(set = 1, binding = 0, std430) readonly buffer InstanceMaterials
+layout(set = 6, binding = 0, std430) readonly buffer InstanceMaterials
 {
       uint InstanceMaterialIndices[];
 };

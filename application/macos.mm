@@ -702,6 +702,9 @@ namespace AeonGames
                             projection.Perspective ( aScene.GetFieldOfView(), mAspectRatio, aScene.GetNear(), aScene.GetFar() );
                             mRenderer->SetProjectionMatrix ( ( __bridge void* ) mNSView, projection );
                         }
+                        mRenderer->SetLights ( ( __bridge void* ) mNSView, aScene.GetFrameLights() );
+                        mRenderer->SetGlobals ( ( __bridge void* ) mNSView, aScene.GetGlobals() );
+                        mRenderer->SetEnvironmentMap ( ( __bridge void* ) mNSView, aScene.GetEnvironmentMap() );
                         if ( mGuiOverlay )
                         {
                             mGuiOverlay->BeginFrame ( ( __bridge void* ) mNSView, delta.count() );

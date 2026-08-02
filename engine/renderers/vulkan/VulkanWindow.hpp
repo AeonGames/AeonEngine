@@ -273,6 +273,16 @@ namespace AeonGames
         void InitializePointShadowMap();
         /// @brief Release the point shadow map array, framebuffers and buffers.
         void FinalizePointShadowMap();
+        /// @brief Create the packed descriptor sets the shading pipeline binds:
+        ///        one aggregating the per-frame blocks (Matrices, Globals,
+        ///        ClusterParams, Lights and the three shadow params UBOs) and one
+        ///        aggregating the three shadow maps. They alias the buffers and
+        ///        image views of the individual sets, and exist because MoltenVK
+        ///        caps a pipeline layout at 8 descriptor sets. Call after every
+        ///        buffer and shadow image view has been created.
+        void InitializePackedShadingSets();
+        /// @brief Release the packed shading descriptor pools.
+        void FinalizePackedShadingSets();
         void FinalizeSurface();
         void FinalizeSwapchain();
         void FinalizeImageViews();
@@ -531,7 +541,6 @@ namespace AeonGames
         std::array<VkImage, kFramesInFlight> mVkShadowColorImage{};
         std::array<VkDeviceMemory, kFramesInFlight> mVkShadowColorImageMemory{};
         std::array<VkImageView, kFramesInFlight> mVkShadowColorImageView{};
-        VkSampler mVkShadowSampler{VK_NULL_HANDLE};
         VkRenderPass mVkShadowRenderPass{VK_NULL_HANDLE};
         std::array<VkFramebuffer, kFramesInFlight> mVkShadowFramebuffer{};
         VkDescriptorPool mShadowParamsDescriptorPool{VK_NULL_HANDLE};
@@ -590,6 +599,18 @@ namespace AeonGames
         VkDescriptorPool mPointShadowDepthMatricesDescriptorPool{VK_NULL_HANDLE};
         std::array<std::array<VkDescriptorSet, MAX_POINT_SHADOW_CASTERS>, kFramesInFlight> mPointShadowDepthMatricesDescriptorSets{};
         VkDeviceSize mPointShadowDepthMatrixStride{0};
+        // Packed descriptor sets for the shading pipeline. MoltenVK allows at
+        // most 8 descriptor sets per pipeline layout, well below the
+        // one-set-per-resource layout the shading shaders would otherwise need,
+        // so clustered_phong groups the per-frame blocks into one set and the
+        // three shadow maps into another. Both alias the same buffers and image
+        // views as the individual sets above, which pipelines that declare the
+        // resources separately keep binding.
+        static constexpr uint32_t kFrameParamsLightsBinding = 3;
+        VkDescriptorPool mFrameParamsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mFrameParamsDescriptorSets{};
+        VkDescriptorPool mShadowMapsDescriptorPool{VK_NULL_HANDLE};
+        std::array<VkDescriptorSet, kFramesInFlight> mShadowMapsDescriptorSets{};
         // Point passes use a dedicated depth pipeline that writes linear radial
         // distance from the light (point_shadow_depth) instead of projected
         // depth; lazily loaded on the first point pass. On Vulkan it is the

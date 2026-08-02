@@ -6,6 +6,11 @@
 #extension GL_ARB_bindless_texture : require
 #endif
 
+// Descriptor set budget: MoltenVK caps a pipeline layout at 8 descriptor sets,
+// so this pipeline packs the window-owned per-frame blocks into set 0 and the
+// three shadow maps into set 1 rather than giving each its own set. The engine
+// identifies a packed set by its binding 0 (Matrices, ShadowMap) and binds it
+// whole. The OpenGL flat bindings below are unaffected.
 #ifdef VULKAN
 layout(set = 0, binding = 0, std140)
 #else
@@ -107,7 +112,7 @@ struct GpuLight {
       uint  _pad1;
 };
 #ifdef VULKAN
-layout(set = 4, binding = 0, std430)
+layout(set = 0, binding = 3, std430)
 #else
 layout(binding = 2, std430)
 #endif
@@ -122,7 +127,7 @@ readonly buffer Lights{
 // Clustered-shading parameters, shared with the lighting compute pipeline.
 // Depth axis is view-space Y in this engine (+X right, +Y forward, +Z up).
 #ifdef VULKAN
-layout(set = 5, binding = 0, std140)
+layout(set = 0, binding = 2, std140)
 #else
 layout(binding = 4, std140)
 #endif
@@ -136,7 +141,7 @@ uniform ClusterParams
 // Per-cluster (offset, count) into LightIndexList, written by the light-cull
 // compute stage of the lighting pipeline.
 #ifdef VULKAN
-layout(set = 6, binding = 0, std430)
+layout(set = 3, binding = 0, std430)
 #else
 layout(binding = 0, std430)
 #endif
@@ -147,7 +152,7 @@ readonly buffer LightGrid
 
 // Flat per-cluster light-index slots (fixed cap per cluster).
 #ifdef VULKAN
-layout(set = 7, binding = 0, std430)
+layout(set = 4, binding = 0, std430)
 #else
 layout(binding = 1, std430)
 #endif
@@ -165,7 +170,7 @@ readonly buffer LightIndexList
 // with hardware comparison (sampler2DShadow). shadow_params.w > 0.5 marks a
 // directional caster active this frame; otherwise geometry is left fully lit.
 #ifdef VULKAN
-layout(set = 8, binding = 0, std140)
+layout(set = 0, binding = 4, std140)
 #else
 layout(binding = 5, std140)
 #endif
@@ -176,7 +181,7 @@ uniform ShadowParams
 };
 
 #ifdef VULKAN
-layout(set = 9, binding = 0)
+layout(set = 1, binding = 0)
 #else
 layout(binding = 8)
 #endif
@@ -188,7 +193,7 @@ uniform sampler2DShadow ShadowMap;
 // shading a spot light the fragment shader finds the slot whose caster_position
 // matches the light's own position and samples that array layer.
 #ifdef VULKAN
-layout(set = 10, binding = 0, std140)
+layout(set = 0, binding = 5, std140)
 #else
 layout(binding = 6, std140)
 #endif
@@ -200,7 +205,7 @@ uniform SpotShadowParams
 };
 
 #ifdef VULKAN
-layout(set = 11, binding = 0)
+layout(set = 1, binding = 1)
 #else
 layout(binding = 9)
 #endif
@@ -214,7 +219,7 @@ uniform sampler2DArrayShadow SpotShadowMap;
 // the dominant axis of the light-to-fragment vector and samples that layer.
 // Array sizes are 6 * MAX_POINT_SHADOW_CASTERS and MAX_POINT_SHADOW_CASTERS.
 #ifdef VULKAN
-layout(set = 12, binding = 0, std140)
+layout(set = 0, binding = 6, std140)
 #else
 layout(binding = 7, std140)
 #endif
@@ -226,7 +231,7 @@ uniform PointShadowParams
 };
 
 #ifdef VULKAN
-layout(set = 13, binding = 0)
+layout(set = 1, binding = 2)
 #else
 layout(binding = 10)
 #endif
@@ -245,7 +250,7 @@ uniform samplerCubeArrayShadow PointShadowMap;
 // path the driver reads correctly. The CPU side is unchanged (same 160-byte
 // buffer). Vulkan (SPIR-V) is unaffected and keeps the std140 UBO.
 #ifdef VULKAN
-layout(set = 14, binding = 0, std140) uniform Globals
+layout(set = 0, binding = 1, std140) uniform Globals
 #else
 layout(binding = 6, std430) readonly buffer Globals
 #endif

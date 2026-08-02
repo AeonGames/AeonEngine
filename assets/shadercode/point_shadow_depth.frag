@@ -11,7 +11,7 @@
 // compatibility with the main pipelines (see shadow_depth.frag); its alpha must
 // be 1.0 because the shared pipeline enables alpha-to-coverage.
 #ifdef VULKAN
-layout(set = 8, binding = 0, std140)
+layout(set = 0, binding = 0, std140)
 #else
 layout(binding = 5, std140)
 #endif
