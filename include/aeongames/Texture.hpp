@@ -32,6 +32,8 @@ namespace AeonGames
     class Texture : public Resource
     {
     public:
+        /** @brief Default constructor. */
+        DLL Texture();
         /** @brief Pixel channel layout format.
          *
          * Specifies the ordering and number of color channels per pixel.

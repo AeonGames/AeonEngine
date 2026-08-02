@@ -24,6 +24,7 @@ limitations under the License.
 
 namespace AeonGames
 {
+    Texture::Texture() = default;
     Texture::~Texture() = default;
 
     bool RegisterImageDecoder ( const std::string& aMagick, const std::function < bool ( Texture&, size_t, const void* ) > & aDecoder )
