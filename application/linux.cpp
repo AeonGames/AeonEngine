@@ -24,8 +24,11 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/GuiOverlay.hpp"
 #include "aeongames/InputSystem.hpp"
+#include "aeongames/KeyCode.hpp"
+#include <array>
 #include <cassert>
 #include <chrono>
+#include <clocale>
 #include <iostream>
 #include <cstdint>
 #include <vector>
@@ -33,7 +36,7 @@ limitations under the License.
 #include <stdexcept>
 #include <cassert>
 #include <X11/Xlib.h>
-#include <X11/keysym.h>
+#include <X11/XKBlib.h>
 #include <GL/glx.h>
 #include <GL/gl.h>
 #include "Window.h"
@@ -42,6 +45,15 @@ int Main ( int argc, char *argv[] );
 
 int ENTRYPOINT main ( int argc, char *argv[] )
 {
+    // The X input method decodes keystrokes according to the locale, so this
+    // has to happen before any other X call for non-ASCII text input to work.
+    // Only LC_CTYPE: LC_NUMERIC would change the decimal separator strtod
+    // expects and break text-format asset parsing under e.g. de_DE.
+    std::setlocale ( LC_CTYPE, "" );
+    if ( XSupportsLocale() )
+    {
+        XSetLocaleModifiers ( "" );
+    }
     XSetErrorHandler ( [] ( Display * mDisplay, XErrorEvent * error_event ) -> int
     {
         char error_string[1024];
@@ -166,6 +178,257 @@ namespace AeonGames
         return mods;
     }
 
+    /// Highest Linux evdev key code the translation table covers (KEY_F24 is 194).
+    static constexpr size_t kEvdevKeyCount = 195;
+
+    /** Linux evdev key code to KeyCode. Xorg's evdev/libinput driver reports
+     *  X11 key codes as the evdev code plus 8, so this table also serves X11
+     *  after subtracting that offset, and is reusable as-is for a future
+     *  Wayland front-end, which receives evdev codes directly. */
+    static constexpr std::array<KeyCode, kEvdevKeyCount> kEvdevToKeyCode = []
+    {
+        std::array<KeyCode, kEvdevKeyCount> table{};
+        table[1] = KeyCode::Escape;
+        table[2] = KeyCode::Num1;
+        table[3] = KeyCode::Num2;
+        table[4] = KeyCode::Num3;
+        table[5] = KeyCode::Num4;
+        table[6] = KeyCode::Num5;
+        table[7] = KeyCode::Num6;
+        table[8] = KeyCode::Num7;
+        table[9] = KeyCode::Num8;
+        table[10] = KeyCode::Num9;
+        table[11] = KeyCode::Num0;
+        table[12] = KeyCode::Minus;
+        table[13] = KeyCode::Equal;
+        table[14] = KeyCode::Backspace;
+        table[15] = KeyCode::Tab;
+        table[16] = KeyCode::Q;
+        table[17] = KeyCode::W;
+        table[18] = KeyCode::E;
+        table[19] = KeyCode::R;
+        table[20] = KeyCode::T;
+        table[21] = KeyCode::Y;
+        table[22] = KeyCode::U;
+        table[23] = KeyCode::I;
+        table[24] = KeyCode::O;
+        table[25] = KeyCode::P;
+        table[26] = KeyCode::LeftBracket;
+        table[27] = KeyCode::RightBracket;
+        table[28] = KeyCode::Enter;
+        table[29] = KeyCode::LeftCtrl;
+        table[30] = KeyCode::A;
+        table[31] = KeyCode::S;
+        table[32] = KeyCode::D;
+        table[33] = KeyCode::F;
+        table[34] = KeyCode::G;
+        table[35] = KeyCode::H;
+        table[36] = KeyCode::J;
+        table[37] = KeyCode::K;
+        table[38] = KeyCode::L;
+        table[39] = KeyCode::Semicolon;
+        table[40] = KeyCode::Apostrophe;
+        table[41] = KeyCode::Grave;
+        table[42] = KeyCode::LeftShift;
+        table[43] = KeyCode::Backslash;
+        table[44] = KeyCode::Z;
+        table[45] = KeyCode::X;
+        table[46] = KeyCode::C;
+        table[47] = KeyCode::V;
+        table[48] = KeyCode::B;
+        table[49] = KeyCode::N;
+        table[50] = KeyCode::M;
+        table[51] = KeyCode::Comma;
+        table[52] = KeyCode::Period;
+        table[53] = KeyCode::Slash;
+        table[54] = KeyCode::RightShift;
+        table[55] = KeyCode::KeypadMultiply;
+        table[56] = KeyCode::LeftAlt;
+        table[57] = KeyCode::Space;
+        table[58] = KeyCode::CapsLock;
+        table[59] = KeyCode::F1;
+        table[60] = KeyCode::F2;
+        table[61] = KeyCode::F3;
+        table[62] = KeyCode::F4;
+        table[63] = KeyCode::F5;
+        table[64] = KeyCode::F6;
+        table[65] = KeyCode::F7;
+        table[66] = KeyCode::F8;
+        table[67] = KeyCode::F9;
+        table[68] = KeyCode::F10;
+        table[69] = KeyCode::NumLock;
+        table[70] = KeyCode::ScrollLock;
+        table[71] = KeyCode::Keypad7;
+        table[72] = KeyCode::Keypad8;
+        table[73] = KeyCode::Keypad9;
+        table[74] = KeyCode::KeypadSubtract;
+        table[75] = KeyCode::Keypad4;
+        table[76] = KeyCode::Keypad5;
+        table[77] = KeyCode::Keypad6;
+        table[78] = KeyCode::KeypadAdd;
+        table[79] = KeyCode::Keypad1;
+        table[80] = KeyCode::Keypad2;
+        table[81] = KeyCode::Keypad3;
+        table[82] = KeyCode::Keypad0;
+        table[83] = KeyCode::KeypadDecimal;
+        table[86] = KeyCode::NonUsBackslash;
+        table[87] = KeyCode::F11;
+        table[88] = KeyCode::F12;
+        table[89] = KeyCode::International1;
+        table[92] = KeyCode::International4;
+        table[93] = KeyCode::International2;
+        table[94] = KeyCode::International5;
+        table[95] = KeyCode::KeypadComma;
+        table[96] = KeyCode::KeypadEnter;
+        table[97] = KeyCode::RightCtrl;
+        table[98] = KeyCode::KeypadDivide;
+        table[99] = KeyCode::PrintScreen;
+        table[100] = KeyCode::RightAlt;
+        table[102] = KeyCode::Home;
+        table[103] = KeyCode::Up;
+        table[104] = KeyCode::PageUp;
+        table[105] = KeyCode::Left;
+        table[106] = KeyCode::Right;
+        table[107] = KeyCode::End;
+        table[108] = KeyCode::Down;
+        table[109] = KeyCode::PageDown;
+        table[110] = KeyCode::Insert;
+        table[111] = KeyCode::Delete;
+        table[113] = KeyCode::Mute;
+        table[114] = KeyCode::VolumeDown;
+        table[115] = KeyCode::VolumeUp;
+        table[116] = KeyCode::Power;
+        table[117] = KeyCode::KeypadEqual;
+        table[119] = KeyCode::Pause;
+        table[121] = KeyCode::KeypadComma;
+        table[122] = KeyCode::Lang1;
+        table[123] = KeyCode::Lang2;
+        table[124] = KeyCode::International3;
+        table[125] = KeyCode::LeftSuper;
+        table[126] = KeyCode::RightSuper;
+        table[127] = KeyCode::Application;
+        table[138] = KeyCode::Help;
+        table[139] = KeyCode::Menu;
+        table[183] = KeyCode::F13;
+        table[184] = KeyCode::F14;
+        table[185] = KeyCode::F15;
+        table[186] = KeyCode::F16;
+        table[187] = KeyCode::F17;
+        table[188] = KeyCode::F18;
+        table[189] = KeyCode::F19;
+        table[190] = KeyCode::F20;
+        table[191] = KeyCode::F21;
+        table[192] = KeyCode::F22;
+        table[193] = KeyCode::F23;
+        table[194] = KeyCode::F24;
+        return table;
+    }
+    ();
+
+    /** Translate an X11 hardware key code into a KeyCode.
+     *  Returns KeyCode::Unknown for keys outside the table. */
+    static KeyCode TranslateX11KeyCode ( unsigned int aKeyCode )
+    {
+        // Xorg reserves key codes 0-7, so evdev codes start at 8.
+        if ( aKeyCode < 8 )
+        {
+            return KeyCode::Unknown;
+        }
+        const size_t evdev = aKeyCode - 8;
+        return ( evdev < kEvdevKeyCount ) ? kEvdevToKeyCode[evdev] : KeyCode::Unknown;
+    }
+
+    /** Returns the KeyModifier bit a key contributes, or KeyModifier_None. */
+    static uint32_t ModifierBitFor ( KeyCode aKeyCode )
+    {
+        switch ( aKeyCode )
+        {
+        case KeyCode::LeftShift:
+        case KeyCode::RightShift:
+            return KeyModifier_Shift;
+        case KeyCode::LeftCtrl:
+        case KeyCode::RightCtrl:
+            return KeyModifier_Ctrl;
+        case KeyCode::LeftAlt:
+        case KeyCode::RightAlt:
+            return KeyModifier_Alt;
+        case KeyCode::LeftSuper:
+        case KeyCode::RightSuper:
+            return KeyModifier_Super;
+        default:
+            return KeyModifier_None;
+        }
+    }
+
+    /** Build the modifier mask for a key event.
+     *  XKeyEvent::state describes the modifiers as they were *before* the
+     *  event, so pressing Shift would otherwise report Shift as still up for
+     *  one event; fold the event's own key into the mask. */
+    static uint32_t ModifiersForKeyEvent ( const XKeyEvent& aKeyEvent, KeyCode aKeyCode, bool aPressed )
+    {
+        uint32_t mods = TranslateX11Modifiers ( aKeyEvent.state );
+        const uint32_t bit = ModifierBitFor ( aKeyCode );
+        if ( aPressed )
+        {
+            mods |= bit;
+        }
+        else
+        {
+            mods &= ~bit;
+        }
+        return mods;
+    }
+
+    /** Decode the UTF-8 sequence starting at aIndex, advancing aIndex past it.
+     *  Returns 0 for malformed input, having skipped the offending bytes. */
+    static uint32_t DecodeUtf8 ( const char* aBytes, int aLength, int& aIndex )
+    {
+        const unsigned char lead = static_cast<unsigned char> ( aBytes[aIndex] );
+        uint32_t codepoint{};
+        int continuation_count{};
+        if ( lead < 0x80 )
+        {
+            codepoint = lead;
+        }
+        else if ( ( lead & 0xE0 ) == 0xC0 )
+        {
+            codepoint = lead & 0x1Fu;
+            continuation_count = 1;
+        }
+        else if ( ( lead & 0xF0 ) == 0xE0 )
+        {
+            codepoint = lead & 0x0Fu;
+            continuation_count = 2;
+        }
+        else if ( ( lead & 0xF8 ) == 0xF0 )
+        {
+            codepoint = lead & 0x07u;
+            continuation_count = 3;
+        }
+        else
+        {
+            ++aIndex;
+            return 0;
+        }
+        if ( aIndex + continuation_count >= aLength )
+        {
+            aIndex = aLength;
+            return 0;
+        }
+        for ( int i = 0; i < continuation_count; ++i )
+        {
+            const unsigned char continuation = static_cast<unsigned char> ( aBytes[aIndex + 1 + i] );
+            if ( ( continuation & 0xC0 ) != 0x80 )
+            {
+                aIndex += 1 + i;
+                return 0;
+            }
+            codepoint = ( codepoint << 6 ) | ( continuation & 0x3Fu );
+        }
+        aIndex += continuation_count + 1;
+        return codepoint;
+    }
+
     Window::Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
                      bool aFullScreen, const RendererSettings& aRendererSettings ) :
         mDisplay{XOpenDisplay ( nullptr ) }
@@ -197,7 +460,43 @@ namespace AeonGames
                     );
         XFree ( xvi );
         XStoreName ( mDisplay, mWindowId, "AeonGames" );
+        // Without this, X11 auto-repeat delivers a synthetic KeyRelease before
+        // every repeated KeyPress, so a held key reads as released for one
+        // event and edge-triggered queries fire on every repeat.
+        Bool detectable_auto_repeat_supported{False};
+        XkbSetDetectableAutoRepeat ( mDisplay, True, &detectable_auto_repeat_supported );
+        if ( !detectable_auto_repeat_supported )
+        {
+            std::cout << LogLevel::Warning
+                      << "X server does not support detectable auto-repeat; held keys may flicker."
+                      << std::endl;
+        }
         XFlush ( mDisplay );
+        // An input context turns keystrokes into UTF-8 text, handling dead
+        // keys, compose sequences and IME preedit that raw KeySyms cannot.
+        mInputMethod = XOpenIM ( mDisplay, nullptr, nullptr, nullptr );
+        if ( mInputMethod != nullptr )
+        {
+            mInputContext = XCreateIC ( mInputMethod,
+                                        XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+                                        XNClientWindow, mWindowId,
+                                        XNFocusWindow, mWindowId,
+                                        nullptr );
+        }
+        if ( mInputContext != nullptr )
+        {
+            unsigned long filter_events{};
+            if ( XGetICValues ( mInputContext, XNFilterEvents, &filter_events, nullptr ) == nullptr )
+            {
+                XSelectInput ( mDisplay, mWindowId, swa.event_mask | filter_events );
+            }
+        }
+        else
+        {
+            std::cout << LogLevel::Warning
+                      << "No X input context; text input is limited to ASCII."
+                      << std::endl;
+        }
         mRenderer = ConstructRenderer ( aRendererName, reinterpret_cast<void*> ( mWindowId ), aRendererSettings );
         EnumerateGuiOverlayConstructors ( [this] ( const StringId & aIdentifier ) -> bool
         {
@@ -218,6 +517,14 @@ namespace AeonGames
         if ( mRenderer )
         {
             mRenderer->DetachWindow ( this );
+        }
+        if ( mInputContext )
+        {
+            XDestroyIC ( mInputContext );
+        }
+        if ( mInputMethod )
+        {
+            XCloseIM ( mInputMethod );
         }
         if ( mWindowId )
         {
@@ -276,6 +583,13 @@ namespace AeonGames
             while ( ( XPending ( mDisplay ) > 0 ) && running )
             {
                 XNextEvent ( mDisplay, &xevent );
+                // Gives the input method first refusal: it swallows the
+                // keystrokes that make up a dead key or compose sequence and
+                // re-emits the composed character as a later KeyPress.
+                if ( XFilterEvent ( &xevent, None ) )
+                {
+                    continue;
+                }
                 switch ( xevent.type )
                 {
                 case Expose:
@@ -287,22 +601,22 @@ namespace AeonGames
                 break;
                 case KeyPress:
                 {
-                    uint32_t key = XLookupKeysym ( &xevent.xkey, 0 );
+                    KeyCode key = TranslateX11KeyCode ( xevent.xkey.keycode );
                     if ( mInputSystem )
                     {
-                        mInputSystem->SetKeyModifiers ( TranslateX11Modifiers ( xevent.xkey.state ) );
+                        mInputSystem->SetKeyModifiers ( ModifiersForKeyEvent ( xevent.xkey, key, true ) );
                     }
-                    bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
+                    bool consumed = key != KeyCode::Unknown && mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
                     if ( !consumed )
                     {
                         // ESC exits the application unless the GUI overlay consumed it.
-                        if ( key == XK_Escape )
+                        if ( key == KeyCode::Escape )
                         {
                             running = false;
                             break;
                         }
                         // F1 toggles the renderer's debug-geometry overlay.
-                        if ( key == XK_F1 )
+                        if ( key == KeyCode::F1 )
                         {
                             ToggleDebugRendering();
                             break;
@@ -310,53 +624,84 @@ namespace AeonGames
                         // F2/F3/F4 toggle a whole light type on/off (debugging
                         // aid: e.g. disable point and spot lights to isolate the
                         // directional light's shadow).
-                        if ( key == XK_F2 )
+                        if ( key == KeyCode::F2 )
                         {
                             ToggleLightType ( LightType::Directional );
                             break;
                         }
-                        if ( key == XK_F3 )
+                        if ( key == KeyCode::F3 )
                         {
                             ToggleLightType ( LightType::Point );
                             break;
                         }
-                        if ( key == XK_F4 )
+                        if ( key == KeyCode::F4 )
                         {
                             ToggleLightType ( LightType::Spot );
                             break;
                         }
-                        if ( mInputSystem )
+                        if ( key != KeyCode::Unknown && mInputSystem )
                         {
                             mInputSystem->OnKeyEvent ( key, true );
                         }
                     }
-                    // Translate to printable characters for text input. Route
-                    // through the GUI overlay first; only forward to the
-                    // InputSystem if the overlay does not consume the codepoint.
-                    char buffer[8] = {};
+                    // Translate to text for text input. Route through the GUI
+                    // overlay first; only forward to the InputSystem if the
+                    // overlay does not consume the codepoint.
+                    char buffer[64] = {};
                     KeySym sym = NoSymbol;
-                    int len = XLookupString ( &xevent.xkey, buffer, sizeof ( buffer ) - 1, &sym, nullptr );
-                    for ( int i = 0; i < len; ++i )
+                    int length{};
+                    // Without an input context only Latin-1 is available, so
+                    // each byte is already a codepoint; with one the buffer is
+                    // UTF-8 and has to be decoded.
+                    const bool utf8 = mInputContext != nullptr;
+                    if ( utf8 )
                     {
-                        unsigned char c = static_cast<unsigned char> ( buffer[i] );
-                        if ( c >= 0x20 && c != 0x7f )
+                        Status lookup_status = XLookupNone;
+                        length = Xutf8LookupString ( mInputContext, &xevent.xkey, buffer, sizeof ( buffer ) - 1, &sym, &lookup_status );
+                        if ( lookup_status != XLookupChars && lookup_status != XLookupBoth )
                         {
-                            uint32_t codepoint = static_cast<uint32_t> ( c );
-                            bool char_consumed = mGuiOverlay && mGuiOverlay->OnTextInput ( codepoint );
-                            if ( !char_consumed && mInputSystem )
-                            {
-                                mInputSystem->OnChar ( codepoint );
-                            }
+                            length = 0;
+                        }
+                    }
+                    else
+                    {
+                        length = XLookupString ( &xevent.xkey, buffer, sizeof ( buffer ) - 1, &sym, nullptr );
+                    }
+                    int index{};
+                    while ( index < length )
+                    {
+                        uint32_t codepoint{};
+                        if ( utf8 )
+                        {
+                            codepoint = DecodeUtf8 ( buffer, length, index );
+                        }
+                        else
+                        {
+                            codepoint = static_cast<unsigned char> ( buffer[index] );
+                            ++index;
+                        }
+                        if ( codepoint < 0x20 || codepoint == 0x7F )
+                        {
+                            continue;
+                        }
+                        bool char_consumed = mGuiOverlay && mGuiOverlay->OnTextInput ( codepoint );
+                        if ( !char_consumed && mInputSystem )
+                        {
+                            mInputSystem->OnChar ( codepoint );
                         }
                     }
                 }
                 break;
                 case KeyRelease:
                 {
-                    uint32_t key = XLookupKeysym ( &xevent.xkey, 0 );
+                    KeyCode key = TranslateX11KeyCode ( xevent.xkey.keycode );
                     if ( mInputSystem )
                     {
-                        mInputSystem->SetKeyModifiers ( TranslateX11Modifiers ( xevent.xkey.state ) );
+                        mInputSystem->SetKeyModifiers ( ModifiersForKeyEvent ( xevent.xkey, key, false ) );
+                    }
+                    if ( key == KeyCode::Unknown )
+                    {
+                        break;
                     }
                     bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, false );
                     if ( !consumed && mInputSystem )
@@ -437,12 +782,20 @@ namespace AeonGames
                 }
                 break;
                 case FocusIn:
+                    if ( mInputContext )
+                    {
+                        XSetICFocus ( mInputContext );
+                    }
                     if ( mInputSystem )
                     {
                         mInputSystem->OnFocusGained();
                     }
                     break;
                 case FocusOut:
+                    if ( mInputContext )
+                    {
+                        XUnsetICFocus ( mInputContext );
+                    }
                     if ( mInputSystem )
                     {
                         mInputSystem->OnFocusLost();

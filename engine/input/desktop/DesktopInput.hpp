@@ -35,9 +35,9 @@ namespace AeonGames
 
         ///@name Keyboard
         ///@{
-        bool IsKeyDown ( uint32_t aScanCode ) const override;
-        bool IsKeyPressed ( uint32_t aScanCode ) const override;
-        bool IsKeyReleased ( uint32_t aScanCode ) const override;
+        bool IsKeyDown ( KeyCode aKeyCode ) const override;
+        bool IsKeyPressed ( KeyCode aKeyCode ) const override;
+        bool IsKeyReleased ( KeyCode aKeyCode ) const override;
         uint32_t GetKeyModifiers() const override;
         ///@}
 
@@ -69,7 +69,7 @@ namespace AeonGames
 
         ///@name Event Injection
         ///@{
-        void OnKeyEvent ( uint32_t aScanCode, bool aPressed ) override;
+        void OnKeyEvent ( KeyCode aKeyCode, bool aPressed ) override;
         void SetKeyModifiers ( uint32_t aModifiers ) override;
         void OnChar ( uint32_t aCodepoint ) override;
         void OnMouseMove ( int32_t aX, int32_t aY ) override;
@@ -85,7 +85,7 @@ namespace AeonGames
         ///@}
 
     private:
-        static constexpr size_t MaxKeys = 512;
+        static constexpr size_t MaxKeys = static_cast<size_t> ( KeyCode::Count );
         static constexpr size_t MaxMouseButtons = MouseButton_Count;
 
         std::array<bool, MaxKeys> mKeyState{};

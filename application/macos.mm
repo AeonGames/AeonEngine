@@ -24,6 +24,8 @@ limitations under the License.
 #include "aeongames/Node.hpp"
 #include "aeongames/GuiOverlay.hpp"
 #include "aeongames/InputSystem.hpp"
+#include "aeongames/KeyCode.hpp"
+#include <array>
 #include <cassert>
 #include <chrono>
 #include <iostream>
@@ -69,6 +71,169 @@ namespace AeonGames
             mods |= KeyModifier_Super;
         }
         return mods;
+    }
+
+    /// Carbon virtual key codes occupy the low 7 bits.
+    static constexpr size_t kMacKeyCodeCount = 0x80;
+
+    /** Carbon kVK_* virtual key code to KeyCode. Despite the name these are
+     *  hardware key codes, i.e. layout independent, matching KeyCode. */
+    static constexpr std::array<KeyCode, kMacKeyCodeCount> kMacToKeyCode = []
+    {
+        std::array<KeyCode, kMacKeyCodeCount> table{};
+        table[kVK_ANSI_A] = KeyCode::A;
+        table[kVK_ANSI_B] = KeyCode::B;
+        table[kVK_ANSI_C] = KeyCode::C;
+        table[kVK_ANSI_D] = KeyCode::D;
+        table[kVK_ANSI_E] = KeyCode::E;
+        table[kVK_ANSI_F] = KeyCode::F;
+        table[kVK_ANSI_G] = KeyCode::G;
+        table[kVK_ANSI_H] = KeyCode::H;
+        table[kVK_ANSI_I] = KeyCode::I;
+        table[kVK_ANSI_J] = KeyCode::J;
+        table[kVK_ANSI_K] = KeyCode::K;
+        table[kVK_ANSI_L] = KeyCode::L;
+        table[kVK_ANSI_M] = KeyCode::M;
+        table[kVK_ANSI_N] = KeyCode::N;
+        table[kVK_ANSI_O] = KeyCode::O;
+        table[kVK_ANSI_P] = KeyCode::P;
+        table[kVK_ANSI_Q] = KeyCode::Q;
+        table[kVK_ANSI_R] = KeyCode::R;
+        table[kVK_ANSI_S] = KeyCode::S;
+        table[kVK_ANSI_T] = KeyCode::T;
+        table[kVK_ANSI_U] = KeyCode::U;
+        table[kVK_ANSI_V] = KeyCode::V;
+        table[kVK_ANSI_W] = KeyCode::W;
+        table[kVK_ANSI_X] = KeyCode::X;
+        table[kVK_ANSI_Y] = KeyCode::Y;
+        table[kVK_ANSI_Z] = KeyCode::Z;
+        table[kVK_ANSI_1] = KeyCode::Num1;
+        table[kVK_ANSI_2] = KeyCode::Num2;
+        table[kVK_ANSI_3] = KeyCode::Num3;
+        table[kVK_ANSI_4] = KeyCode::Num4;
+        table[kVK_ANSI_5] = KeyCode::Num5;
+        table[kVK_ANSI_6] = KeyCode::Num6;
+        table[kVK_ANSI_7] = KeyCode::Num7;
+        table[kVK_ANSI_8] = KeyCode::Num8;
+        table[kVK_ANSI_9] = KeyCode::Num9;
+        table[kVK_ANSI_0] = KeyCode::Num0;
+        table[kVK_ANSI_Grave] = KeyCode::Grave;
+        table[kVK_ANSI_Minus] = KeyCode::Minus;
+        table[kVK_ANSI_Equal] = KeyCode::Equal;
+        table[kVK_ANSI_LeftBracket] = KeyCode::LeftBracket;
+        table[kVK_ANSI_RightBracket] = KeyCode::RightBracket;
+        table[kVK_ANSI_Backslash] = KeyCode::Backslash;
+        table[kVK_ANSI_Semicolon] = KeyCode::Semicolon;
+        table[kVK_ANSI_Quote] = KeyCode::Apostrophe;
+        table[kVK_ANSI_Comma] = KeyCode::Comma;
+        table[kVK_ANSI_Period] = KeyCode::Period;
+        table[kVK_ANSI_Slash] = KeyCode::Slash;
+        table[kVK_ISO_Section] = KeyCode::NonUsBackslash;
+        table[kVK_Return] = KeyCode::Enter;
+        table[kVK_Tab] = KeyCode::Tab;
+        table[kVK_Space] = KeyCode::Space;
+        table[kVK_Delete] = KeyCode::Backspace;
+        table[kVK_ForwardDelete] = KeyCode::Delete;
+        table[kVK_Escape] = KeyCode::Escape;
+        table[kVK_CapsLock] = KeyCode::CapsLock;
+        table[kVK_Command] = KeyCode::LeftSuper;
+        table[kVK_RightCommand] = KeyCode::RightSuper;
+        table[kVK_Shift] = KeyCode::LeftShift;
+        table[kVK_RightShift] = KeyCode::RightShift;
+        table[kVK_Option] = KeyCode::LeftAlt;
+        table[kVK_RightOption] = KeyCode::RightAlt;
+        table[kVK_Control] = KeyCode::LeftCtrl;
+        table[kVK_RightControl] = KeyCode::RightCtrl;
+        table[kVK_Home] = KeyCode::Home;
+        table[kVK_End] = KeyCode::End;
+        table[kVK_PageUp] = KeyCode::PageUp;
+        table[kVK_PageDown] = KeyCode::PageDown;
+        table[kVK_LeftArrow] = KeyCode::Left;
+        table[kVK_RightArrow] = KeyCode::Right;
+        table[kVK_DownArrow] = KeyCode::Down;
+        table[kVK_UpArrow] = KeyCode::Up;
+        table[kVK_Help] = KeyCode::Insert;
+        table[kVK_Mute] = KeyCode::Mute;
+        table[kVK_VolumeUp] = KeyCode::VolumeUp;
+        table[kVK_VolumeDown] = KeyCode::VolumeDown;
+        table[kVK_F1] = KeyCode::F1;
+        table[kVK_F2] = KeyCode::F2;
+        table[kVK_F3] = KeyCode::F3;
+        table[kVK_F4] = KeyCode::F4;
+        table[kVK_F5] = KeyCode::F5;
+        table[kVK_F6] = KeyCode::F6;
+        table[kVK_F7] = KeyCode::F7;
+        table[kVK_F8] = KeyCode::F8;
+        table[kVK_F9] = KeyCode::F9;
+        table[kVK_F10] = KeyCode::F10;
+        table[kVK_F11] = KeyCode::F11;
+        table[kVK_F12] = KeyCode::F12;
+        table[kVK_F13] = KeyCode::PrintScreen;
+        table[kVK_F14] = KeyCode::ScrollLock;
+        table[kVK_F15] = KeyCode::Pause;
+        table[kVK_F16] = KeyCode::F16;
+        table[kVK_F17] = KeyCode::F17;
+        table[kVK_F18] = KeyCode::F18;
+        table[kVK_F19] = KeyCode::F19;
+        table[kVK_F20] = KeyCode::F20;
+        table[kVK_ANSI_Keypad0] = KeyCode::Keypad0;
+        table[kVK_ANSI_Keypad1] = KeyCode::Keypad1;
+        table[kVK_ANSI_Keypad2] = KeyCode::Keypad2;
+        table[kVK_ANSI_Keypad3] = KeyCode::Keypad3;
+        table[kVK_ANSI_Keypad4] = KeyCode::Keypad4;
+        table[kVK_ANSI_Keypad5] = KeyCode::Keypad5;
+        table[kVK_ANSI_Keypad6] = KeyCode::Keypad6;
+        table[kVK_ANSI_Keypad7] = KeyCode::Keypad7;
+        table[kVK_ANSI_Keypad8] = KeyCode::Keypad8;
+        table[kVK_ANSI_Keypad9] = KeyCode::Keypad9;
+        table[kVK_ANSI_KeypadDecimal] = KeyCode::KeypadDecimal;
+        table[kVK_ANSI_KeypadDivide] = KeyCode::KeypadDivide;
+        table[kVK_ANSI_KeypadEnter] = KeyCode::KeypadEnter;
+        table[kVK_ANSI_KeypadEquals] = KeyCode::KeypadEqual;
+        table[kVK_ANSI_KeypadMinus] = KeyCode::KeypadSubtract;
+        table[kVK_ANSI_KeypadMultiply] = KeyCode::KeypadMultiply;
+        table[kVK_ANSI_KeypadPlus] = KeyCode::KeypadAdd;
+        table[kVK_ANSI_KeypadClear] = KeyCode::NumLock;
+        table[kVK_JIS_Yen] = KeyCode::International3;
+        table[kVK_JIS_Underscore] = KeyCode::International1;
+        table[kVK_JIS_KeypadComma] = KeyCode::KeypadComma;
+        table[kVK_JIS_Eisu] = KeyCode::Lang2;
+        table[kVK_JIS_Kana] = KeyCode::Lang1;
+        return table;
+    }
+    ();
+
+    /** Translate a Carbon virtual key code into a KeyCode.
+     *  Returns KeyCode::Unknown for keys outside the table. */
+    static KeyCode TranslateNSKeyCode ( unsigned short aKeyCode )
+    {
+        return ( aKeyCode < kMacKeyCodeCount ) ? kMacToKeyCode[aKeyCode] : KeyCode::Unknown;
+    }
+
+    /** Returns the NSEvent modifier flag a key contributes, or 0.
+     *  Cocoa's public flags do not distinguish left from right, so with both
+     *  of a pair held, releasing one still reports the other's flag as set. */
+    static NSEventModifierFlags ModifierFlagFor ( KeyCode aKeyCode )
+    {
+        switch ( aKeyCode )
+        {
+        case KeyCode::LeftShift:
+        case KeyCode::RightShift:
+            return NSEventModifierFlagShift;
+        case KeyCode::LeftCtrl:
+        case KeyCode::RightCtrl:
+            return NSEventModifierFlagControl;
+        case KeyCode::LeftAlt:
+        case KeyCode::RightAlt:
+            return NSEventModifierFlagOption;
+        case KeyCode::LeftSuper:
+        case KeyCode::RightSuper:
+            return NSEventModifierFlagCommand;
+        case KeyCode::CapsLock:
+            return NSEventModifierFlagCapsLock;
+        default:
+            return 0;
+        }
     }
 
     /** Translate an NSEvent buttonNumber into a normalized MouseButton value.
@@ -149,8 +314,8 @@ namespace AeonGames
         @autoreleasepool
         {
             if ( mNSWindow )
-            {
-                [mNSWindow close];
+        {
+            [mNSWindow close];
                 mNSWindow = nil;
             }
         }
@@ -203,22 +368,22 @@ namespace AeonGames
                         {
                         case NSEventTypeKeyDown:
                         {
-                            uint32_t key = [event keyCode];
+                            KeyCode key = TranslateNSKeyCode ( [event keyCode] );
                             if ( mInputSystem )
                             {
                                 mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [event modifierFlags] ) );
                             }
-                            bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
+                            bool consumed = key != KeyCode::Unknown && mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, true );
                             if ( !consumed )
                             {
                                 // ESC exits the application unless the GUI overlay consumed it.
-                                if ( key == kVK_Escape )
+                                if ( key == KeyCode::Escape )
                                 {
                                     running = false;
                                     break;
                                 }
                                 // F1 toggles the renderer's debug-geometry overlay.
-                                if ( key == kVK_F1 )
+                                if ( key == KeyCode::F1 )
                                 {
                                     ToggleDebugRendering();
                                     break;
@@ -227,22 +392,22 @@ namespace AeonGames
                                 // (debugging aid: e.g. disable point and spot
                                 // lights to isolate the directional light's
                                 // shadow).
-                                if ( key == kVK_F2 )
+                                if ( key == KeyCode::F2 )
                                 {
                                     ToggleLightType ( LightType::Directional );
                                     break;
                                 }
-                                if ( key == kVK_F3 )
+                                if ( key == KeyCode::F3 )
                                 {
                                     ToggleLightType ( LightType::Point );
                                     break;
                                 }
-                                if ( key == kVK_F4 )
+                                if ( key == KeyCode::F4 )
                                 {
                                     ToggleLightType ( LightType::Spot );
                                     break;
                                 }
-                                if ( mInputSystem )
+                                if ( key != KeyCode::Unknown && mInputSystem )
                                 {
                                     mInputSystem->OnKeyEvent ( key, true );
                                 }
@@ -285,10 +450,14 @@ namespace AeonGames
                         break;
                         case NSEventTypeKeyUp:
                         {
-                            uint32_t key = [event keyCode];
+                            KeyCode key = TranslateNSKeyCode ( [event keyCode] );
                             if ( mInputSystem )
                             {
                                 mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [event modifierFlags] ) );
+                            }
+                            if ( key == KeyCode::Unknown )
+                            {
+                                break;
                             }
                             bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, false );
                             if ( !consumed && mInputSystem )
@@ -299,11 +468,26 @@ namespace AeonGames
                         break;
                         case NSEventTypeFlagsChanged:
                         {
-                            // Sent when modifier keys (Shift/Ctrl/Option/Cmd) change
-                            // state without producing a normal key event.
+                            // Cocoa reports modifier keys only as a flag change,
+                            // never as KeyDown/KeyUp, so their pressed state has
+                            // to be derived from the flag mask or queries like
+                            // IsKeyDown ( KeyCode::LeftShift ) never fire.
+                            NSEventModifierFlags flags = [event modifierFlags];
                             if ( mInputSystem )
                             {
-                                mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [event modifierFlags] ) );
+                                mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( flags ) );
+                            }
+                            KeyCode key = TranslateNSKeyCode ( [event keyCode] );
+                            NSEventModifierFlags key_flag = ModifierFlagFor ( key );
+                            if ( key_flag == 0 )
+                            {
+                                break;
+                            }
+                            bool pressed = ( flags & key_flag ) != 0;
+                            bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, pressed );
+                            if ( !consumed && mInputSystem )
+                            {
+                                mInputSystem->OnKeyEvent ( key, pressed );
                             }
                         }
                         break;

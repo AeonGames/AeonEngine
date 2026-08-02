@@ -43,7 +43,13 @@ namespace AeonGames
                 std::remove_if ( bindings.begin(), bindings.end(),
                                  [&aBinding] ( const Binding & b )
             {
-                return b.mType == aBinding.mType && b.mCode == aBinding.mCode;
+                if ( b.mType != aBinding.mType )
+                {
+                    return false;
+                }
+                return ( b.mType == BindingType::Key ) ?
+                       b.mKeyCode == aBinding.mKeyCode :
+                       b.mMouseButton == aBinding.mMouseButton;
             } ), bindings.end() );
             if ( bindings.empty() )
             {
@@ -62,9 +68,9 @@ namespace AeonGames
         switch ( aBinding.mType )
         {
         case ActionMap::BindingType::Key:
-            return aInputSystem.IsKeyDown ( aBinding.mCode );
+            return aInputSystem.IsKeyDown ( aBinding.mKeyCode );
         case ActionMap::BindingType::MouseButton:
-            return aInputSystem.IsMouseButtonDown ( static_cast<int32_t> ( aBinding.mCode ) );
+            return aInputSystem.IsMouseButtonDown ( aBinding.mMouseButton );
         }
         return false;
     }
@@ -74,11 +80,9 @@ namespace AeonGames
         switch ( aBinding.mType )
         {
         case ActionMap::BindingType::Key:
-            return aInputSystem.IsKeyPressed ( aBinding.mCode );
+            return aInputSystem.IsKeyPressed ( aBinding.mKeyCode );
         case ActionMap::BindingType::MouseButton:
-            // Mouse buttons don't have edge detection in the current InputSystem,
-            // fall back to IsMouseButtonDown.
-            return aInputSystem.IsMouseButtonDown ( static_cast<int32_t> ( aBinding.mCode ) );
+            return aInputSystem.IsMouseButtonPressed ( aBinding.mMouseButton );
         }
         return false;
     }
@@ -88,9 +92,9 @@ namespace AeonGames
         switch ( aBinding.mType )
         {
         case ActionMap::BindingType::Key:
-            return aInputSystem.IsKeyReleased ( aBinding.mCode );
+            return aInputSystem.IsKeyReleased ( aBinding.mKeyCode );
         case ActionMap::BindingType::MouseButton:
-            return false;
+            return aInputSystem.IsMouseButtonReleased ( aBinding.mMouseButton );
         }
         return false;
     }

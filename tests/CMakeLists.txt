@@ -26,6 +26,7 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/DependencyMap.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/KeyCode.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Quaternion.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Package.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.hpp
@@ -41,6 +42,7 @@ set(TEST_SRCS
     DecoderTests.cpp
     DependencyMapTests.cpp
     CRCTests.cpp
+    KeyCodeTests.cpp
     SceneTests.cpp
     MatrixTests.cpp
     TransformTests.cpp

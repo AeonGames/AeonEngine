@@ -38,7 +38,7 @@ namespace AeonGames
 
         bool OnMouseMove ( int32_t aX, int32_t aY ) final;
         bool OnMouseButton ( int32_t aButton, bool aPressed, int32_t aX, int32_t aY ) final;
-        bool OnKeyEvent ( uint32_t aKey, bool aPressed ) final;
+        bool OnKeyEvent ( KeyCode aKeyCode, bool aPressed ) final;
         bool OnTextInput ( uint32_t aCodepoint ) final;
 
         void Resize ( uint32_t aWidth, uint32_t aHeight ) final;

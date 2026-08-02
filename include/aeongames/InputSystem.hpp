@@ -17,6 +17,7 @@ limitations under the License.
 #define AEONGAMES_INPUTSYSTEM_H
 
 #include "aeongames/Platform.hpp"
+#include "aeongames/KeyCode.hpp"
 #include <cstdint>
 #include <memory>
 #include <functional>
@@ -68,12 +69,12 @@ namespace AeonGames
 
         ///@name Keyboard
         ///@{
-        /** Returns true if the given key scan-code is currently pressed. */
-        virtual bool IsKeyDown ( uint32_t aScanCode ) const = 0;
+        /** Returns true if the given key is currently pressed. */
+        virtual bool IsKeyDown ( KeyCode aKeyCode ) const = 0;
         /** Returns true if the given key was pressed this frame (edge trigger). */
-        virtual bool IsKeyPressed ( uint32_t aScanCode ) const = 0;
+        virtual bool IsKeyPressed ( KeyCode aKeyCode ) const = 0;
         /** Returns true if the given key was released this frame (edge trigger). */
-        virtual bool IsKeyReleased ( uint32_t aScanCode ) const = 0;
+        virtual bool IsKeyReleased ( KeyCode aKeyCode ) const = 0;
         /** Returns the current keyboard modifier bitmask (see KeyModifier). */
         virtual uint32_t GetKeyModifiers() const = 0;
         ///@}
@@ -148,10 +149,11 @@ namespace AeonGames
         ///@name Event Injection
         ///@{
         /** Injects a key event into the input system.
-         * @param aScanCode Key scan-code.
+         * @param aKeyCode Physical key identifier; front-ends must translate
+         *                 native key events into a KeyCode first.
          * @param aPressed true if the key was pressed, false if released.
          */
-        virtual void OnKeyEvent ( uint32_t aScanCode, bool aPressed ) = 0;
+        virtual void OnKeyEvent ( KeyCode aKeyCode, bool aPressed ) = 0;
         /** Updates the current keyboard modifier bitmask. */
         virtual void SetKeyModifiers ( uint32_t aModifiers ) = 0;
         /** Injects a Unicode character (UTF-32 codepoint) for text input. */

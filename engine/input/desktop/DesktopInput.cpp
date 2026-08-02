@@ -27,31 +27,34 @@ namespace AeonGames
 
     DesktopInput::~DesktopInput() = default;
 
-    bool DesktopInput::IsKeyDown ( uint32_t aScanCode ) const
+    bool DesktopInput::IsKeyDown ( KeyCode aKeyCode ) const
     {
-        if ( aScanCode >= MaxKeys )
+        const size_t index = static_cast<size_t> ( aKeyCode );
+        if ( index >= MaxKeys )
         {
             return false;
         }
-        return mKeyState[aScanCode];
+        return mKeyState[index];
     }
 
-    bool DesktopInput::IsKeyPressed ( uint32_t aScanCode ) const
+    bool DesktopInput::IsKeyPressed ( KeyCode aKeyCode ) const
     {
-        if ( aScanCode >= MaxKeys )
+        const size_t index = static_cast<size_t> ( aKeyCode );
+        if ( index >= MaxKeys )
         {
             return false;
         }
-        return mKeyState[aScanCode] && !mPrevKeyState[aScanCode];
+        return mKeyState[index] && !mPrevKeyState[index];
     }
 
-    bool DesktopInput::IsKeyReleased ( uint32_t aScanCode ) const
+    bool DesktopInput::IsKeyReleased ( KeyCode aKeyCode ) const
     {
-        if ( aScanCode >= MaxKeys )
+        const size_t index = static_cast<size_t> ( aKeyCode );
+        if ( index >= MaxKeys )
         {
             return false;
         }
-        return !mKeyState[aScanCode] && mPrevKeyState[aScanCode];
+        return !mKeyState[index] && mPrevKeyState[index];
     }
 
     uint32_t DesktopInput::GetKeyModifiers() const
@@ -145,11 +148,12 @@ namespace AeonGames
         return out;
     }
 
-    void DesktopInput::OnKeyEvent ( uint32_t aScanCode, bool aPressed )
+    void DesktopInput::OnKeyEvent ( KeyCode aKeyCode, bool aPressed )
     {
-        if ( aScanCode < MaxKeys )
+        const size_t index = static_cast<size_t> ( aKeyCode );
+        if ( index < MaxKeys )
         {
-            mKeyState[aScanCode] = aPressed;
+            mKeyState[index] = aPressed;
         }
     }
 

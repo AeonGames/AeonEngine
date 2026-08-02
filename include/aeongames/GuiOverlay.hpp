@@ -22,6 +22,7 @@ limitations under the License.
 #include <string>
 #include <vector>
 #include "aeongames/Platform.hpp"
+#include "aeongames/KeyCode.hpp"
 
 namespace AeonGames
 {
@@ -83,11 +84,11 @@ namespace AeonGames
          */
         virtual bool OnMouseButton ( int32_t aButton, bool aPressed, int32_t aX, int32_t aY ) = 0;
         /** Notifies the overlay of a key event.
-         * @param aKey Key identifier.
+         * @param aKeyCode Physical key identifier.
          * @param aPressed true if the key was pressed, false if released.
          * @return true if the event was consumed by the GUI.
          */
-        virtual bool OnKeyEvent ( uint32_t aKey, bool aPressed ) = 0;
+        virtual bool OnKeyEvent ( KeyCode aKeyCode, bool aPressed ) = 0;
         /** Notifies the overlay of a text input event.
          * @param aCodepoint Unicode codepoint of the character.
          * @return true if the event was consumed by the GUI.
