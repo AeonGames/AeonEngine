@@ -222,7 +222,14 @@ namespace AeonGames
         VkRenderPass GetRenderPass() const;
         /// @brief Get the current command buffer being recorded.
         VkCommandBuffer GetCommandBuffer() const;
+        /// @brief Arm a colour buffer capture for the frame being recorded. @see Renderer::RequestCapture.
+        void RequestCapture();
+        /// @brief Read the colour buffer back as top-down RGBA8. @see Renderer::ReadPixels.
+        bool ReadPixels ( Texture& aTexture ) const;
     private:
+        /// @brief Record the presented image into mCaptureBuffer; must run while
+        ///        the swapchain image is still acquired, i.e. before the present.
+        void RecordCaptureCopy();
         void Initialize();
         void Finalize();
         void InitializeSurface();
@@ -434,6 +441,15 @@ namespace AeonGames
         VkSurfaceKHR mVkSurfaceKHR{ VK_NULL_HANDLE };
         VkSurfaceCapabilitiesKHR mVkSurfaceCapabilitiesKHR {};
         uint32_t mSwapchainImageCount{ 2 };
+        /// @brief True when the swapchain was created with TRANSFER_SRC, i.e. ReadPixels can work.
+        bool mSwapchainReadable{ false };
+        /// @brief Set by RequestCapture; EndRender copies the image out when true.
+        bool mCaptureRequested{ false };
+        uint32_t mCaptureWidth{ 0 };
+        uint32_t mCaptureHeight{ 0 };
+        /// @brief Host-visible copy of the last captured colour buffer.
+        ///        std::vector because VulkanBuffer has no default constructor.
+        std::vector<VulkanBuffer> mCaptureBuffer;
         VkSwapchainKHR mVkSwapchainKHR{ VK_NULL_HANDLE };
         // Ring-buffered one per frame in flight so an in-flight frame's depth is
         // not overwritten by the next frame under overlap (the SSR composite

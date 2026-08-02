@@ -969,7 +969,7 @@ namespace AeonGames
         if ( it == mPipelineStore.end() )
         {
             it = mPipelineStore.emplace ( key, VulkanPipeline{*this, aPipeline, aMesh.GetAttributes(),
-                                          static_cast<uint32_t> ( aMesh.GetStride() ), aRenderPass} ).first;
+                static_cast<uint32_t> ( aMesh.GetStride() ), aRenderPass} ).first;
         }
         return &it->second;
     }
@@ -1497,8 +1497,8 @@ namespace AeonGames
         uint32_t key
         {
             crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.bindingCount ), sizeof ( uint32_t ),
-                     crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.flags ), sizeof ( VkDescriptorSetLayoutCreateFlags ),
-                              crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.sType ), sizeof ( VkStructureType ) ) ) )
+            crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.flags ), sizeof ( VkDescriptorSetLayoutCreateFlags ),
+            crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.sType ), sizeof ( VkStructureType ) ) ) )
         };
 
         for ( uint32_t i = 0; i < aDescriptorSetLayoutCreateInfo.bindingCount; ++i )
@@ -1565,7 +1565,7 @@ namespace AeonGames
             descriptor_set_layout_create_info.pBindings = descriptor_set_layout_bindings.data();
             lb = mVkDescriptorSetLayouts.insert ( lb, {{aSamplerCount}, {VK_NULL_HANDLE}} );
             if ( VkResult result = vkCreateDescriptorSetLayout ( mVkDevice, &descriptor_set_layout_create_info, nullptr,
-                                   &std::get<1> ( *lb ) ) )
+                &std::get<1> ( *lb ) ) )
             {
                 std::ostringstream stream;
                 stream << "DescriptorSet Layout creation failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -2084,6 +2084,24 @@ namespace AeonGames
             std::cout << LogLevel::Error << "vkDeviceWaitIdle failed in Finish: " << GetVulkanResultString ( result ) << std::endl;
         }
     }
+    bool VulkanRenderer::ReadPixels ( void* aWindowId, Texture& aTexture ) const
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return false;
+        }
+        return it->second.ReadPixels ( aTexture );
+    }
+    void VulkanRenderer::RequestCapture ( void* aWindowId )
+    {
+        auto it = mWindowStore.find ( aWindowId );
+        if ( it == mWindowStore.end() )
+        {
+            return;
+        }
+        it->second.RequestCapture();
+    }
     void VulkanRenderer::SubmitRenderQueue ( void* aWindowId, const Scene& aScene, RenderPass aRenderPass )
     {
         auto it = mWindowStore.find ( aWindowId );
@@ -2264,11 +2282,11 @@ namespace AeonGames
                                 const BufferAccessor& aSkinnedVertices ) const
     {
         if ( mDeviceLost )
-        {
-            return;
-        }
-        auto it = mWindowStore.find ( aWindowId );
-        if ( it == mWindowStore.end() )
+    {
+        return;
+    }
+    auto it = mWindowStore.find ( aWindowId );
+    if ( it == mWindowStore.end() )
         {
             return;
         }
@@ -2389,13 +2407,13 @@ void main()
 )";
 
     static const float overlay_vertices[] =
-        {
-            // positions   // texCoords
-            -1.0f,  1.0f,  0.0f, 1.0f,
-            -1.0f, -1.0f,  0.0f, 0.0f,
-            1.0f, -1.0f,  1.0f, 0.0f,
-            1.0f,  1.0f,  1.0f, 1.0f
-        };
+    {
+        // positions   // texCoords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+        1.0f, -1.0f,  1.0f, 0.0f,
+        1.0f,  1.0f,  1.0f, 1.0f
+    };
 
     void VulkanRenderer::InitializeOverlay()
     {
@@ -2642,7 +2660,7 @@ void main()
         alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         alloc_info.allocationSize = mem_reqs.size;
         alloc_info.memoryTypeIndex = FindMemoryTypeIndex ( mem_reqs.memoryTypeBits,
-                                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
         if ( VkResult result = vkAllocateMemory ( mVkDevice, &alloc_info, nullptr, &mOverlayVertexBufferMemory ) )
         {
             std::ostringstream stream;
@@ -2796,7 +2814,7 @@ void main()
             staging_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
             staging_alloc_info.allocationSize = staging_mem_reqs.size;
             staging_alloc_info.memoryTypeIndex = FindMemoryTypeIndex ( staging_mem_reqs.memoryTypeBits,
-                                                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
             vkAllocateMemory ( mVkDevice, &staging_alloc_info, nullptr, &cache.stagingMemory );
             vkBindBufferMemory ( mVkDevice, cache.stagingBuffer, cache.stagingMemory, 0 );
 
@@ -2821,7 +2839,7 @@ void main()
             img_alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
             img_alloc_info.allocationSize = img_mem_reqs.size;
             img_alloc_info.memoryTypeIndex = FindMemoryTypeIndex ( img_mem_reqs.memoryTypeBits,
-                                             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
+                VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT );
             vkAllocateMemory ( mVkDevice, &img_alloc_info, nullptr, &cache.memory );
             vkBindImageMemory ( mVkDevice, cache.image, cache.memory, 0 );
 

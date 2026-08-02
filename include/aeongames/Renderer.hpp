@@ -386,6 +386,43 @@ namespace AeonGames
          * @param aWindowId Platform dependent window handle.
          */
         virtual void Finish ( void* aWindowId ) = 0;
+        /** Arms a colour buffer capture for the frame about to be recorded.
+         *
+         * OpenGL can only read the back buffer before EndRender swaps it away,
+         * so the capture has to be armed ahead of the frame it should capture;
+         * the Vulkan swapchain image survives presentation, so that backend
+         * ignores this. Call it on both for a backend-independent sequence:
+         * RequestCapture, render the frame, EndRender, then ReadPixels.
+         * @param aWindowId Platform dependent window handle.
+         */
+        virtual void RequestCapture ( void* aWindowId )
+        {
+            ( void ) aWindowId;
+        }
+        /** Reads the window's colour buffer back into @p aTexture.
+         *
+         * Intended for debugging and for tests that need to assert on what was
+         * actually rasterized. Blocking: implementations drain the GPU before
+         * copying, so this is not for use in a shipping frame loop. Call after
+         * EndRender, outside any render pass.
+         *
+         * The texture is resized to the window's current dimensions and always
+         * filled as Format::RGBA / Type::UNSIGNED_BYTE with the top row first,
+         * regardless of the backend's native surface format or row order, so
+         * callers never have to branch on the renderer.
+         *
+         * @param aWindowId Platform dependent window handle.
+         * @param aTexture Destination; resized and overwritten on success and
+         *        left untouched on failure.
+         * @return true when the pixels were read, false when the backend or
+         *         surface cannot support readback.
+         */
+        virtual bool ReadPixels ( void* aWindowId, Texture& aTexture ) const
+        {
+            ( void ) aWindowId;
+            ( void ) aTexture;
+            return false;
+        }
         /** Issues a draw call for a mesh with the given pipeline and optional material.
          * @param aWindowId Platform dependent window handle.
          * @param aModelMatrix Model transformation matrix.

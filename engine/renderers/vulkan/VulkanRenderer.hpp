@@ -180,6 +180,8 @@ namespace AeonGames
         void EndPointShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Finish ( void* aWindowId ) final;
+        void RequestCapture ( void* aWindowId ) final;
+        bool ReadPixels ( void* aWindowId, Texture& aTexture ) const final;
         void Render ( void* aWindowId,
                       const Matrix4x4& aModelMatrix,
                       const Mesh& aMesh,
