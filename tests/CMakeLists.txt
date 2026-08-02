@@ -35,6 +35,7 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/UniqueAnyPtr.hpp)
 set(TEST_SRCS
     Main.cpp
+    RenderTestWindow.h
     AABBTests.cpp
     FrustumTests.cpp
     ArchiveTests.cpp
@@ -53,6 +54,8 @@ set(TEST_SRCS
     UniqueAnyPtrTests.cpp
     CollisionTests.cpp
     ComputeTests.cpp
+    ReadbackTests.cpp
+    SkinnedDrawTests.cpp
     PipelineTests.cpp
     SamplerTests.cpp
     MeshLayoutTests.cpp
