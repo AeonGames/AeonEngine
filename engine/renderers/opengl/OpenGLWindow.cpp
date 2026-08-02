@@ -1770,6 +1770,10 @@ for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
         OPENGL_CHECK_ERROR_NO_THROW;
 #endif
         MaybeCaptureBackbuffer();
+        if ( mCaptureRequested )
+        {
+            CaptureBackBuffer();
+        }
         SwapBuffers();
         mMemoryPoolBuffer.Reset();
         mStorageMemoryPoolBuffer.Reset();
@@ -1789,6 +1793,57 @@ for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
         mOpenGLRenderer.MakeCurrent ( mWindowId );
 #endif
         glFinish();
+    }
+
+    bool OpenGLWindow::ReadPixels ( Texture& aTexture ) const
+    {
+        if ( mCapturedFrame.GetWidth() == 0 || mCapturedFrame.GetHeight() == 0 )
+        {
+            return false;
+        }
+        aTexture.Resize ( mCapturedFrame.GetWidth(), mCapturedFrame.GetHeight(),
+                          mCapturedFrame.GetPixels().data(),
+                          Texture::Format::RGBA, Texture::Type::UNSIGNED_BYTE );
+        return true;
+    }
+
+    void OpenGLWindow::RequestCapture()
+    {
+        mCaptureRequested = true;
+    }
+
+    void OpenGLWindow::CaptureBackBuffer()
+    {
+        mCaptureRequested = false;
+        if ( mViewportWidth == 0 || mViewportHeight == 0 )
+        {
+            return;
+        }
+        // Must run before SwapBuffers: afterwards the back buffer no longer
+        // holds this frame, and front buffer reads are unreliable when the
+        // window is occluded or unmapped.
+        glBindFramebuffer ( GL_FRAMEBUFFER, 0 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glReadBuffer ( GL_BACK );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        const size_t row_size = static_cast<size_t> ( mViewportWidth ) * 4;
+        std::vector<uint8_t> pixels ( row_size * mViewportHeight );
+        glPixelStorei ( GL_PACK_ALIGNMENT, 1 );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        glReadPixels ( 0, 0, static_cast<GLsizei> ( mViewportWidth ), static_cast<GLsizei> ( mViewportHeight ),
+                       GL_RGBA, GL_UNSIGNED_BYTE, pixels.data() );
+        OPENGL_CHECK_ERROR_NO_THROW;
+        // GL returns rows bottom-up; the API contract is top-down so callers do
+        // not have to branch on the backend.
+        std::vector<uint8_t> flipped ( pixels.size() );
+        for ( uint32_t row = 0; row < mViewportHeight; ++row )
+        {
+            std::memcpy ( flipped.data() + row * row_size,
+                          pixels.data() + ( mViewportHeight - 1 - row ) * row_size,
+                          row_size );
+        }
+        mCapturedFrame.Resize ( mViewportWidth, mViewportHeight, flipped.data(),
+                                Texture::Format::RGBA, Texture::Type::UNSIGNED_BYTE );
     }
     void OpenGLWindow::RecordGpuTimestamp ( uint32_t aSlot )
     {

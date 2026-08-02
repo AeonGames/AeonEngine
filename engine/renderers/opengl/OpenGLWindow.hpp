@@ -109,6 +109,12 @@ namespace AeonGames
         /// @brief Block until the GPU has finished every command issued for this
         ///        window (glFinish), so buffers can be safely read back.
         void Finish();
+        /// @brief Arm a back buffer capture for the frame being recorded. @see Renderer::RequestCapture.
+        void RequestCapture();
+        /// @brief Read the colour buffer back as top-down RGBA8. @see Renderer::ReadPixels.
+        bool ReadPixels ( Texture& aTexture ) const;
+        /// @brief Latch the back buffer into mCapturedFrame; must run before SwapBuffers.
+        void CaptureBackBuffer();
         /// @brief Record a GPU timestamp into slot @p aSlot of the per-pass
         ///        benchmark timer ring (AEON_BENCH_FRAMES); lazily creates the
         ///        GL_TIMESTAMP query objects on first use.
@@ -409,6 +415,10 @@ namespace AeonGames
         bool mActiveCullEnabled{false};
         uint32_t mViewportWidth{0};
         uint32_t mViewportHeight{0};
+        /// @brief Set by RequestCapture; EndRender latches the back buffer when true.
+        bool mCaptureRequested{false};
+        /// @brief Last latched back buffer, as top-down RGBA8.
+        Texture mCapturedFrame{};
         // Reused scratch holding one bindless material index per instance for
         // BindInstanceMaterials; grows once then amortises (no per-draw alloc).
         mutable std::vector<uint32_t> mInstanceMaterials{};

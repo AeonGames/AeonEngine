@@ -125,6 +125,11 @@ namespace AeonGames
         std::swap ( mVkSurfaceKHR, aVulkanWindow.mVkSurfaceKHR );
         std::swap ( mVkSurfaceCapabilitiesKHR, aVulkanWindow.mVkSurfaceCapabilitiesKHR );
         std::swap ( mSwapchainImageCount, aVulkanWindow.mSwapchainImageCount );
+        std::swap ( mSwapchainReadable, aVulkanWindow.mSwapchainReadable );
+        std::swap ( mCaptureRequested, aVulkanWindow.mCaptureRequested );
+        std::swap ( mCaptureWidth, aVulkanWindow.mCaptureWidth );
+        std::swap ( mCaptureHeight, aVulkanWindow.mCaptureHeight );
+        std::swap ( mCaptureBuffer, aVulkanWindow.mCaptureBuffer );
         std::swap ( mVkSwapchainKHR, aVulkanWindow.mVkSwapchainKHR );
         std::swap ( mVkDepthStencilImage, aVulkanWindow.mVkDepthStencilImage );
         std::swap ( mVkDepthStencilImageMemory, aVulkanWindow.mVkDepthStencilImageMemory );
@@ -358,6 +363,14 @@ namespace AeonGames
         swapchain_create_info.imageExtent.height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
         swapchain_create_info.imageArrayLayers = 1;
         swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+        // TRANSFER_SRC lets ReadPixels copy the presented image out. Not every
+        // surface allows it, so it is requested only when advertised and the
+        // capability is remembered rather than assumed.
+        mSwapchainReadable = ( mVkSurfaceCapabilitiesKHR.supportedUsageFlags & VK_IMAGE_USAGE_TRANSFER_SRC_BIT ) != 0;
+        if ( mSwapchainReadable )
+        {
+            swapchain_create_info.imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
+        }
         swapchain_create_info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
         swapchain_create_info.queueFamilyIndexCount = 0;
         swapchain_create_info.pQueueFamilyIndices = nullptr;
@@ -3849,6 +3862,11 @@ namespace AeonGames
         vkCmdDraw ( mVkCommandBuffer, 3, 1, 0, 0 );
         vkCmdEndRenderPass ( mVkCommandBuffer );
 
+        if ( mCaptureRequested )
+        {
+            RecordCaptureCopy();
+        }
+
         if ( VkResult result = vkEndCommandBuffer ( mVkCommandBuffer ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
@@ -4691,6 +4709,104 @@ namespace AeonGames
                                1, &vertex_barrier,
                                0, nullptr,
                                0, nullptr );
+    }
+
+    void VulkanWindow::RequestCapture()
+    {
+        mCaptureRequested = true;
+    }
+
+    void VulkanWindow::RecordCaptureCopy()
+    {
+        mCaptureRequested = false;
+        if ( !mSwapchainReadable || mActiveImageIndex >= mVkSwapchainImages.size() )
+        {
+            return;
+        }
+        const uint32_t width = mVkSurfaceCapabilitiesKHR.currentExtent.width;
+        const uint32_t height = mVkSurfaceCapabilitiesKHR.currentExtent.height;
+        if ( width == 0 || height == 0 )
+        {
+            return;
+        }
+        const VkDeviceSize buffer_size = static_cast<VkDeviceSize> ( width ) * height * 4;
+        if ( mCaptureBuffer.empty() || mCaptureWidth != width || mCaptureHeight != height )
+        {
+            // Only reallocated when the surface changes size, which always
+            // follows a swapchain recreation and its device drain.
+            mCaptureBuffer.clear();
+            mCaptureBuffer.emplace_back ( mVulkanRenderer, buffer_size,
+                                          VK_BUFFER_USAGE_TRANSFER_DST_BIT,
+                                          VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT );
+        }
+        mCaptureWidth = width;
+        mCaptureHeight = height;
+
+        // The render pass left the image in PRESENT_SRC. It is still acquired
+        // here, which is the only window in which it may legally be read; after
+        // vkQueuePresentKHR the image is released and touching it is invalid.
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.image = mVkSwapchainImages[mActiveImageIndex];
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.levelCount = 1;
+        barrier.subresourceRange.layerCount = 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &barrier );
+
+        VkBufferImageCopy region{};
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.layerCount = 1;
+        region.imageExtent = { width, height, 1 };
+        vkCmdCopyImageToBuffer ( mVkCommandBuffer, mVkSwapchainImages[mActiveImageIndex],
+                                 VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                                 mCaptureBuffer.front().GetBuffer(), 1, &region );
+
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+        barrier.dstAccessMask = 0;
+        vkCmdPipelineBarrier ( mVkCommandBuffer,
+                               VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT,
+                               0, 0, nullptr, 0, nullptr, 1, &barrier );
+    }
+
+    bool VulkanWindow::ReadPixels ( Texture& aTexture ) const
+    {
+        if ( mCaptureBuffer.empty() || mCaptureWidth == 0 || mCaptureHeight == 0 )
+        {
+            return false;
+        }
+        const VkDeviceSize buffer_size = static_cast<VkDeviceSize> ( mCaptureWidth ) * mCaptureHeight * 4;
+        const uint8_t* mapped = static_cast<const uint8_t*> ( mCaptureBuffer.front().Map ( 0, buffer_size ) );
+        if ( mapped == nullptr )
+        {
+            return false;
+        }
+        std::vector<uint8_t> pixels ( static_cast<size_t> ( buffer_size ) );
+        std::memcpy ( pixels.data(), mapped, pixels.size() );
+        mCaptureBuffer.front().Unmap();
+
+        // Swapchains are commonly BGRA; the API contract is RGBA so callers do
+        // not have to branch on the surface format. Rows already arrive top-down.
+        if ( mVkSurfaceFormatKHR.format == VK_FORMAT_B8G8R8A8_UNORM ||
+             mVkSurfaceFormatKHR.format == VK_FORMAT_B8G8R8A8_SRGB )
+        {
+            for ( size_t i = 0; i < pixels.size(); i += 4 )
+            {
+                std::swap ( pixels[i], pixels[i + 2] );
+            }
+        }
+        aTexture.Resize ( mCaptureWidth, mCaptureHeight, pixels.data(),
+                          Texture::Format::RGBA, Texture::Type::UNSIGNED_BYTE );
+        return true;
     }
 
     void VulkanWindow::Barrier() const

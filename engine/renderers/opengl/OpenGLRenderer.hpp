@@ -180,6 +180,8 @@ namespace AeonGames
         void EndPointShadowPass ( void* aWindowId ) final;
         void EndRender ( void* aWindowId ) final;
         void Finish ( void* aWindowId ) final;
+        void RequestCapture ( void* aWindowId ) final;
+        bool ReadPixels ( void* aWindowId, Texture& aTexture ) const final;
         void RecordGpuTimestamp ( void* aWindowId, uint32_t aSlot ) final;
         bool ReadGpuTimestamps ( void* aWindowId, std::array<uint64_t, kGpuTimestampMarks>& aTimestampsNs ) final;
         void Render ( void* aWindowId,
