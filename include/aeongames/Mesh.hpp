@@ -65,6 +65,15 @@ namespace AeonGames
             INTEGER          =  0b00000010, ///< Values are passed as integers (no conversion).
         };
 
+        /** @brief Vertex stride of the compute-skinning output, in bytes.
+         *
+         * The skinning pass drops the per-vertex weight data, so its output is
+         * the compact position/normal/tangent/bitangent/uv layout rather than
+         * the weighted source stride. Both back-ends must bind the skinned
+         * buffer with this stride, not the source mesh's: getting it wrong
+         * misreads every vertex after the first. */
+        static constexpr size_t kSkinnedVertexStride = 56;
+
         /** @brief CRC32-based binding location identifiers for descriptor sets. */
         enum  BindingLocations : uint32_t
         {

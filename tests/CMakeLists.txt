@@ -97,6 +97,15 @@ target_link_libraries(unit-tests
                       ${GMOCK_LIBRARIES}
                       ${ZLIB_LIBRARIES})
 
+if(UNIX AND NOT APPLE)
+  # The GPU tests host renderer surfaces on an off-screen X11 window, created
+  # with a GLX visual because the OpenGL back-end derives its framebuffer config
+  # from the window's visual.
+  find_package(X11 REQUIRED)
+  find_package(OpenGL REQUIRED)
+  target_link_libraries(unit-tests ${X11_LIBRARIES} ${OPENGL_LIBRARIES})
+endif()
+
 if(BUILD_VULKAN_RENDERER)
   # Link the Vulkan loader so the compute tests can probe for a usable Vulkan
   # driver before exercising the VulkanRenderer backend. This lets headless CI

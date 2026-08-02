@@ -427,8 +427,8 @@ namespace AeonGames
         // A single object: hardware-instanced aInstanceCount times (e.g. the
         // editor grid draws one line matrix repeated across gl_InstanceID).
         RenderCommon ( { &aModelMatrix, 1 }, aMesh, aPipeline, aMaterial, aTopology,
-                       aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
-                       aSkinnedVertices, aRenderPass );
+                     aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
+                     aSkinnedVertices, aRenderPass );
     }
 
     void OpenGLWindow::RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
@@ -444,32 +444,32 @@ namespace AeonGames
                                       RenderPass aRenderPass ) const
     {
         if ( aModelMatrices.empty() )
-        {
-            return;
-        }
-        // Resolve the optional pre-skinned vertex buffer produced by the compute
-        // skinning pre-pass. When present it is bound as the vertex array source
-        // in place of the mesh's rest-pose vertices, using its compact 56-byte
-        // stride (weight data dropped) instead of the mesh's own 64-byte stride.
-        // Batched instancing is never skinned, so those callers pass null here.
-        GLuint skinned_vertex_buffer_id = 0;
-        size_t skinned_vertex_offset = 0;
-        size_t skinned_vertex_stride = 0;
-        if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
-        {
-            skinned_vertex_buffer_id =
-                reinterpret_cast<const OpenGLBuffer&> ( aSkinnedVertices->GetMemoryPoolBuffer()->GetBuffer() ).GetBufferId();
+    {
+        return;
+    }
+    // Resolve the optional pre-skinned vertex buffer produced by the compute
+    // skinning pre-pass. When present it is bound as the vertex array source
+    // in place of the mesh's rest-pose vertices, using its compact 56-byte
+    // stride (weight data dropped) instead of the mesh's own 64-byte stride.
+    // Batched instancing is never skinned, so those callers pass null here.
+    GLuint skinned_vertex_buffer_id = 0;
+    size_t skinned_vertex_offset = 0;
+    size_t skinned_vertex_stride = 0;
+    if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
+    {
+        skinned_vertex_buffer_id =
+            reinterpret_cast<const OpenGLBuffer&> ( aSkinnedVertices->GetMemoryPoolBuffer()->GetBuffer() ).GetBufferId();
             skinned_vertex_offset = aSkinnedVertices->GetOffset();
-            skinned_vertex_stride = 56;
+            skinned_vertex_stride = Mesh::kSkinnedVertexStride;
         }
         // Select the pipeline and engine state for this pass. Shadow and depth-pre
         // passes substitute renderer-owned pipelines (depth-only / cluster-mark)
         // that ignore the item's own pipeline and material; the shading pass uses
         // the item's pipeline.
         switch ( aRenderPass )
-        {
-        case RenderPass::ShadowPass:
-            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
+    {
+    case RenderPass::ShadowPass:
+        mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             BindShadowPassState();
             break;
         case RenderPass::DepthPrePass:
@@ -489,8 +489,8 @@ namespace AeonGames
         // Material state applies only to the shading pass; the substituted
         // shadow/depth pipelines ignore it.
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass && aMaterial != nullptr )
-        {
-            mOpenGLRenderer.SetMaterial ( *aMaterial );
+    {
+        mOpenGLRenderer.SetMaterial ( *aMaterial );
             // Deliver the material's bindless record index per-instance (one copy
             // per model matrix) so the shading shader selects it by gl_InstanceID,
             // parallel to BindObjectMatrices.
@@ -508,8 +508,8 @@ namespace AeonGames
         const OpenGLMesh* gl_mesh = mOpenGLRenderer.GetOpenGLMesh ( aMesh );
         const bool pooled = ( gl_mesh != nullptr && gl_mesh->IsPooled() && skinned_vertex_buffer_id == 0 );
         if ( aMesh.GetIndexCount() )
-        {
-            if ( pooled )
+    {
+        if ( pooled )
             {
                 glDrawElementsInstancedBaseVertexBaseInstance (
                     TopologyMap[aTopology],
@@ -559,15 +559,15 @@ namespace AeonGames
                                           RenderPass aRenderPass ) const
     {
         if ( aMeshes.empty() )
-        {
-            return;
-        }
-        // Same pass-pipeline selection and engine state as RenderCommon: shadow /
-        // depth-pre passes substitute the renderer-owned depth-only pipelines.
-        switch ( aRenderPass )
-        {
-        case RenderPass::ShadowPass:
-            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
+    {
+        return;
+    }
+    // Same pass-pipeline selection and engine state as RenderCommon: shadow /
+    // depth-pre passes substitute the renderer-owned depth-only pipelines.
+    switch ( aRenderPass )
+    {
+    case RenderPass::ShadowPass:
+        mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             BindShadowPassState();
             break;
         case RenderPass::DepthPrePass:
@@ -586,8 +586,8 @@ namespace AeonGames
         // Shading pass: upload the per-instance bindless material indices the
         // fragment shader reads through the flat varying (parallel to the matrices).
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass )
-        {
-            mOpenGLRenderer.BindMaterialStorageBuffer();
+    {
+        mOpenGLRenderer.BindMaterialStorageBuffer();
             mInstanceMaterials.clear();
             mInstanceMaterials.reserve ( aMaterials.size() );
             for ( const Material * material : aMaterials )
@@ -610,8 +610,8 @@ namespace AeonGames
         uint32_t instance_base = 0;
         size_t i = 0;
         while ( i < aMeshes.size() )
-        {
-            const Mesh* mesh = aMeshes[i];
+    {
+        const Mesh* mesh = aMeshes[i];
             uint32_t run = 1;
             while ( i + run < aMeshes.size() && aMeshes[i + run] == mesh )
             {
@@ -745,8 +745,8 @@ namespace AeonGames
         // pipeline in BeginRender. Bound by name-CRC; BindStorageBuffer silently
         // skips pipelines that don't declare these blocks.
         if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
-        {
-            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+    {
+        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
         }
         // Directional / spot / point shadow params + depth textures. Pipelines
@@ -768,8 +768,8 @@ namespace AeonGames
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
         if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
-        {
-            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
+    {
+        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
         }
         // OpenGLRenderer::BindPipeline applies the mark pipeline's colour-write
         // mask on every bind (all channels, since the pipeline declares no blend
@@ -777,8 +777,8 @@ namespace AeonGames
         // BeginRender. Re-assert it here -- after the pipeline bind -- so the
         // mark pass keeps skipping its throwaway G-buffer colour writes.
         if ( PrePassMaskColor() )
-        {
-            glColorMask ( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
+    {
+        glColorMask ( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
         }
     }
 
@@ -788,8 +788,8 @@ namespace AeonGames
         // through a scratch UBO bound at the same ShadowParams slot the depth
         // vertex shader reads; the directional pass uses the real buffer.
         mOpenGLRenderer.SetShadowParams ( mInPointShadowPass ? mPointShadowDepthScratch
-                                          : mInSpotShadowPass ? mSpotShadowDepthScratch
-                                          : mShadowParams );
+        : mInSpotShadowPass ? mSpotShadowDepthScratch
+        : mShadowParams );
     }
 
     void OpenGLWindow::BindObjectMatrices ( std::span<const Matrix4x4> aMatrices ) const
@@ -1595,9 +1595,9 @@ namespace AeonGames
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
-        for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
-        {
-            if ( storage_buffer.mBuffer != nullptr )
+for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
+    {
+        if ( storage_buffer.mBuffer != nullptr )
             {
                 mOpenGLRenderer.BindStorageBuffer ( storage_buffer.mBinding, *storage_buffer.mBuffer );
             }

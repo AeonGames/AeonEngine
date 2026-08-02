@@ -226,15 +226,18 @@ namespace AeonGames
         throw std::runtime_error ( "Invalid Index Size." );
     }
 
-    void VulkanMesh::Bind ( VkCommandBuffer aVkCommandBuffer, VkBuffer aSkinnedVertexBuffer, VkDeviceSize aSkinnedVertexOffset ) const
+    void VulkanMesh::Bind ( VkCommandBuffer aVkCommandBuffer, VkBuffer aSkinnedVertexBuffer, VkDeviceSize aSkinnedVertexOffset, VkDeviceSize aSkinnedVertexStride ) const
     {
         const VkDeviceSize zero_offset = 0;
+        const VkDeviceSize mesh_stride = mStride;
         if ( aSkinnedVertexBuffer != VK_NULL_HANDLE )
         {
             // Pre-skinned vertices produced by the compute pass replace the
             // rest-pose vertex input; the index buffer still comes from this
-            // (weighted, private) mesh's own buffer.
-            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &aSkinnedVertexBuffer, &aSkinnedVertexOffset );
+            // (weighted, private) mesh's own buffer. Their stride is the packed
+            // one the compute pass wrote, not this mesh's weighted stride.
+            const VkDeviceSize skinned_stride = aSkinnedVertexStride != 0 ? aSkinnedVertexStride : mesh_stride;
+            vkCmdBindVertexBuffers2 ( aVkCommandBuffer, 0, 1, &aSkinnedVertexBuffer, &aSkinnedVertexOffset, nullptr, &skinned_stride );
             if ( mMesh->GetIndexCount() )
             {
                 vkCmdBindIndexBuffer ( aVkCommandBuffer,
@@ -246,7 +249,7 @@ namespace AeonGames
         {
             // Static mesh drawn from the renderer's shared geometry pool; the
             // draw's base-vertex / first-index select this mesh's region.
-            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mVulkanRenderer.GetGeometryVertexBuffer ( mStride ), &zero_offset );
+            vkCmdBindVertexBuffers2 ( aVkCommandBuffer, 0, 1, &mVulkanRenderer.GetGeometryVertexBuffer ( mStride ), &zero_offset, nullptr, &mesh_stride );
             if ( mMesh->GetIndexCount() )
             {
                 vkCmdBindIndexBuffer ( aVkCommandBuffer,
@@ -258,7 +261,7 @@ namespace AeonGames
         {
             // Weighted mesh drawn at rest pose (e.g. a shadow pass) from its own
             // buffer.
-            vkCmdBindVertexBuffers ( aVkCommandBuffer, 0, 1, &mMeshBuffer.GetBuffer(), &zero_offset );
+            vkCmdBindVertexBuffers2 ( aVkCommandBuffer, 0, 1, &mMeshBuffer.GetBuffer(), &zero_offset, nullptr, &mesh_stride );
             if ( mMesh->GetIndexCount() )
             {
                 vkCmdBindIndexBuffer ( aVkCommandBuffer,

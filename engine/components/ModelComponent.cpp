@@ -112,8 +112,8 @@ namespace AeonGames
     Property ModelComponent::GetProperty ( const StringId& aId ) const
     {
         switch ( aId )
-        {
-        case ModelComponentPropertyIds[0]:
+    {
+    case ModelComponentPropertyIds[0]:
             return GetModel().GetPathString();
         case ModelComponentPropertyIds[1]:
             return GetActiveAnimation();
@@ -454,8 +454,7 @@ namespace AeonGames
             // The skinned output drops the per-vertex weight data, so it uses
             // the compact 56-byte stride consumed by the no-skeleton draw
             // pipeline (position, normal, tangent, bitangent, uv).
-            constexpr size_t kSkinnedVertexStride = 56;
-            size_t skinned_size = static_cast<size_t> ( mesh->GetVertexCount() ) * kSkinnedVertexStride;
+            size_t skinned_size = static_cast<size_t> ( mesh->GetVertexCount() ) * Mesh::kSkinnedVertexStride;
             mSkinnedVertices[i] = aRenderer.AllocateSingleFrameStorageMemory ( aWindowId, skinned_size );
             aRenderer.Skin ( aWindowId, *skinning_pipeline, *mesh, skinning_matrices, mSkinnedVertices[i] );
             dispatched = true;

@@ -630,7 +630,7 @@ namespace AeonGames
         memset ( pipeline_color_blend_state_create_info.blendConstants, 0, sizeof ( VkPipelineColorBlendStateCreateInfo::blendConstants ) );
 
         //----------------Dynamic State------------------//
-        std::array<VkDynamicState, 4> dynamic_states
+        std::array<VkDynamicState, 5> dynamic_states
         {
             {
                 VK_DYNAMIC_STATE_VIEWPORT,
@@ -642,11 +642,22 @@ namespace AeonGames
                 VK_DYNAMIC_STATE_DEPTH_BIAS
             }
         };
+        uint32_t dynamic_state_count = 4;
+        // The same mesh is drawn either at rest pose (its own stride) or from the
+        // compute-skinned buffer, whose vertices are packed without weights.
+        // Binding the stride at draw time keeps one pipeline per mesh layout and
+        // matches the OpenGL back-end, which passes the stride to
+        // EnableAttributes. Vertexless (fullscreen) pipelines never bind a vertex
+        // buffer, so they must not declare a stride they can never set.
+        if ( !mVertexAttributes.empty() )
+        {
+            dynamic_states[dynamic_state_count++] = VK_DYNAMIC_STATE_VERTEX_INPUT_BINDING_STRIDE;
+        }
         VkPipelineDynamicStateCreateInfo pipeline_dynamic_state_create_info{};
         pipeline_dynamic_state_create_info.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
         pipeline_dynamic_state_create_info.pNext = nullptr;
         pipeline_dynamic_state_create_info.flags = 0;
-        pipeline_dynamic_state_create_info.dynamicStateCount = static_cast<uint32_t> ( dynamic_states.size() );
+        pipeline_dynamic_state_create_info.dynamicStateCount = dynamic_state_count;
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
         // Cap on simultaneously-bound descriptor sets. Raised from 8 to 16 so
@@ -1096,7 +1107,7 @@ namespace AeonGames
                 {
                     const SpvReflectDescriptorBinding& descriptor_set_binding = *descriptor_set->bindings[i];
                     auto layout_binding = std::lower_bound ( it->descriptor_set_layout_bindings.begin(), it->descriptor_set_layout_bindings.end(), descriptor_set_binding.binding,
-                                          [] ( const VkDescriptorSetLayoutBinding & a, const uint32_t b )
+                        [] ( const VkDescriptorSetLayoutBinding & a, const uint32_t b )
                     {
                         return a.binding < b;
                     } );
