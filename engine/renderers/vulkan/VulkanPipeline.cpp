@@ -286,8 +286,7 @@ namespace AeonGames
     {
         return ! ( a.binding == b.binding &&
                    a.descriptorType  == SpvReflectToVulkanDescriptorType.at ( b.descriptor_type ) &&
-                   a.descriptorCount == b.count &&
-                   a.pImmutableSamplers == nullptr );
+                   a.descriptorCount == b.count );
     }
 
     VulkanPipeline::VulkanPipeline ( VulkanPipeline&& aVulkanPipeline ) :
@@ -660,11 +659,12 @@ namespace AeonGames
         pipeline_dynamic_state_create_info.dynamicStateCount = dynamic_state_count;
         pipeline_dynamic_state_create_info.pDynamicStates = dynamic_states.data();
 
-        // Cap on simultaneously-bound descriptor sets. Raised from 8 to 16 so
-        // the clustered shading pipeline (sets 0-7) can additionally bind the
-        // directional-shadow ShadowParams (set 8) and ShadowMap (set 9) sets.
-        // Desktop Vulkan implementations report maxBoundDescriptorSets >= 32, so
-        // 16 stays well within hardware limits.
+        // Cap on simultaneously-bound descriptor sets. Vulkan's pSetLayouts is
+        // dense, so a sparse set index costs a slot: the array must cover the
+        // highest index any stage declares, not the number of sets used. The
+        // real ceiling is maxBoundDescriptorSets, which is 8 on MoltenVK and
+        // cannot be raised, so shaders keep their set indices dense and pack
+        // several resources per set where they need more (see RENDER_PIPELINE.md).
         std::array<VkDescriptorSetLayout, 16> descriptor_set_layouts{};
         if ( mDescriptorSets.size() > descriptor_set_layouts.size() )
         {
@@ -1014,18 +1014,21 @@ namespace AeonGames
             }
             for ( const auto& descriptor_set : descriptor_sets )
             {
-                // A descriptor set that contains a single buffer block (uniform
+                // A descriptor set whose first binding is a buffer block (uniform
                 // or storage, including their dynamic variants) is named after
-                // the block itself so the engine can look it up by CRC32 of
+                // that block so the engine can look it up by CRC32 of
                 // the GLSL block name (see Mesh::BindingLocations). Any other
-                // shape — most commonly a single combined image sampler or a
-                // genuine multi-binding set — is collapsed under the legacy
-                // "Samplers" bucket. Storage buffers were previously omitted
-                // here, which made every clustered/forward+ SSBO collide on
-                // that bucket; keep this list in sync with new buffer kinds.
+                // shape — most commonly a set of unnamed combined image samplers
+                // — is collapsed under the legacy "Samplers" bucket. Storage
+                // buffers were previously omitted here, which made every
+                // clustered/forward+ SSBO collide on that bucket; keep this list
+                // in sync with new buffer kinds.
+                // Sets may hold several bindings: MoltenVK caps a pipeline layout
+                // at 8 descriptor sets, so the shading pipeline packs the
+                // window's per-frame blocks into one set. Such a set is
+                // identified by its FIRST binding, and the engine binds it whole.
                 const auto first_descriptor_type = descriptor_set->bindings[0]->descriptor_type;
                 const bool is_named_buffer_block =
-                    ( descriptor_set->binding_count == 1 ) &&
                     ( first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
                       first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC ||
                       first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER ||
@@ -1033,15 +1036,16 @@ namespace AeonGames
                 const char* type_name{ is_named_buffer_block
                                        ? descriptor_set->bindings[0]->type_description->type_name
                                        : "Samplers" };
-                // A lone combined image sampler that the engine binds by name
+                // A combined image sampler that the engine binds by name
                 // (the directional ShadowMap, the spot SpotShadowMap or the
                 // point PointShadowMap, owned by the window rather than the
                 // material) must keep its own identity instead of collapsing
                 // into the material "Samplers" bucket; otherwise distinct sampler
                 // sets hash-collide and overwrite each other at bind time,
-                // leaving the material sampler set unbound.
+                // leaving the material sampler set unbound. The three shadow maps
+                // share one packed set on the shading pipeline, named after the
+                // directional map at binding 0.
                 if ( !is_named_buffer_block &&
-                     descriptor_set->binding_count == 1 &&
                      first_descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
                      descriptor_set->bindings[0]->name != nullptr &&
                      descriptor_set->bindings[0]->name[0] != '\0' &&
@@ -1076,30 +1080,29 @@ namespace AeonGames
                 } );
 
                 /// @note Kwizatz: Add more checks to avoid binding conflicts across different shaders
-                if ( it != mDescriptorSets.end() && it->hash == hash && it->set == descriptor_set->set )
+                // A set already seen in an earlier stage is reused rather than
+                // re-inserted, and the binding loop below merges in any binding
+                // this stage adds. Stages of one pipeline may declare different
+                // subsets of a packed set (the vertex stage reads only Matrices
+                // from set 0 while the fragment stage reads all seven blocks);
+                // skipping the merge would leave those bindings out of the
+                // pipeline layout.
+                if ( it == mDescriptorSets.end() || it->hash != hash || it->set != descriptor_set->set )
                 {
-#if 0
-                    for ( auto& binding : it->descriptor_set_layout_bindings )
+                    it = mDescriptorSets.insert ( it,
+                                                  VulkanDescriptorSetInfo
                     {
-                        binding.stageFlags |= ShaderTypeToShaderStageFlagBit.at ( aType );
-                    }
-#endif
-                    continue;
+                        hash,
+                        descriptor_set->set,
+                        VkDescriptorSetLayoutCreateInfo
+                        {
+                            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+                            .pNext = nullptr,
+                            .flags = 0
+                        },
+                        {}
+                    } );
                 }
-
-                it = mDescriptorSets.insert ( it,
-                                              VulkanDescriptorSetInfo
-                {
-                    hash,
-                    descriptor_set->set,
-                    VkDescriptorSetLayoutCreateInfo
-                    {
-                        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-                        .pNext = nullptr,
-                        .flags = 0
-                    },
-                    {}
-                } );
                 it->descriptor_set_layout_bindings.reserve ( descriptor_set->binding_count );
                 std::cout << LogLevel::Debug << "Descriptor set " << descriptor_set->set << std::endl;
 
@@ -1121,10 +1124,26 @@ namespace AeonGames
                         // use the dynamic storage descriptor variant. The per-frame
                         // Lights SSBO is the exception: it is a persistent per-window
                         // buffer bound at offset 0, so it stays a plain storage
-                        // descriptor.
+                        // descriptor. Keyed on the binding's own block name, not the
+                        // set's, so a packed set holding Lights alongside other
+                        // blocks still classifies each binding correctly.
                         VkDescriptorType descriptor_type = SpvReflectToVulkanDescriptorType.at ( descriptor_set_binding.descriptor_type );
+                        // Buffer blocks are identified by their GLSL block type
+                        // name, images and samplers by their variable name.
+                        const bool binding_is_buffer_block =
+                            descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER ||
+                            descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC ||
+                            descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER ||
+                            descriptor_set_binding.descriptor_type == SPV_REFLECT_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
+                        const char* binding_type_name =
+                            binding_is_buffer_block
+                            ? ( ( descriptor_set_binding.type_description != nullptr ) ? descriptor_set_binding.type_description->type_name : nullptr )
+                            : descriptor_set_binding.name;
+                        const uint32_t binding_hash = ( binding_type_name != nullptr && binding_type_name[0] != '\0' )
+                                                      ? crc32i ( binding_type_name, strlen ( binding_type_name ) )
+                                                      : hash;
                         if ( descriptor_type == VK_DESCRIPTOR_TYPE_STORAGE_BUFFER &&
-                             hash != Mesh::BindingLocations::LIGHTS )
+                             binding_hash != Mesh::BindingLocations::LIGHTS )
                         {
                             descriptor_type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC;
                         }
@@ -1132,7 +1151,20 @@ namespace AeonGames
                         layout_binding->descriptorCount = descriptor_set_binding.count;
                         //layout_binding->stageFlags = ShaderTypeToShaderStageFlagBit.at ( aType );
                         layout_binding->stageFlags = VK_SHADER_STAGE_ALL;
-                        layout_binding->pImmutableSamplers = nullptr;
+                        // The shadow maps are sampled with hardware comparison.
+                        // Metal only supports comparison samplers baked into the
+                        // shader, which is what an immutable sampler compiles to,
+                        // so the renderer's device-wide shadow sampler is declared
+                        // immutable here and in the matching window-owned layouts.
+                        // Desktop Vulkan accepts either form.
+                        const bool is_shadow_map_sampler =
+                            descriptor_type == VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER &&
+                            ( binding_hash == Mesh::BindingLocations::SHADOW_MAP ||
+                              binding_hash == Mesh::BindingLocations::SPOT_SHADOW_MAP ||
+                              binding_hash == Mesh::BindingLocations::POINT_SHADOW_MAP );
+                        layout_binding->pImmutableSamplers = is_shadow_map_sampler
+                                                             ? mVulkanRenderer.GetShadowSamplerPtr()
+                                                             : nullptr;
                         std::cout << LogLevel::Debug << "Set " << descriptor_set_binding.set << " New Binding " << descriptor_set_binding.binding  << " Type Name " << type_name << " Shader Type " << ShaderTypeToString.at ( aType ) << std::endl;
                     }
                 }
@@ -1154,6 +1186,20 @@ namespace AeonGames
             return it->set;
         }
         return std::numeric_limits<uint32_t>::max();
+    }
+
+    uint32_t VulkanPipeline::GetDescriptorSetBindingCount ( uint32_t hash ) const
+    {
+        auto it = std::lower_bound ( mDescriptorSets.begin(), mDescriptorSets.end(), hash,
+                                     [] ( const VulkanDescriptorSetInfo & a, const uint32_t b )
+        {
+            return a.hash < b;
+        } );
+        if ( it != mDescriptorSets.end() && it->hash == hash )
+        {
+            return static_cast<uint32_t> ( it->descriptor_set_layout_bindings.size() );
+        }
+        return 0;
     }
 
     const std::vector<VulkanDescriptorSetInfo>& VulkanPipeline::GetDescriptorSetInfos() const

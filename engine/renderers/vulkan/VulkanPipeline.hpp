@@ -64,6 +64,12 @@ namespace AeonGames
         const VkDescriptorSetLayout GetDescriptorSetLayout ( uint32_t name ) const;
         /// @brief Get the descriptor set index for a given hash.
         uint32_t GetDescriptorSetIndex ( uint32_t hash ) const;
+        /// @brief Get how many bindings the descriptor set identified by a hash declares.
+        /// @param hash CRC32 of the set's first binding's block/variable name.
+        /// @return The binding count, or 0 when the pipeline declares no such set.
+        ///         A count above one means the shader packs several engine
+        ///         resources into that set, which the engine then binds whole.
+        uint32_t GetDescriptorSetBindingCount ( uint32_t hash ) const;
         /// @brief Get the reflected descriptor set metadata (hash, set index, bindings).
         const std::vector<VulkanDescriptorSetInfo>& GetDescriptorSetInfos() const;
         /// @brief Get the push constant range used for the model matrix.

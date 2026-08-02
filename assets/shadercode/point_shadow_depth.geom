@@ -10,7 +10,7 @@ layout ( triangles ) in;
 layout ( triangle_strip, max_vertices = 18 ) out;
 
 #ifdef VULKAN
-layout(set = 8, binding = 0, std140)
+layout(set = 0, binding = 0, std140)
 #else
 layout(binding = 5, std140)
 #endif

@@ -37,6 +37,14 @@ uniform Matrices { mat4 ProjectionMatrix; mat4 ViewMatrix; };
   assignments in [static_mesh.vert](../../assets/shadercode/static_mesh.vert) and
   [clustered_phong.frag](../../assets/shadercode/clustered_phong.frag) before claiming a slot, and
   keep the C++ side in both renderers in sync.
+- **A pipeline may declare at most 8 descriptor sets** — MoltenVK's hard limit, and not
+  configurable (Metal argument buffers do not raise it). The count is `max(set index) + 1` across
+  *all* stages of the pipeline, since gaps are filled with empty layouts, so keep set indices dense
+  and low. When a pipeline needs more engine resources than that, **pack** several into one set
+  under different `binding` numbers; the engine identifies a packed set by its **binding 0** and
+  binds the whole set at once (see sets 0 and 1 of `clustered_phong.frag`, bound by
+  `VulkanWindow::BindShadingPassSets`). Packing also needs a matching aggregate descriptor set in
+  `VulkanWindow::InitializePackedShadingSets`, so it is not a shader-only change.
 - Backend-specific access goes behind a macro (`MODEL_MATRIX`, `MAT_REC`, `MAT_TEX(i)`) so `main()`
   stays backend-agnostic.
 - Instancing: Vulkan folds the base instance into `gl_InstanceIndex`; OpenGL needs

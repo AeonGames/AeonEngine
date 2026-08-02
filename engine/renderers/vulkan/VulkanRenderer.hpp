@@ -236,6 +236,17 @@ namespace AeonGames
         Display* GetDisplay() const;
 #endif
         bool HasPrimitiveTopologyListRestart() const;
+        /// @brief Whether the device supports vkCmdDrawIndexedIndirectCount.
+        /// @return true when the draw count may be sourced from a GPU buffer,
+        ///         false on implementations such as MoltenVK that lack the
+        ///         drawIndirectCount feature.
+        bool HasDrawIndirectCount() const;
+        /// @brief Get the device-wide shadow-map comparison sampler.
+        VkSampler GetShadowSampler() const;
+        /// @brief Get a stable pointer to the shadow-map comparison sampler, for
+        ///        use as VkDescriptorSetLayoutBinding::pImmutableSamplers.
+        /// @return A pointer valid for the renderer's lifetime.
+        const VkSampler* GetShadowSamplerPtr() const;
         const RendererSettings& GetSettings() const;
     private:
         void InitializeInstance();
@@ -447,6 +458,10 @@ namespace AeonGames
         std::array<const Texture*, kMaterialSamplerSlots.size() > mMaterialSamplerFallbacks{};
         const Texture* mDefaultTexture{ nullptr };
         bool mHasPrimitiveTopologyListRestart{false};
+        bool mHasDrawIndirectCount{false};
+        // Device-wide shadow-map comparison sampler, used as an immutable
+        // sampler by every shadow-map descriptor set layout.
+        VkSampler mVkShadowSampler{VK_NULL_HANDLE};
 
         // Overlay resources
         VkPipeline mOverlayPipeline{ VK_NULL_HANDLE };

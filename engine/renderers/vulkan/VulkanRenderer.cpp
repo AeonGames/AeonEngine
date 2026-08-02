@@ -256,6 +256,21 @@ namespace AeonGames
         return mHasPrimitiveTopologyListRestart;
     }
 
+    bool VulkanRenderer::HasDrawIndirectCount() const
+    {
+        return mHasDrawIndirectCount;
+    }
+
+    VkSampler VulkanRenderer::GetShadowSampler() const
+    {
+        return mVkShadowSampler;
+    }
+
+    const VkSampler* VulkanRenderer::GetShadowSamplerPtr() const
+    {
+        return &mVkShadowSampler;
+    }
+
     const RendererSettings& VulkanRenderer::GetSettings() const
     {
         return mSettings;
@@ -654,10 +669,11 @@ namespace AeonGames
         mHasPrimitiveTopologyListRestart = ( supported_restart_features.primitiveTopologyListRestart == VK_TRUE );
 #endif
         // Query and require the descriptor-indexing (bindless), buffer device
-        // address, indirect-draw-count and draw-parameter features the bindless
-        // / GPU-driven renderer path depends on. All are core in the requested
-        // Vulkan 1.2+, so no extension is needed; we still verify the physical
-        // device actually supports them and fail fast with a precise message.
+        // address and draw-parameter features the bindless / GPU-driven renderer
+        // path depends on. All are core in the requested Vulkan 1.2+, so no
+        // extension is needed; we still verify the physical device actually
+        // supports them and fail fast with a precise message. drawIndirectCount
+        // is queried alongside them but is optional (see below).
         VkPhysicalDeviceVulkan11Features supported_vulkan11_features{};
         supported_vulkan11_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_1_FEATURES;
         VkPhysicalDeviceVulkan12Features supported_vulkan12_features{};
@@ -685,8 +701,12 @@ namespace AeonGames
             { supported_vulkan12_features.descriptorBindingVariableDescriptorCount, "descriptorBindingVariableDescriptorCount" },
             { supported_vulkan12_features.descriptorBindingSampledImageUpdateAfterBind, "descriptorBindingSampledImageUpdateAfterBind" },
             { supported_vulkan12_features.bufferDeviceAddress, "bufferDeviceAddress" },
-            { supported_vulkan12_features.drawIndirectCount, "drawIndirectCount" },
         };
+        // drawIndirectCount is optional: MoltenVK does not implement it. Without
+        // it the culled batches fall back to vkCmdDrawIndexedIndirect over the
+        // full padded command list, whose culled slots are zeroed (inert) by
+        // VulkanWindow::CullShadingBatch instead of compacted away.
+        mHasDrawIndirectCount = ( supported_vulkan12_features.drawIndirectCount == VK_TRUE );
         {
             std::ostringstream missing;
             for ( const RequiredFeature& feature : required_features )
@@ -713,7 +733,12 @@ namespace AeonGames
         physical_device_properties2.pNext = &mVkDescriptorIndexingProperties;
         vkGetPhysicalDeviceProperties2 ( mVkPhysicalDevice, &physical_device_properties2 );
         std::cout << LogLevel::Info << "VulkanRenderer bindless/GPU-driven features supported: descriptorIndexing, "
-                                       "bufferDeviceAddress, drawIndirectCount, multiDrawIndirect, shaderDrawParameters." << std::endl;
+                                       "bufferDeviceAddress, multiDrawIndirect, shaderDrawParameters." << std::endl;
+        if ( !mHasDrawIndirectCount )
+        {
+            std::cout << LogLevel::Warning << "VulkanRenderer physical device does not support drawIndirectCount, "
+                                              "falling back to non-compacted indirect draws for GPU-culled batches." << std::endl;
+        }
         std::cout << LogLevel::Debug << "maxDescriptorSetUpdateAfterBindSampledImages: "
                   << mVkDescriptorIndexingProperties.maxDescriptorSetUpdateAfterBindSampledImages << std::endl;
         std::cout << LogLevel::Debug << "maxPerStageDescriptorUpdateAfterBindSampledImages: "
@@ -730,9 +755,9 @@ namespace AeonGames
         // shaderDrawParameters exposes gl_DrawID / gl_BaseInstance for the
         // GPU-driven indirect path.
         vulkan11_features.shaderDrawParameters = VK_TRUE;
-        // Descriptor indexing (bindless), buffer device address and indirect
-        // draw count drive the bindless / GPU-driven renderer path; all verified
-        // supported above before this point.
+        // Descriptor indexing (bindless) and buffer device address drive the
+        // bindless / GPU-driven renderer path; both verified supported above
+        // before this point. drawIndirectCount is enabled only where present.
         VkPhysicalDeviceVulkan12Features vulkan12_features {};
         vulkan12_features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
         vulkan12_features.descriptorIndexing = VK_TRUE;
@@ -742,7 +767,7 @@ namespace AeonGames
         vulkan12_features.descriptorBindingVariableDescriptorCount = VK_TRUE;
         vulkan12_features.descriptorBindingSampledImageUpdateAfterBind = VK_TRUE;
         vulkan12_features.bufferDeviceAddress = VK_TRUE;
-        vulkan12_features.drawIndirectCount = VK_TRUE;
+        vulkan12_features.drawIndirectCount = mHasDrawIndirectCount ? VK_TRUE : VK_FALSE;
 #ifdef VK_USE_PLATFORM_METAL_EXT
         vulkan12_features.pNext = use_primitive_topology_list_restart ? &physical_device_primitive_topology_list_restart_features : nullptr;
 #endif
@@ -801,6 +826,35 @@ namespace AeonGames
                 mHasDeviceFault = false;
             }
         }
+
+        // Shadow-map comparison sampler: hardware PCF, depth <= stored => lit;
+        // sampling outside the map returns the white border (1.0) so it reads as
+        // lit. Device-scoped rather than per-window because it is used as an
+        // immutable sampler in every shadow-map descriptor set layout, including
+        // the ones VulkanPipeline builds from shader reflection. Metal only
+        // supports comparison samplers baked into the shader
+        // (VkPhysicalDevicePortabilitySubsetFeaturesKHR::mutableComparisonSamplers
+        // is false on MoltenVK), which is exactly what an immutable sampler
+        // becomes; desktop Vulkan is indifferent.
+        VkSamplerCreateInfo shadow_sampler_create_info{};
+        shadow_sampler_create_info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        shadow_sampler_create_info.magFilter = VK_FILTER_LINEAR;
+        shadow_sampler_create_info.minFilter = VK_FILTER_LINEAR;
+        shadow_sampler_create_info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_NEAREST;
+        shadow_sampler_create_info.addressModeU = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        shadow_sampler_create_info.addressModeV = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        shadow_sampler_create_info.addressModeW = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_BORDER;
+        shadow_sampler_create_info.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        shadow_sampler_create_info.compareEnable = VK_TRUE;
+        shadow_sampler_create_info.compareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+        shadow_sampler_create_info.maxLod = 1.0f;
+        if ( VkResult result = vkCreateSampler ( mVkDevice, &shadow_sampler_create_info, nullptr, &mVkShadowSampler ) )
+        {
+            std::ostringstream stream;
+            stream << "Shadow sampler creation failed: ( " << GetVulkanResultString ( result ) << " )";
+            std::cout << LogLevel::Error << stream.str() << std::endl;
+            throw std::runtime_error ( stream.str().c_str() );
+        }
     }
 
     void VulkanRenderer::InitializeCommandPools()
@@ -846,6 +900,11 @@ namespace AeonGames
             if ( VkResult result = vkDeviceWaitIdle ( mVkDevice ) )
             {
                 std::cout << LogLevel::Error << "vkDeviceWaitIdle returned " << GetVulkanResultString ( result ) << std::endl;
+            }
+            if ( mVkShadowSampler != VK_NULL_HANDLE )
+            {
+                vkDestroySampler ( mVkDevice, mVkShadowSampler, nullptr );
+                mVkShadowSampler = VK_NULL_HANDLE;
             }
             vkDestroyDevice ( mVkDevice, nullptr );
             mVkDevice = VK_NULL_HANDLE;
@@ -1508,6 +1567,16 @@ namespace AeonGames
                          crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].descriptorCount ), sizeof ( uint32_t ),
                                   crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].descriptorType ), sizeof ( VkDescriptorType ),
                                            crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].binding ), sizeof ( uint32_t ), key ) ) ) );
+            // Immutable samplers are part of a layout's identity: two layouts
+            // that differ only by them are not compatible, so they must not
+            // share a cache entry.
+            if ( aDescriptorSetLayoutCreateInfo.pBindings[i].pImmutableSamplers != nullptr )
+            {
+                for ( uint32_t j = 0; j < aDescriptorSetLayoutCreateInfo.pBindings[i].descriptorCount; ++j )
+                {
+                    key = crc32i ( reinterpret_cast<const char*> ( &aDescriptorSetLayoutCreateInfo.pBindings[i].pImmutableSamplers[j] ), sizeof ( VkSampler ), key );
+                }
+            }
         }
 
         auto lb = std::lower_bound ( mVkDescriptorSetLayouts.begin(), mVkDescriptorSetLayouts.end(), key,
@@ -2406,13 +2475,18 @@ void main()
 }
 )";
 
+    // Fullscreen quad as a triangle strip: (TL, BL, TR) + (BL, TR, BR). A fan
+    // would be the natural fit but MoltenVK reports triangleFans as unsupported
+    // (VkPhysicalDevicePortabilitySubsetFeaturesKHR::triangleFans), and strips
+    // are universally available. Rasterization culls nothing, so the winding
+    // flip between the two strip triangles is irrelevant.
     static const float overlay_vertices[] =
     {
         // positions   // texCoords
         -1.0f,  1.0f,  0.0f, 1.0f,
         -1.0f, -1.0f,  0.0f, 0.0f,
-        1.0f, -1.0f,  1.0f, 0.0f,
-        1.0f,  1.0f,  1.0f, 1.0f
+        1.0f,  1.0f,  1.0f, 1.0f,
+        1.0f, -1.0f,  1.0f, 0.0f
     };
 
     void VulkanRenderer::InitializeOverlay()
@@ -2552,7 +2626,7 @@ void main()
 
         VkPipelineInputAssemblyStateCreateInfo input_assembly{};
         input_assembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_FAN;
+        input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_STRIP;
 
         VkPipelineViewportStateCreateInfo viewport_state{};
         viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;

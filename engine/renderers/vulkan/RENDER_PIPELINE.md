@@ -346,7 +346,11 @@ has to run outside one.
    variant whose depth attachment `LOAD`s the pre‑pass result.
 3. **Draw.** `DrawCulledShadingBatches` issues one
    `vkCmdDrawIndexedIndirectCount` per batch; skinned, non‑indexed and privately
-   buffered items follow as individual draws.
+   buffered items follow as individual draws. Where the device lacks the
+   `drawIndirectCount` feature (MoltenVK), the batch falls back to a plain
+   `vkCmdDrawIndexedIndirect` over the whole padded command list — the slots the
+   compaction leaves unwritten are zeroed up front, so the surplus commands are
+   inert.
 
 `clustered_phong.frag` reconstructs its cluster from `gl_FragCoord`, looks up its
 `LightGrid` cell, iterates just that cell's slice of `LightIndexList`, and
@@ -455,12 +459,39 @@ pipeline reflects is handled by some binder for the pass — catching the "shade
 gained a set but C++ didn't bind it → device lost" class of bug at the bind site.
 
 **Capacity:** a pipeline layout may declare up to **16** descriptor sets (an
-engine‑chosen `std::array<VkDescriptorSetLayout, 16>` in `VulkanPipeline.cpp`,
-raised from 8 so clustered shading can also bind the shadow sets). Sparse set
-indices are allowed; gaps are filled with a shared **empty** layout because Vulkan's
-`pSetLayouts` is dense. This is *not* the hardware limit
-(`maxBoundDescriptorSets`, usually ≥ 32 on desktop), which the engine does not
-currently query.
+engine‑chosen `std::array<VkDescriptorSetLayout, 16>` in `VulkanPipeline.cpp`).
+Sparse set indices are allowed; gaps are filled with a shared **empty** layout
+because Vulkan's `pSetLayouts` is dense — so the count a pipeline actually costs is
+`max(set index) + 1` across all its stages, not the number of sets it uses.
+
+The real ceiling is the hardware's `maxBoundDescriptorSets`. Desktop drivers report
+≥ 32, but **MoltenVK reports 8** and that cannot be raised (it is SPIRV‑Cross's
+argument‑buffer limit; `MVK_CONFIG_USE_METAL_ARGUMENT_BUFFERS` does not change it).
+Shaders must therefore stay within **8 sets**, which is why the shading pipeline
+**packs** several engine resources into one set instead of giving each its own:
+
+| Packed set | Bindings |
+| --- | --- |
+| `clustered_phong` set 0 | `Matrices`, `Globals`, `ClusterParams`, `Lights`, `ShadowParams`, `SpotShadowParams`, `PointShadowParams` |
+| `clustered_phong` set 1 | `ShadowMap`, `SpotShadowMap`, `PointShadowMap` |
+
+Reflection names a set after its **binding 0**, so a packed set keeps a stable
+identity (`Matrices`, `ShadowMap`) and `GetDescriptorSetBindingCount` tells the
+binder whether the shader packed it. `VulkanWindow::InitializePackedShadingSets`
+builds the matching aggregate descriptor sets, aliasing the same buffers and image
+views the individual per‑resource sets use, so pipelines that still declare one set
+per resource are unaffected.
+
+### Shadow samplers are immutable
+The three shadow maps sample with hardware comparison. Metal only supports
+comparison samplers baked into the shader
+(`VkPhysicalDevicePortabilitySubsetFeaturesKHR::mutableComparisonSamplers` is false
+on MoltenVK), which is what an **immutable sampler** compiles to. The comparison
+sampler is therefore owned by `VulkanRenderer` (device scope, not per window) and
+declared as `pImmutableSamplers` in every shadow‑map layout — both the hand‑written
+ones in `VulkanWindow` and the reflected ones in `VulkanPipeline`. Descriptor writes
+leave `VkDescriptorImageInfo::sampler` null. Immutable samplers are part of a
+layout's identity, so they are folded into the descriptor‑set‑layout cache key.
 
 ### Bindless resources
 `VulkanRenderer::InitializeBindless` creates one **global** descriptor set holding a

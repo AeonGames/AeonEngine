@@ -9,7 +9,7 @@
 // of cluster_mark.vert / static_mesh.vert so the same static
 // meshes bind unchanged. Skinned meshes fall back to their rest pose here.
 #ifdef VULKAN
-layout(set = 8, binding = 0, std140)
+layout(set = 0, binding = 0, std140)
 #else
 layout(binding = 5, std140)
 #endif

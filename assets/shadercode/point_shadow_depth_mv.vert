@@ -8,7 +8,7 @@
 // OpenGL build uses instead, see point_shadow_depth.geom). Vulkan-only: this
 // source is selected for the "Vulkan" renderer, so it assumes Vulkan bindings
 // and clip conventions.
-layout(set = 8, binding = 0, std140)
+layout(set = 0, binding = 0, std140)
 uniform ShadowParams
 {
       mat4 face_view_projection[6]; // POINT_SHADOW_FACES, indexed by gl_ViewIndex
