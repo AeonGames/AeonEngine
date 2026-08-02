@@ -31,23 +31,40 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/GpuClusterParams.hpp"
 #include "aeongames/GpuLight.hpp"
-#ifdef _WIN32
 #include <string_view>
 #include "aeongames/Platform.hpp"
+#if defined(__unix__) && !defined(__APPLE__)
+#include <X11/Xlib.h>
+#include <GL/glx.h>
+#endif
 #ifdef AEON_TEST_HAVE_VULKAN
 #include <vulkan/vulkan.h>
-#endif
 #endif
 
 using namespace ::testing;
 namespace AeonGames
 {
-#ifdef _WIN32
-    /** @brief Create an off-screen pop-up window suitable for hosting a renderer
-     *  surface without ever being shown. */
-    static HWND CreateHiddenRenderWindow()
+#if defined(__unix__) && !defined(__APPLE__)
+    /** @brief Process-wide X display owned by the test harness.
+     *
+     *  Kept open for the lifetime of the process because closing the connection
+     *  would destroy every window created on it. */
+    static Display* TestDisplay()
     {
-        WNDCLASSEX wcex{};
+        static Display* display = XOpenDisplay ( nullptr );
+        return display;
+    }
+#endif
+
+    /** @brief Create an off-screen window suitable for hosting a renderer
+     *  surface without ever being shown, or nullptr where unsupported.
+     *
+     *  Returned as void* because that is what ConstructRenderer takes: an HWND
+     *  on Windows, an X11 window id on Linux. */
+    static void* CreateHiddenRenderWindow()
+    {
+#if defined(_WIN32)
+        WNDCLASSEX wcex {};
         wcex.cbSize = sizeof ( WNDCLASSEX );
         wcex.style = CS_OWNDC;
         wcex.lpfnWndProc = DefWindowProc;
@@ -57,6 +74,60 @@ namespace AeonGames
         return CreateWindowEx ( 0, "AeonComputeTestWindow", "AeonComputeTest",
                                 WS_POPUP, 0, 0, 64, 64, nullptr, nullptr,
                                 GetModuleHandle ( nullptr ), nullptr );
+#elif defined(__unix__) && !defined(__APPLE__)
+        Display* display = TestDisplay();
+        if ( display == nullptr )
+        {
+            return nullptr;
+        }
+        // The OpenGL back-end derives its GLX framebuffer config from the
+        // window's visual, so the window needs a GLX visual even for tests that
+        // only exercise compute.
+        int visual_attribs[]
+        {
+            GLX_RGBA, GLX_DOUBLEBUFFER,
+            GLX_RED_SIZE, 8, GLX_GREEN_SIZE, 8, GLX_BLUE_SIZE, 8, GLX_ALPHA_SIZE, 8,
+            GLX_DEPTH_SIZE, 24, GLX_STENCIL_SIZE, 8,
+            None
+        };
+        XVisualInfo* visual_info = glXChooseVisual ( display, DefaultScreen ( display ), visual_attribs );
+        if ( visual_info == nullptr )
+        {
+            return nullptr;
+        }
+        ::Window root = DefaultRootWindow ( display );
+        XSetWindowAttributes window_attributes{};
+        window_attributes.colormap = XCreateColormap ( display, root, visual_info->visual, AllocNone );
+        window_attributes.border_pixel = 0;
+        // override_redirect keeps the window away from the window manager so it
+        // is never mapped, focused or shown while the suite runs.
+        window_attributes.override_redirect = True;
+        ::Window window = XCreateWindow ( display, root, 0, 0, 64, 64, 0,
+                                          visual_info->depth, InputOutput, visual_info->visual,
+                                          CWBorderPixel | CWColormap | CWOverrideRedirect,
+                                          &window_attributes );
+        XFree ( visual_info );
+        XSync ( display, False );
+        return reinterpret_cast<void*> ( window );
+#else
+        return nullptr;
+#endif
+    }
+
+    /** @brief Destroy a window returned by CreateHiddenRenderWindow. */
+    static void DestroyHiddenRenderWindow ( void* aWindow )
+    {
+#if defined(_WIN32)
+        DestroyWindow ( static_cast<HWND> ( aWindow ) );
+#elif defined(__unix__) && !defined(__APPLE__)
+        if ( Display * display = TestDisplay() )
+        {
+            XDestroyWindow ( display, reinterpret_cast< ::Window> ( aWindow ) );
+            XFlush ( display );
+        }
+#else
+        ( void ) aWindow;
+#endif
     }
 
 #ifdef AEON_TEST_HAVE_VULKAN
@@ -141,12 +212,15 @@ namespace AeonGames
      *  storage-buffer binding path produces an identity sequence on readback. */
     static void RunNoopComputeSmokeTest ( const char* aRendererName )
     {
-        HWND hwnd = CreateHiddenRenderWindow();
-        ASSERT_NE ( hwnd, nullptr );
+        void* hwnd = CreateHiddenRenderWindow();
+        if ( hwnd == nullptr )
+        {
+            GTEST_SKIP() << "No off-screen render window available on this platform.";
+        }
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
-            DestroyWindow ( hwnd );
+            DestroyHiddenRenderWindow ( hwnd );
             GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
         }
         // The hidden window never receives WM_SIZE, so size the swapchain and
@@ -184,7 +258,7 @@ namespace AeonGames
         ssbo.Unmap();
 
         renderer.reset();
-        DestroyWindow ( hwnd );
+        DestroyHiddenRenderWindow ( hwnd );
     }
 
     /** @brief Dispatch shaders/cluster_build on the given backend and verify the
@@ -196,12 +270,15 @@ namespace AeonGames
      *  non-degenerate and that the grid as a whole spans [near, far] in depth. */
     static void RunClusterBuildTest ( const char* aRendererName )
     {
-        HWND hwnd = CreateHiddenRenderWindow();
-        ASSERT_NE ( hwnd, nullptr );
+        void* hwnd = CreateHiddenRenderWindow();
+        if ( hwnd == nullptr )
+        {
+            GTEST_SKIP() << "No off-screen render window available on this platform.";
+        }
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
-            DestroyWindow ( hwnd );
+            DestroyHiddenRenderWindow ( hwnd );
             GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
         }
         renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
@@ -273,7 +350,7 @@ namespace AeonGames
                 << "far depth of cluster grid does not match the projection";
 
         renderer.reset();
-        DestroyWindow ( hwnd );
+        DestroyHiddenRenderWindow ( hwnd );
     }
 
     /** @brief Dispatch shaders/cluster_build then shaders/light_cull on the
@@ -288,12 +365,15 @@ namespace AeonGames
      *  the fixed cap, and that the populated cells reference light index 0. */
     static void RunLightCullTest ( const char* aRendererName )
     {
-        HWND hwnd = CreateHiddenRenderWindow();
-        ASSERT_NE ( hwnd, nullptr );
+        void* hwnd = CreateHiddenRenderWindow();
+        if ( hwnd == nullptr )
+        {
+            GTEST_SKIP() << "No off-screen render window available on this platform.";
+        }
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
-            DestroyWindow ( hwnd );
+            DestroyHiddenRenderWindow ( hwnd );
             GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
         }
         renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
@@ -405,7 +485,7 @@ namespace AeonGames
         counter_buffer.Unmap();
 
         renderer.reset();
-        DestroyWindow ( hwnd );
+        DestroyHiddenRenderWindow ( hwnd );
     }
 
     /** @brief Dispatch the combined shaders/lighting pipeline, which carries
@@ -419,12 +499,15 @@ namespace AeonGames
      *  instead of two separate ones. */
     static void RunCombinedLightingTest ( const char* aRendererName )
     {
-        HWND hwnd = CreateHiddenRenderWindow();
-        ASSERT_NE ( hwnd, nullptr );
+        void* hwnd = CreateHiddenRenderWindow();
+        if ( hwnd == nullptr )
+        {
+            GTEST_SKIP() << "No off-screen render window available on this platform.";
+        }
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
-            DestroyWindow ( hwnd );
+            DestroyHiddenRenderWindow ( hwnd );
             GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
         }
         renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
@@ -531,7 +614,7 @@ namespace AeonGames
         counter_buffer.Unmap();
 
         renderer.reset();
-        DestroyWindow ( hwnd );
+        DestroyHiddenRenderWindow ( hwnd );
     }
 
     /** @brief End-to-end depth-pre-pass active-cluster culling test.
@@ -550,12 +633,15 @@ namespace AeonGames
      *  invariant cannot pass vacuously. */
     static void RunActiveClusterCullTest ( const char* aRendererName )
     {
-        HWND hwnd = CreateHiddenRenderWindow();
-        ASSERT_NE ( hwnd, nullptr );
+        void* hwnd = CreateHiddenRenderWindow();
+        if ( hwnd == nullptr )
+        {
+            GTEST_SKIP() << "No off-screen render window available on this platform.";
+        }
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
-            DestroyWindow ( hwnd );
+            DestroyHiddenRenderWindow ( hwnd );
             GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
         }
         renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
@@ -683,7 +769,7 @@ namespace AeonGames
                 << "the light reached no marked cluster; setup is degenerate";
 
         renderer.reset();
-        DestroyWindow ( hwnd );
+        DestroyHiddenRenderWindow ( hwnd );
     }
 
     /** @brief Reinterpret a float's bits as an unsigned 32-bit word, matching the
@@ -717,12 +803,15 @@ namespace AeonGames
      *  source/skeleton/output SSBO binding path end to end. */
     static void RunSkinningTest ( const char* aRendererName )
     {
-        HWND hwnd = CreateHiddenRenderWindow();
-        ASSERT_NE ( hwnd, nullptr );
+        void* hwnd = CreateHiddenRenderWindow();
+        if ( hwnd == nullptr )
+        {
+            GTEST_SKIP() << "No off-screen render window available on this platform.";
+        }
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( aRendererName, hwnd );
         if ( renderer == nullptr )
         {
-            DestroyWindow ( hwnd );
+            DestroyHiddenRenderWindow ( hwnd );
             GTEST_SKIP() << aRendererName << " renderer unavailable on this host.";
         }
         renderer->ResizeViewport ( hwnd, 0, 0, 64, 64 );
@@ -731,6 +820,14 @@ namespace AeonGames
         constexpr uint32_t vertex_words = 16; // 64-byte source vertex stride.
         constexpr uint32_t skinned_words = 14; // 56-byte compact skinned stride.
         constexpr uint32_t vertex_count = 100; // spans two work groups.
+
+        // The draw side binds the skinned buffer with Mesh::kSkinnedVertexStride
+        // rather than the source mesh's stride. If that constant ever drifts
+        // from the layout the compute pass actually writes (verified below),
+        // every vertex after the first is misread and skinned meshes render as
+        // exploded geometry, so pin the two together here.
+        static_assert ( Mesh::kSkinnedVertexStride == skinned_words * sizeof ( uint32_t ),
+                        "Mesh::kSkinnedVertexStride disagrees with the skinning shader's output layout" );
 
         // Joint 0 is a pure translation; its 3x3 part is identity.
         const float tx = 2.0f, ty = -3.0f, tz = 0.5f;
@@ -827,89 +924,52 @@ namespace AeonGames
         skinned_buffer.Unmap();
 
         renderer.reset();
-        DestroyWindow ( hwnd );
+        DestroyHiddenRenderWindow ( hwnd );
     }
-#endif
 
     TEST ( ComputeTest, OpenGLNoopCompute )
     {
-#ifdef _WIN32
         RunNoopComputeSmokeTest ( "OpenGL" );
-#else
-        GTEST_SKIP() << "Compute smoke test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, VulkanNoopCompute )
     {
-#ifdef _WIN32
         RunNoopComputeSmokeTest ( "Vulkan" );
-#else
-        GTEST_SKIP() << "Compute smoke test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, OpenGLClusterBuild )
     {
-#ifdef _WIN32
         RunClusterBuildTest ( "OpenGL" );
-#else
-        GTEST_SKIP() << "Cluster build test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, VulkanClusterBuild )
     {
-#ifdef _WIN32
         RunClusterBuildTest ( "Vulkan" );
-#else
-        GTEST_SKIP() << "Cluster build test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, OpenGLLightCull )
     {
-#ifdef _WIN32
         RunLightCullTest ( "OpenGL" );
-#else
-        GTEST_SKIP() << "Light cull test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, VulkanLightCull )
     {
-#ifdef _WIN32
         RunLightCullTest ( "Vulkan" );
-#else
-        GTEST_SKIP() << "Light cull test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, OpenGLCombinedLighting )
     {
-#ifdef _WIN32
         RunCombinedLightingTest ( "OpenGL" );
-#else
-        GTEST_SKIP() << "Combined lighting test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, VulkanCombinedLighting )
     {
-#ifdef _WIN32
         RunCombinedLightingTest ( "Vulkan" );
-#else
-        GTEST_SKIP() << "Combined lighting test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, OpenGLActiveClusterCull )
     {
-#ifdef _WIN32
         RunActiveClusterCullTest ( "OpenGL" );
-#else
-        GTEST_SKIP() << "Active-cluster cull test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, VulkanActiveClusterCull )
@@ -926,19 +986,11 @@ namespace AeonGames
 
     TEST ( ComputeTest, OpenGLSkinning )
     {
-#ifdef _WIN32
         RunSkinningTest ( "OpenGL" );
-#else
-        GTEST_SKIP() << "Skinning test requires Win32 windowing.";
-#endif
     }
 
     TEST ( ComputeTest, VulkanSkinning )
     {
-#ifdef _WIN32
         RunSkinningTest ( "Vulkan" );
-#else
-        GTEST_SKIP() << "Skinning test requires Win32 windowing.";
-#endif
     }
 }

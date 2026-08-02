@@ -36,7 +36,7 @@ namespace AeonGames
         VulkanMesh& operator= ( const VulkanMesh& aVulkanMesh ) = delete;
         VulkanMesh& operator= ( VulkanMesh&& aVulkanMesh ) = delete;
         /// @brief Bind the mesh vertex and index buffers to a command buffer.
-        void Bind ( VkCommandBuffer aVkCommandBuffer, VkBuffer aSkinnedVertexBuffer = VK_NULL_HANDLE, VkDeviceSize aSkinnedVertexOffset = 0 ) const;
+        void Bind ( VkCommandBuffer aVkCommandBuffer, VkBuffer aSkinnedVertexBuffer = VK_NULL_HANDLE, VkDeviceSize aSkinnedVertexOffset = 0, VkDeviceSize aSkinnedVertexStride = 0 ) const;
         /** @brief First vertex offset to pass to the draw call. Non-zero for
          * pooled static meshes (their position in the shared per-stride vertex
          * pool); zero for skinned meshes drawn from their own buffer. */

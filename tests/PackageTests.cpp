@@ -43,6 +43,7 @@ namespace AeonGames
         }
         void SetUp() override
         {
+            mPreviousResourcePath = GetResourcePath();
             std::filesystem::create_directory ( "package" );
             std::ofstream outfile ( "package/test.txt" );
             outfile << "This is a test file for the Package class and can be safely deleted.";
@@ -50,8 +51,14 @@ namespace AeonGames
         }
         void TearDown() override
         {
+            // The resource path is global state; leaving it pointing at this
+            // fixture's scratch directory breaks every later test that loads a
+            // resource (the GPU tests fail to find their pipelines).
+            SetResourcePath ( mPreviousResourcePath );
             std::filesystem::remove_all ( "package" );
         }
+    private:
+        std::vector<std::string> mPreviousResourcePath{};
     };
     TEST_F ( PackageTest, Directory )
     {
@@ -87,6 +94,7 @@ namespace AeonGames
         void SetUp() override
         {
             namespace fs = std::filesystem;
+            mPreviousResourcePath = GetResourcePath();
             fs::create_directories ( "resolve_pkg/shaders" );
             fs::create_directories ( "resolve_pkg/meshes" );
             auto write_file = [] ( const std::string & path, const std::string & content )
@@ -102,9 +110,11 @@ namespace AeonGames
         }
         void TearDown() override
         {
-            SetResourcePath ( {} );
+            SetResourcePath ( mPreviousResourcePath );
             std::filesystem::remove_all ( "resolve_pkg" );
         }
+    private:
+        std::vector<std::string> mPreviousResourcePath{};
     };
     TEST_F ( ResourceResolveTest, BasenamePrefersText )
     {
