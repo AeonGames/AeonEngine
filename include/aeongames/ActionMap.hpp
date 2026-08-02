@@ -21,6 +21,7 @@ limitations under the License.
 #include <vector>
 #include "aeongames/Platform.hpp"
 #include "aeongames/StringId.hpp"
+#include "aeongames/InputSystem.hpp"
 
 namespace AeonGames
 {
@@ -28,7 +29,7 @@ namespace AeonGames
 
     /** @brief Maps named game actions to raw input bindings.
      *
-     * Provides a layer of indirection between raw input (scan-codes,
+     * Provides a layer of indirection between raw input (key codes,
      * mouse buttons) and game-level actions identified by StringId.
      * Supports multiple bindings per action and queries the current
      * InputSystem state each frame.
@@ -39,15 +40,27 @@ namespace AeonGames
         /** @brief Type of raw input binding. */
         enum class BindingType : uint8_t
         {
-            Key,         ///< Keyboard scan-code.
+            Key,         ///< Physical keyboard key.
             MouseButton  ///< Mouse button index.
         };
 
-        /** @brief A single raw input binding. */
+        /** @brief A single raw input binding.
+         *
+         * The constructor argument selects the binding type, so a binding can
+         * never name a key with a mouse button identifier or vice versa.
+         */
         struct Binding
         {
-            BindingType mType{BindingType::Key};
-            uint32_t    mCode{0}; ///< Scan-code or mouse button index.
+            constexpr Binding ( KeyCode aKeyCode ) :
+                mType{BindingType::Key}, mKeyCode{aKeyCode} {}
+            constexpr Binding ( MouseButton aMouseButton ) :
+                mType{BindingType::MouseButton}, mMouseButton{aMouseButton} {}
+            BindingType mType;
+            union
+            {
+                KeyCode     mKeyCode;
+                MouseButton mMouseButton;
+            };
         };
 
         DLL ActionMap();

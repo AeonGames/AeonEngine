@@ -35,33 +35,18 @@ namespace AeonGames
         return CharacterControllerStringId;
     }
 
-    // Default key bindings. These currently target Win32 virtual key codes
-    // (W=0x57, A=0x41, S=0x53, D=0x44, arrows=0x25..0x28). The Win32 front
-    // end forwards wParam directly to InputSystem::OnKeyEvent, so these
-    // values work as-is on Windows. Other front-ends will eventually need
-    // a translation layer or platform-specific default bindings.
-    namespace
-    {
-        constexpr uint32_t kKeyW    = 0x57;
-        constexpr uint32_t kKeyA    = 0x41;
-        constexpr uint32_t kKeyS    = 0x53;
-        constexpr uint32_t kKeyD    = 0x44;
-        constexpr uint32_t kKeyLeft = 0x25;
-        constexpr uint32_t kKeyUp   = 0x26;
-        constexpr uint32_t kKeyRight = 0x27;
-        constexpr uint32_t kKeyDown = 0x28;
-    }
-
+    // Default key bindings. KeyCode names physical keys, so these follow the
+    // WASD block wherever the active layout puts its labels.
     CharacterController::CharacterController() : Component{}
     {
-        mActionMap.Bind ( Action_MoveForward,  { ActionMap::BindingType::Key, kKeyW } );
-        mActionMap.Bind ( Action_MoveForward,  { ActionMap::BindingType::Key, kKeyUp } );
-        mActionMap.Bind ( Action_MoveBackward, { ActionMap::BindingType::Key, kKeyS } );
-        mActionMap.Bind ( Action_MoveBackward, { ActionMap::BindingType::Key, kKeyDown } );
-        mActionMap.Bind ( Action_StrafeLeft,   { ActionMap::BindingType::Key, kKeyA } );
-        mActionMap.Bind ( Action_StrafeRight,  { ActionMap::BindingType::Key, kKeyD } );
-        mActionMap.Bind ( Action_TurnLeft,     { ActionMap::BindingType::Key, kKeyLeft } );
-        mActionMap.Bind ( Action_TurnRight,    { ActionMap::BindingType::Key, kKeyRight } );
+        mActionMap.Bind ( Action_MoveForward,  KeyCode::W );
+        mActionMap.Bind ( Action_MoveForward,  KeyCode::Up );
+        mActionMap.Bind ( Action_MoveBackward, KeyCode::S );
+        mActionMap.Bind ( Action_MoveBackward, KeyCode::Down );
+        mActionMap.Bind ( Action_StrafeLeft,   KeyCode::A );
+        mActionMap.Bind ( Action_StrafeRight,  KeyCode::D );
+        mActionMap.Bind ( Action_TurnLeft,     KeyCode::Left );
+        mActionMap.Bind ( Action_TurnRight,    KeyCode::Right );
     }
 
     CharacterController::~CharacterController() = default;
@@ -118,8 +103,8 @@ namespace AeonGames
     Property CharacterController::GetProperty ( const StringId& aId ) const
     {
         switch ( aId )
-        {
-        case CharacterControllerPropertyIds[0]:
+    {
+    case CharacterControllerPropertyIds[0]:
             return GetMoveSpeed();
         case CharacterControllerPropertyIds[1]:
             return GetTurnSpeed();

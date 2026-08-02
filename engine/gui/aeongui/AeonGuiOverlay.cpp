@@ -70,8 +70,8 @@ namespace AeonGames
         // If mPixelBuffer is populated, stride padding was stripped.
         // Otherwise, the canvas pixels are usable directly.
         if ( !mPixelBuffer.empty() )
-        {
-            return mPixelBuffer.data();
+    {
+        return mPixelBuffer.data();
         }
         return mWindow.GetPixels();
     }
@@ -107,12 +107,12 @@ namespace AeonGames
         return false;
     }
 
-    bool AeonGuiOverlay::OnKeyEvent ( uint32_t aKey, bool aPressed )
+    bool AeonGuiOverlay::OnKeyEvent ( KeyCode aKeyCode, bool aPressed )
     {
-        ( void ) aKey;
+        ( void ) aKeyCode;
         ( void ) aPressed;
-        // Key event forwarding requires mapping platform key codes to DOM key strings.
-        // This will be implemented when the input mapping layer is in place.
+        // Key event forwarding requires mapping KeyCode to DOM key strings.
+        // @todo Implement once the DOM key name table exists.
         return false;
     }
 

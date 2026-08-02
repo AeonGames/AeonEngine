@@ -79,6 +79,8 @@ namespace AeonGames
         Display* mDisplay {};
         ::Window mWindowId{None};
         Colormap mColorMap{None};
+        XIM mInputMethod{nullptr};
+        XIC mInputContext{nullptr};
 #endif
         std::unique_ptr<Renderer> mRenderer {};
         std::unique_ptr<GuiOverlay> mGuiOverlay {};

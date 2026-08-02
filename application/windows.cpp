@@ -22,6 +22,8 @@ limitations under the License.
 #include "aeongames/Frustum.hpp"
 #include "aeongames/GuiOverlay.hpp"
 #include "aeongames/InputSystem.hpp"
+#include "aeongames/KeyCode.hpp"
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <cstdint>
@@ -127,6 +129,164 @@ int ENTRYPOINT main ( int argc, char *argv[] )
 
 namespace AeonGames
 {
+    /// Scancode table size: 9 bits, the 8-bit set 1 scancode plus the extended flag.
+    static constexpr size_t kWin32ScanCodeCount = 0x200;
+
+    /** Win32 set 1 scancode (with the extended flag in bit 8) to KeyCode.
+     *  Scancodes are used rather than the virtual key code in wParam because
+     *  they identify the *physical* key, matching KeyCode's semantics. */
+    static constexpr std::array<KeyCode, kWin32ScanCodeCount> kWin32ScanCodeToKeyCode = []
+    {
+        std::array<KeyCode, kWin32ScanCodeCount> table{};
+        table[0x00B] = KeyCode::Num0;
+        table[0x002] = KeyCode::Num1;
+        table[0x003] = KeyCode::Num2;
+        table[0x004] = KeyCode::Num3;
+        table[0x005] = KeyCode::Num4;
+        table[0x006] = KeyCode::Num5;
+        table[0x007] = KeyCode::Num6;
+        table[0x008] = KeyCode::Num7;
+        table[0x009] = KeyCode::Num8;
+        table[0x00A] = KeyCode::Num9;
+        table[0x01E] = KeyCode::A;
+        table[0x030] = KeyCode::B;
+        table[0x02E] = KeyCode::C;
+        table[0x020] = KeyCode::D;
+        table[0x012] = KeyCode::E;
+        table[0x021] = KeyCode::F;
+        table[0x022] = KeyCode::G;
+        table[0x023] = KeyCode::H;
+        table[0x017] = KeyCode::I;
+        table[0x024] = KeyCode::J;
+        table[0x025] = KeyCode::K;
+        table[0x026] = KeyCode::L;
+        table[0x032] = KeyCode::M;
+        table[0x031] = KeyCode::N;
+        table[0x018] = KeyCode::O;
+        table[0x019] = KeyCode::P;
+        table[0x010] = KeyCode::Q;
+        table[0x013] = KeyCode::R;
+        table[0x01F] = KeyCode::S;
+        table[0x014] = KeyCode::T;
+        table[0x016] = KeyCode::U;
+        table[0x02F] = KeyCode::V;
+        table[0x011] = KeyCode::W;
+        table[0x02D] = KeyCode::X;
+        table[0x015] = KeyCode::Y;
+        table[0x02C] = KeyCode::Z;
+        table[0x028] = KeyCode::Apostrophe;
+        table[0x02B] = KeyCode::Backslash;
+        table[0x033] = KeyCode::Comma;
+        table[0x00D] = KeyCode::Equal;
+        table[0x029] = KeyCode::Grave;
+        table[0x01A] = KeyCode::LeftBracket;
+        table[0x00C] = KeyCode::Minus;
+        table[0x034] = KeyCode::Period;
+        table[0x01B] = KeyCode::RightBracket;
+        table[0x027] = KeyCode::Semicolon;
+        table[0x035] = KeyCode::Slash;
+        table[0x056] = KeyCode::NonUsBackslash;
+        table[0x00E] = KeyCode::Backspace;
+        table[0x153] = KeyCode::Delete;
+        table[0x14F] = KeyCode::End;
+        table[0x01C] = KeyCode::Enter;
+        table[0x001] = KeyCode::Escape;
+        table[0x147] = KeyCode::Home;
+        table[0x152] = KeyCode::Insert;
+        table[0x15D] = KeyCode::Application;
+        // Windows reports NumLock with the extended flag set, while Pause
+        // arrives as the bare 0x45 of its E1-prefixed sequence.
+        table[0x145] = KeyCode::NumLock;
+        table[0x045] = KeyCode::Pause;
+        table[0x039] = KeyCode::Space;
+        table[0x00F] = KeyCode::Tab;
+        table[0x03A] = KeyCode::CapsLock;
+        table[0x046] = KeyCode::ScrollLock;
+        table[0x03B] = KeyCode::F1;
+        table[0x03C] = KeyCode::F2;
+        table[0x03D] = KeyCode::F3;
+        table[0x03E] = KeyCode::F4;
+        table[0x03F] = KeyCode::F5;
+        table[0x040] = KeyCode::F6;
+        table[0x041] = KeyCode::F7;
+        table[0x042] = KeyCode::F8;
+        table[0x043] = KeyCode::F9;
+        table[0x044] = KeyCode::F10;
+        table[0x057] = KeyCode::F11;
+        table[0x058] = KeyCode::F12;
+        table[0x064] = KeyCode::F13;
+        table[0x065] = KeyCode::F14;
+        table[0x066] = KeyCode::F15;
+        table[0x067] = KeyCode::F16;
+        table[0x068] = KeyCode::F17;
+        table[0x069] = KeyCode::F18;
+        table[0x06A] = KeyCode::F19;
+        table[0x06B] = KeyCode::F20;
+        table[0x06C] = KeyCode::F21;
+        table[0x06D] = KeyCode::F22;
+        table[0x06E] = KeyCode::F23;
+        table[0x076] = KeyCode::F24;
+        table[0x038] = KeyCode::LeftAlt;
+        table[0x01D] = KeyCode::LeftCtrl;
+        table[0x02A] = KeyCode::LeftShift;
+        table[0x15B] = KeyCode::LeftSuper;
+        table[0x137] = KeyCode::PrintScreen;
+        table[0x138] = KeyCode::RightAlt;
+        table[0x11D] = KeyCode::RightCtrl;
+        table[0x036] = KeyCode::RightShift;
+        table[0x15C] = KeyCode::RightSuper;
+        table[0x150] = KeyCode::Down;
+        table[0x14B] = KeyCode::Left;
+        table[0x14D] = KeyCode::Right;
+        table[0x148] = KeyCode::Up;
+        table[0x052] = KeyCode::Keypad0;
+        table[0x04F] = KeyCode::Keypad1;
+        table[0x050] = KeyCode::Keypad2;
+        table[0x051] = KeyCode::Keypad3;
+        table[0x04B] = KeyCode::Keypad4;
+        table[0x04C] = KeyCode::Keypad5;
+        table[0x04D] = KeyCode::Keypad6;
+        table[0x047] = KeyCode::Keypad7;
+        table[0x048] = KeyCode::Keypad8;
+        table[0x049] = KeyCode::Keypad9;
+        table[0x04E] = KeyCode::KeypadAdd;
+        table[0x053] = KeyCode::KeypadDecimal;
+        table[0x135] = KeyCode::KeypadDivide;
+        table[0x11C] = KeyCode::KeypadEnter;
+        table[0x059] = KeyCode::KeypadEqual;
+        table[0x037] = KeyCode::KeypadMultiply;
+        table[0x04A] = KeyCode::KeypadSubtract;
+        return table;
+    }
+    ();
+
+    /** Translate a WM_KEYDOWN/WM_KEYUP message into a KeyCode.
+     *  Returns KeyCode::Unknown for keys outside the table. */
+    static KeyCode TranslateWin32KeyCode ( WPARAM aWParam, LPARAM aLParam )
+    {
+        size_t scancode = HIWORD ( aLParam ) & ( KF_EXTENDED | 0xFF );
+        if ( !scancode )
+        {
+            // Synthetic events (e.g. injected by SendInput) carry no scancode.
+            scancode = MapVirtualKeyW ( static_cast<UINT> ( aWParam ), MAPVK_VK_TO_VSC );
+        }
+        // Alt+PrintScreen and Ctrl+Pause report scancodes of their own.
+        if ( scancode == 0x054 )
+        {
+            scancode = 0x137;
+        }
+        if ( scancode == 0x146 )
+        {
+            scancode = 0x045;
+        }
+        // CJK input methods set the extended flag on right Shift.
+        if ( scancode == 0x136 )
+        {
+            scancode = 0x036;
+        }
+        return ( scancode < kWin32ScanCodeCount ) ? kWin32ScanCodeToKeyCode[scancode] : KeyCode::Unknown;
+    }
+
     /** Build a KeyModifier bitmask from current Win32 keyboard state. */
     static uint32_t QueryWin32Modifiers()
     {
@@ -189,18 +349,18 @@ namespace AeonGames
         case WM_SYSKEYDOWN:
             if ( window )
             {
-                uint32_t key = static_cast<uint32_t> ( wParam );
-                bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, true );
+                KeyCode key = TranslateWin32KeyCode ( wParam, lParam );
+                bool consumed = key != KeyCode::Unknown && window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, true );
                 if ( !consumed )
                 {
                     // ESC exits the application unless the GUI overlay consumed it.
-                    if ( key == VK_ESCAPE )
+                    if ( key == KeyCode::Escape )
                     {
                         PostQuitMessage ( 0 );
                         break;
                     }
                     // F1 toggles the renderer's debug-geometry overlay.
-                    if ( key == VK_F1 )
+                    if ( key == KeyCode::F1 )
                     {
                         window->ToggleDebugRendering();
                         break;
@@ -208,22 +368,22 @@ namespace AeonGames
                     // F2/F3/F4 toggle a whole light type on/off (debugging aid:
                     // e.g. disable point and spot lights to isolate the
                     // directional light's shadow).
-                    if ( key == VK_F2 )
+                    if ( key == KeyCode::F2 )
                     {
                         window->ToggleLightType ( AeonGames::LightType::Directional );
                         break;
                     }
-                    if ( key == VK_F3 )
+                    if ( key == KeyCode::F3 )
                     {
                         window->ToggleLightType ( AeonGames::LightType::Point );
                         break;
                     }
-                    if ( key == VK_F4 )
+                    if ( key == KeyCode::F4 )
                     {
                         window->ToggleLightType ( AeonGames::LightType::Spot );
                         break;
                     }
-                    if ( window->GetInputSystem() )
+                    if ( key != KeyCode::Unknown && window->GetInputSystem() )
                     {
                         window->GetInputSystem()->SetKeyModifiers ( QueryWin32Modifiers() );
                         window->GetInputSystem()->OnKeyEvent ( key, true );
@@ -235,7 +395,11 @@ namespace AeonGames
         case WM_SYSKEYUP:
             if ( window )
             {
-                uint32_t key = static_cast<uint32_t> ( wParam );
+                KeyCode key = TranslateWin32KeyCode ( wParam, lParam );
+                if ( key == KeyCode::Unknown )
+                {
+                    break;
+                }
                 bool consumed = window->GetGuiOverlay() && window->GetGuiOverlay()->OnKeyEvent ( key, false );
                 if ( !consumed && window->GetInputSystem() )
                 {
