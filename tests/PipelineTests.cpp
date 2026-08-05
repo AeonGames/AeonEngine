@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <cstdint>
 #include "gtest/gtest.h"
+#include "aeongames/CRC.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/ProtoBufClasses.hpp"
 #include "pipeline.pb.h"
@@ -92,5 +93,56 @@ namespace AeonGames
         EXPECT_EQ ( pipeline.GetMultisampleState().sample_shading, PipelineToggle::ENABLED );
         EXPECT_FLOAT_EQ ( pipeline.GetMultisampleState().min_sample_shading, 0.5f );
         EXPECT_EQ ( pipeline.GetMultisampleState().alpha_to_coverage, PipelineToggle::DISABLED );
+    }
+
+    TEST ( PipelineTests, ShaderInterfaceResolvesRendererVariant )
+    {
+        PipelineMsg message;
+        auto& metal_interfaces = ( *message.mutable_shader_interface() ) ["Metal"];
+        auto* metal_compute = metal_interfaces.add_stage();
+        metal_compute->set_stage ( PipelineMsg_ShaderInterface_Stage_STAGE_COMPUTE );
+        metal_compute->set_compute_stage_index ( 1 );
+        metal_compute->set_entry_point ( "main0" );
+        metal_compute->set_local_size_x ( 64 );
+        metal_compute->set_local_size_y ( 2 );
+        metal_compute->set_local_size_z ( 1 );
+        auto* output = metal_compute->add_resource();
+        output->set_name ( "Output" );
+        output->set_set ( 3 );
+        output->set_binding ( 7 );
+        output->set_count ( 1 );
+        output->set_type ( PipelineMsg_ShaderResource_Type_STORAGE_BUFFER );
+        auto* position = metal_compute->add_input();
+        position->set_name ( "VertexPosition" );
+        position->set_location ( 0 );
+        position->set_components ( 3 );
+        position->set_scalar_type ( PipelineMsg_ShaderInterface_Input_ScalarType_SCALAR_FLOAT );
+
+        auto& default_interfaces = ( *message.mutable_shader_interface() ) [""];
+        auto* default_vertex = default_interfaces.add_stage();
+        default_vertex->set_stage ( PipelineMsg_ShaderInterface_Stage_STAGE_VERTEX );
+        default_vertex->set_entry_point ( "main" );
+
+        Pipeline pipeline;
+        pipeline.LoadFromPBMsg ( message );
+
+        const ShaderInterface* compute = pipeline.GetShaderInterface ( COMP, "Metal", 1 );
+        ASSERT_NE ( compute, nullptr );
+        EXPECT_EQ ( compute->entry_point, "main0" );
+        EXPECT_EQ ( compute->local_size, ( std::array<uint32_t, 3> {64, 2, 1} ) );
+        ASSERT_EQ ( compute->resources.size(), 1u );
+        EXPECT_EQ ( compute->resources[0].name_hash, "Output"_crc32 );
+        EXPECT_EQ ( compute->resources[0].set, 3u );
+        EXPECT_EQ ( compute->resources[0].binding, 7u );
+        EXPECT_EQ ( compute->resources[0].type, ShaderResourceType::StorageBuffer );
+        ASSERT_EQ ( compute->inputs.size(), 1u );
+        EXPECT_EQ ( compute->inputs[0].name_hash, "VertexPosition"_crc32 );
+        EXPECT_EQ ( compute->inputs[0].components, 3u );
+        EXPECT_EQ ( compute->inputs[0].scalar_type, ShaderInputScalarType::Float );
+
+        EXPECT_EQ ( pipeline.GetShaderInterface ( COMP, "Metal", 0 ), nullptr );
+        const ShaderInterface* fallback = pipeline.GetShaderInterface ( VERT, "Other" );
+        ASSERT_NE ( fallback, nullptr );
+        EXPECT_EQ ( fallback->entry_point, "main" );
     }
 }

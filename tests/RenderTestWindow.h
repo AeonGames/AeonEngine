@@ -35,6 +35,13 @@ limitations under the License.
 
 namespace AeonGames
 {
+#if defined(__APPLE__)
+    /** @brief Create/destroy the hidden AppKit surface implemented in the
+     *  Objective-C++ test helper. The returned handle is an NSView*, matching
+     *  application/macos.mm and both macOS-capable renderer plugins. */
+    void* CreateHiddenRenderWindowMac();
+    void DestroyHiddenRenderWindowMac ( void* aWindow );
+#endif
 #if defined(__unix__) && !defined(__APPLE__)
     /** @brief Process-wide X display owned by the test harness.
      *
@@ -100,6 +107,8 @@ namespace AeonGames
         XFree ( visual_info );
         XSync ( display, False );
         return reinterpret_cast<void*> ( window );
+#elif defined(__APPLE__)
+        return CreateHiddenRenderWindowMac();
 #else
         return nullptr;
 #endif
@@ -116,6 +125,8 @@ namespace AeonGames
             XDestroyWindow ( display, reinterpret_cast< ::Window> ( aWindow ) );
             XFlush ( display );
         }
+#elif defined(__APPLE__)
+        DestroyHiddenRenderWindowMac ( aWindow );
 #else
         ( void ) aWindow;
 #endif

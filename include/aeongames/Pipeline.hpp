@@ -104,6 +104,59 @@ namespace AeonGames
         COUNT     /**< Number of shader types. */
     };
 
+    /** Resource kinds exposed by generated shader-interface metadata. */
+    enum class ShaderResourceType : uint8_t
+    {
+        Unknown,
+        UniformBuffer,
+        StorageBuffer,
+        SampledImage,
+        StorageImage,
+        Sampler,
+        CombinedImageSampler
+    };
+
+    /** One named shader resource and its backend-neutral set/binding address. */
+    struct ShaderResource
+    {
+        std::string name{};
+        uint32_t name_hash{0};
+        uint32_t set{0};
+        uint32_t binding{0};
+        uint32_t count{0};
+        ShaderResourceType type{ShaderResourceType::Unknown};
+    };
+
+    enum class ShaderInputScalarType : uint8_t
+    {
+        Unknown,
+        Float,
+        Int,
+        UInt
+    };
+
+    /** One active vertex-stage input consumed by the compiled shader. */
+    struct ShaderInput
+    {
+        std::string name{};
+        uint32_t name_hash{0};
+        uint32_t location{0};
+        uint32_t components{0};
+        ShaderInputScalarType scalar_type{ShaderInputScalarType::Unknown};
+    };
+
+    /** Generated interface for one graphics stage or ordered compute stage. */
+    struct ShaderInterface
+    {
+        ShaderType stage{ShaderType::VERT};
+        uint32_t compute_stage_index{0};
+        std::string entry_point{"main"};
+        std::array<uint32_t, 3> local_size{1, 1, 1};
+        uint32_t fragment_output_count{0};
+        std::vector<ShaderResource> resources{};
+        std::vector<ShaderInput> inputs{};
+    };
+
     enum class PipelineToggle : uint8_t { DISABLED, ENABLED };
     enum class PipelineCullMode : uint8_t { BACK, FRONT, NONE };
     enum class PipelineFrontFace : uint8_t { COUNTER_CLOCKWISE, CLOCKWISE };
@@ -261,6 +314,16 @@ namespace AeonGames
          */
         DLL const std::string_view GetComputeShaderCode ( uint32_t aIndex, std::string_view aRenderer = {} ) const;
 
+        /** Resolve generated interface metadata for one shader stage.
+         * @param aType Graphics/compute stage type.
+         * @param aRenderer Renderer name used for selector resolution.
+         * @param aComputeStageIndex Ordered compute stage index; ignored for
+         *        graphics stages.
+         * @return Matching interface, or nullptr when no metadata was packed.
+         */
+        DLL const ShaderInterface* GetShaderInterface ( ShaderType aType,
+                std::string_view aRenderer = {}, uint32_t aComputeStageIndex = 0 ) const;
+
         /** Load pipeline configuration from a protobuf message.
          * @param aPipelineMsg The protobuf message to load from.
          */
@@ -280,6 +343,7 @@ namespace AeonGames
          *  Get*ShaderCode accessors. */
         std::array<std::unordered_map<std::string, std::string>, ShaderType::COUNT> mShaderVariants {};
         std::unordered_map<std::string, std::vector<std::string>> mComputeVariants {};
+        std::unordered_map<std::string, std::vector<ShaderInterface>> mShaderInterfaces {};
         uint32_t mTopologyClass{ TOPOLOGY_CLASS_TRIANGLE };
         PipelineRasterState mRasterState{};
         PipelineDepthStencilState mDepthStencilState{};

@@ -29,8 +29,8 @@ namespace AeonGames
     class StringId;
     /** Abstract base class for GUI overlay systems.
      *
-     * Defines the interface for GUI overlays that rasterize to a CPU-side
-     * RGBA pixel buffer. The engine composites this buffer as a full-screen
+    * Defines the interface for GUI overlays that rasterize to a CPU-side
+    * premultiplied BGRA8 pixel buffer. The engine composites this buffer as a full-screen
      * textured quad on top of the 3D scene. Concrete implementations provide
      * the actual GUI toolkit (e.g., AeonGUI).
      */
@@ -56,9 +56,9 @@ namespace AeonGames
 
         ///@name Pixel Buffer Access
         ///@{
-        /** Returns a pointer to the rasterized RGBA pixel buffer.
+        /** Returns a pointer to the rasterized premultiplied BGRA8 pixel buffer.
          * Valid only after EndFrame() has been called.
-         * @return Pointer to RGBA pixel data, or nullptr if no frame has been rendered.
+         * @return Pointer to premultiplied BGRA8 pixel data, or nullptr if no frame has been rendered.
          */
         virtual const uint8_t* GetPixels() const = 0;
         /** Returns the width of the overlay buffer in pixels. */

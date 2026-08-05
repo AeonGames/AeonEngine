@@ -165,6 +165,59 @@ message PipelineMsg {
 	message ComputeStages {
 		repeated string stage = 1;
 	}
+	// Backend-neutral interface metadata generated from a compiled shader. A
+	// renderer consumes this instead of parsing source text to discover entry
+	// points, workgroup dimensions and named resource bindings.
+	message ShaderResource {
+		enum Type {
+			RESOURCE_UNKNOWN = 0;
+			UNIFORM_BUFFER = 1;
+			STORAGE_BUFFER = 2;
+			SAMPLED_IMAGE = 3;
+			STORAGE_IMAGE = 4;
+			SAMPLER = 5;
+			COMBINED_IMAGE_SAMPLER = 6;
+		}
+		string name = 1;
+		uint32 set = 2;
+		uint32 binding = 3;
+		uint32 count = 4;
+		Type type = 5;
+	}
+	message ShaderInterface {
+		enum Stage {
+			STAGE_VERTEX = 0;
+			STAGE_FRAGMENT = 1;
+			STAGE_COMPUTE = 2;
+			STAGE_TESS_CONTROL = 3;
+			STAGE_TESS_EVALUATION = 4;
+			STAGE_GEOMETRY = 5;
+		}
+		Stage stage = 1;
+		uint32 compute_stage_index = 2;
+		string entry_point = 3;
+		uint32 local_size_x = 4;
+		uint32 local_size_y = 5;
+		uint32 local_size_z = 6;
+		uint32 fragment_output_count = 7;
+		repeated ShaderResource resource = 8;
+		message Input {
+			enum ScalarType {
+				SCALAR_UNKNOWN = 0;
+				SCALAR_FLOAT = 1;
+				SCALAR_INT = 2;
+				SCALAR_UINT = 3;
+			}
+			string name = 1;
+			uint32 location = 2;
+			uint32 components = 3;
+			ScalarType scalar_type = 4;
+		}
+		repeated Input input = 9;
+	}
+	message ShaderInterfaces {
+		repeated ShaderInterface stage = 1;
+	}
 	// Each stage maps a renderer selector to its shader source. The selector key
 	// is a comma-separated set of renderer names matching the names the renderer
 	// plugins export (e.g. "Vulkan", "OpenGL,Metal"); the empty key "" is the
@@ -185,4 +238,7 @@ message PipelineMsg {
 	DepthStencilState          depth_stencil  = 9;
 	BlendState                 blend          = 10;
 	MultisampleState           multisample    = 11;
+	// Renderer selector -> interfaces for the effective shader stages. Selector
+	// resolution follows the same comma-separated convention as shader source.
+	map<string, ShaderInterfaces> shader_interface = 12;
 }

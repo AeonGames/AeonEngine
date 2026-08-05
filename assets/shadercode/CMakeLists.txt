@@ -16,6 +16,7 @@
 set(PIPELINES
 #    "clustered_phong_skinned|vert=skinned_mesh.vert|frag=clustered_phong.frag"
     "clustered_phong|vert=static_mesh.vert|frag=clustered_phong.frag"
+    "bindless_unlit|vert=static_mesh.vert|frag=bindless_unlit.frag"
     "cluster_build|comp=cluster_build.comp"
     "light_cull|comp=light_cull.comp"
     "cull|comp=cull.comp"
@@ -25,7 +26,7 @@ set(PIPELINES
     "lighting|comp=lighting.0.comp|comp=lighting.1.comp"
     "skinning|comp=skinning.comp"
     "shadow_depth|vert=shadow_depth.vert|frag=shadow_depth.frag"
-    "point_shadow_depth|vert=point_shadow_depth.vert|geom=point_shadow_depth.geom|frag=point_shadow_depth.frag|Vulkan:vert=point_shadow_depth_mv.vert|Vulkan:geom"
+    "point_shadow_depth|vert=point_shadow_depth.vert|geom=point_shadow_depth.geom|frag=point_shadow_depth.frag|Vulkan,Metal:vert=point_shadow_depth_mv.vert|Vulkan,Metal:geom"
     # Fullscreen HDR resolve: exposure + ACES tone map + sRGB encode from the
     # off-screen linear HDR target to the swapchain.
     "tonemap|vert=tonemap.vert|frag=tonemap.frag|topology=TRIANGLE"
@@ -79,15 +80,43 @@ foreach(entry IN LISTS PIPELINES)
     endforeach()
 
     set(out_file ${PIPELINE_OUTPUT_DIR}/${name}.txt)
-    add_custom_command(
-        OUTPUT  ${out_file}
-        COMMAND $<TARGET_FILE:aeontool> pipeline
-                ${stage_args}
-                -o ${out_file}
-        DEPENDS aeontool ${stage_deps}
-        COMMENT "Packing pipeline ${name}.txt"
-        VERBATIM
-    )
+    if(BUILD_METAL_RENDERER)
+        set(base_file ${CMAKE_CURRENT_BINARY_DIR}/metal-base/${name}.txt)
+        set(metal_work_dir ${CMAKE_CURRENT_BINARY_DIR}/metal/${name})
+        add_custom_command(
+            OUTPUT  ${base_file}
+            COMMAND $<TARGET_FILE:aeontool> pipeline
+                    ${stage_args}
+                    -o ${base_file}
+            DEPENDS aeontool ${stage_deps}
+            COMMENT "Packing base pipeline ${name}.txt"
+            VERBATIM
+        )
+        add_custom_command(
+            OUTPUT  ${out_file}
+            COMMAND $<TARGET_FILE:metal-shader-tool>
+                    --input ${base_file}
+                    --output ${out_file}
+                    --work-dir ${metal_work_dir}
+                    --glslang ${GLSLANG_VALIDATOR_EXECUTABLE}
+                    --spirv-cross ${SPIRV_CROSS_EXECUTABLE}
+                    --metal-compiler ${METAL_COMPILER_EXECUTABLE}
+                    --sdk-root ${METAL_SDK_ROOT}
+            DEPENDS metal-shader-tool ${base_file}
+            COMMENT "Generating Metal variants for ${name}.txt"
+            VERBATIM
+        )
+    else()
+        add_custom_command(
+            OUTPUT  ${out_file}
+            COMMAND $<TARGET_FILE:aeontool> pipeline
+                    ${stage_args}
+                    -o ${out_file}
+            DEPENDS aeontool ${stage_deps}
+            COMMENT "Packing pipeline ${name}.txt"
+            VERBATIM
+        )
+    endif()
     list(APPEND GENERATED_PIPELINES ${out_file})
 endforeach()
 

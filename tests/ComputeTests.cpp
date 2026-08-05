@@ -449,6 +449,7 @@ namespace AeonGames
         DestroyHiddenRenderWindow ( hwnd );
     }
 
+#ifdef AEON_TEST_HAVE_OPENGL
     /** @brief End-to-end depth-pre-pass active-cluster culling test.
      *
      *  Drives the full mark/cull frame lifecycle the application render loop
@@ -603,6 +604,7 @@ namespace AeonGames
         renderer.reset();
         DestroyHiddenRenderWindow ( hwnd );
     }
+#endif
 
     /** @brief Reinterpret a float's bits as an unsigned 32-bit word, matching the
      *  raw-word layout the skinning compute shader reads. */
@@ -759,51 +761,167 @@ namespace AeonGames
         DestroyHiddenRenderWindow ( hwnd );
     }
 
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( ComputeTest, OpenGLNoopCompute )
     {
         RunNoopComputeSmokeTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( ComputeTest, VulkanNoopCompute )
     {
         RunNoopComputeSmokeTest ( "Vulkan" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_METAL
+    TEST ( ComputeTest, MetalNoopCompute )
+    {
+        RunNoopComputeSmokeTest ( "Metal" );
+    }
+#endif
+
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( ComputeTest, OpenGLClusterBuild )
     {
         RunClusterBuildTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( ComputeTest, VulkanClusterBuild )
     {
         RunClusterBuildTest ( "Vulkan" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_METAL
+    TEST ( ComputeTest, MetalClusterBuild )
+    {
+        RunClusterBuildTest ( "Metal" );
+    }
+#endif
+
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( ComputeTest, OpenGLLightCull )
     {
         RunLightCullTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( ComputeTest, VulkanLightCull )
     {
         RunLightCullTest ( "Vulkan" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_METAL
+    TEST ( ComputeTest, MetalLightCull )
+    {
+        RunLightCullTest ( "Metal" );
+    }
+#endif
+
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( ComputeTest, OpenGLCombinedLighting )
     {
         RunCombinedLightingTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( ComputeTest, VulkanCombinedLighting )
     {
         RunCombinedLightingTest ( "Vulkan" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_METAL
+    TEST ( ComputeTest, MetalCombinedLighting )
+    {
+        RunCombinedLightingTest ( "Metal" );
+    }
+
+    TEST ( ComputeTest, MetalClusteredFrameLifecycle )
+    {
+        void* window = CreateHiddenRenderWindow();
+        ASSERT_NE ( window, nullptr );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
+        ASSERT_NE ( renderer, nullptr );
+        renderer->ResizeViewport ( window, 0, 0, 64, 64 );
+
+        Matrix4x4 projection{};
+        projection.Perspective ( 90.0f, 1.0f, 1.0f, 100.0f );
+        renderer->SetProjectionMatrix ( window, projection );
+        renderer->SetViewMatrix ( window, Matrix4x4{} );
+        GpuLight light{};
+        light.position_radius = Vector4{0.0f, 10.0f, 0.0f, 30.0f};
+        light.color_intensity = Vector4{1.0f, 1.0f, 1.0f, 1.0f};
+        light.type = static_cast<uint32_t> ( LightType::Point );
+        renderer->SetLights ( window, std::span<const GpuLight> {&light, 1} );
+
+        Pipeline lighting;
+        lighting.LoadFromId ( "shaders/lighting.txt"_crc32 );
+        renderer->LoadPipeline ( lighting );
+        Pipeline shading;
+        shading.LoadFromId ( "shaders/clustered_phong.txt"_crc32 );
+        renderer->LoadPipeline ( shading );
+        Mesh mesh;
+        mesh.LoadFromId ( "polesign/meshes/PoleSign.txt"_crc32 );
+        renderer->LoadMesh ( mesh );
+        const Matrix4x4 model
+        {
+            1.0f, 0.0f, 0.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f,
+            0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 10.0f, 0.0f, 1.0f
+        };
+
+        renderer->BeginRender ( window, &lighting );
+        renderer->Render ( window, model, mesh, shading, nullptr, Topology::TRIANGLE_LIST,
+                           0, 0xffffffff, 1, 0, nullptr, RenderPass::DepthPrePass );
+        renderer->EndDepthPrePass ( window, &lighting );
+        renderer->BeginRenderPass ( window );
+        renderer->EndRender ( window );
+        renderer->Finish ( window );
+
+        const BufferAccessor* grid_accessor = renderer->GetFrameLightGrid ( window );
+        const BufferAccessor* active_accessor = renderer->GetFrameClusterActive ( window );
+        ASSERT_NE ( grid_accessor, nullptr );
+        ASSERT_NE ( active_accessor, nullptr );
+        const GpuLightGridCell* grid = static_cast<const GpuLightGridCell*> ( grid_accessor->Map() );
+        ASSERT_NE ( grid, nullptr );
+        uint32_t lit_clusters = 0;
+        for ( uint32_t index = 0; index < CLUSTER_COUNT; ++index )
+        {
+            lit_clusters += grid[index].count != 0 ? 1u : 0u;
+        }
+        grid_accessor->Unmap();
+        EXPECT_GT ( lit_clusters, 0u );
+        const uint32_t* active = static_cast<const uint32_t*> ( active_accessor->Map() );
+        ASSERT_NE ( active, nullptr );
+        EXPECT_TRUE ( std::all_of ( active, active + CLUSTER_COUNT,
+                                    [] ( uint32_t aValue )
+        {
+            return aValue == 0;
+        } ) );
+        active_accessor->Unmap();
+
+        renderer.reset();
+        DestroyHiddenRenderWindow ( window );
+    }
+#endif
+
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( ComputeTest, OpenGLActiveClusterCull )
     {
         RunActiveClusterCullTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( ComputeTest, VulkanActiveClusterCull )
     {
         // The Vulkan backend no longer marks active clusters: the per-fragment
@@ -815,14 +933,26 @@ namespace AeonGames
         // the marking path.
         GTEST_SKIP() << "Vulkan light-culls all clusters (no active-cluster marking).";
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( ComputeTest, OpenGLSkinning )
     {
         RunSkinningTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( ComputeTest, VulkanSkinning )
     {
         RunSkinningTest ( "Vulkan" );
     }
+#endif
+
+#ifdef AEON_TEST_HAVE_METAL
+    TEST ( ComputeTest, MetalSkinning )
+    {
+        RunSkinningTest ( "Metal" );
+    }
+#endif
 }
