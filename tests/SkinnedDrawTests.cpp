@@ -262,13 +262,24 @@ namespace AeonGames
         DestroyHiddenRenderWindow ( window );
     }
 
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( SkinnedDrawTest, OpenGLIdentitySkinMatchesRestPose )
     {
         RunSkinnedDrawMatchesRestPoseTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( SkinnedDrawTest, VulkanIdentitySkinMatchesRestPose )
     {
         RunSkinnedDrawMatchesRestPoseTest ( "Vulkan" );
     }
+#endif
+
+#ifdef AEON_TEST_HAVE_METAL
+    TEST ( SkinnedDrawTest, MetalIdentitySkinMatchesRestPose )
+    {
+        RunSkinnedDrawMatchesRestPoseTest ( "Metal" );
+    }
+#endif
 }

@@ -354,16 +354,16 @@ namespace AeonGames
         // Fast path: every type enabled, no filtering needed.
         constexpr uint32_t all_types =
             ( 1u << static_cast<uint32_t> ( LightType::Point ) ) |
-            ( 1u << static_cast<uint32_t> ( LightType::Spot ) ) |
-            ( 1u << static_cast<uint32_t> ( LightType::Directional ) );
+        ( 1u << static_cast<uint32_t> ( LightType::Spot ) ) |
+        ( 1u << static_cast<uint32_t> ( LightType::Directional ) );
         if ( ( mLightTypeMask & all_types ) == all_types )
-        {
-            return aLights;
-        }
-        mFilteredLights.clear();
-        for ( const GpuLight& light : aLights )
-        {
-            if ( mLightTypeMask & ( 1u << light.type ) )
+    {
+        return aLights;
+    }
+    mFilteredLights.clear();
+for ( const GpuLight& light : aLights )
+    {
+        if ( mLightTypeMask & ( 1u << light.type ) )
             {
                 mFilteredLights.push_back ( light );
             }
@@ -397,12 +397,12 @@ namespace AeonGames
         mDebugGridMesh = std::make_unique<Mesh>();
         mDebugGridMaterial = std::make_unique<Material>();
         mDebugPipeline->LoadFromFile ( "shaders/solid_color" );
-        mDebugWireMesh->LoadFromFile ( "meshes/aabb_wire" );
+        mDebugWireMesh->LoadFromFile ( "meshes/aabb_wire.msh" );
         mDebugAABBMaterial->LoadFromFile ( "materials/solidcolor" );
         mDebugOctreeMaterial->LoadFromFile ( "materials/solidcolor" );
         mDebugFrustumMaterial->LoadFromFile ( "materials/solidcolor" );
         mDebugGridPipeline->LoadFromFile ( "shaders/debug_grid" );
-        mDebugGridMesh->LoadFromFile ( "meshes/fullscreen_triangle" );
+        mDebugGridMesh->LoadFromFile ( "meshes/fullscreen_triangle.msh" );
         mDebugGridMaterial->LoadFromFile ( "materials/debug_grid" );
         mDebugAssetsLoaded = true;
     }

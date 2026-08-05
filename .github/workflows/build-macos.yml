@@ -48,6 +48,7 @@ jobs:
           qt6 \
           pkg-config \
           molten-vk \
+          spirv-cross \
           spirv-headers \
           spirv-tools \
           vulkan-extensionlayer \
@@ -64,11 +65,14 @@ jobs:
         echo "CC=clang" >> $GITHUB_ENV
         echo "CXX=clang++" >> $GITHUB_ENV
 
+    - name: '🔨 Install Metal shader compiler'
+      run: xcodebuild -downloadComponent MetalToolchain
+
     - name: '🚧 Build'
       run: |
         export PATH="/opt/homebrew/opt/bison/bin:$PATH"
         export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
-        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON
+        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON -DBUILD_METAL_RENDERER=ON -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
         cmake --build build --parallel "$(sysctl -n hw.ncpu)"
 
     - name: '🧪 Run TESTS'

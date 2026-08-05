@@ -55,6 +55,7 @@ set(TEST_SRCS
     CollisionTests.cpp
     ComputeTests.cpp
     ReadbackTests.cpp
+    RendererParityTests.cpp
     SkinnedDrawTests.cpp
     PipelineTests.cpp
     SamplerTests.cpp
@@ -64,6 +65,14 @@ set(TEST_SRCS
     HdrDecoderTests.cpp
     CubePrefilterTests.cpp
     ${CMAKE_SOURCE_DIR}/engine/images/hdr/RadianceImage.cpp)
+
+if(APPLE)
+  list(APPEND TEST_SRCS RenderTestWindowMac.mm)
+  set_source_files_properties(RenderTestWindowMac.mm
+                              PROPERTIES
+                                COMPILE_FLAGS "-fobjc-arc"
+                                SKIP_PRECOMPILE_HEADERS ON)
+endif()
 
 source_group("Tested" FILES ${TESTED_SRCS})
 source_group("Tests" FILES ${TEST_SRCS})
@@ -100,6 +109,18 @@ target_link_libraries(unit-tests
                       ${GMOCK_LIBRARIES}
                       ${ZLIB_LIBRARIES})
 
+if(APPLE)
+  target_link_libraries(unit-tests "-framework AppKit" "-framework QuartzCore")
+endif()
+
+if(BUILD_METAL_RENDERER)
+  add_dependencies(unit-tests MetalRenderer)
+  target_compile_definitions(unit-tests PRIVATE AEON_TEST_HAVE_METAL)
+endif()
+if(BUILD_OPENGL_RENDERER)
+  target_compile_definitions(unit-tests PRIVATE AEON_TEST_HAVE_OPENGL)
+endif()
+
 if(UNIX AND NOT APPLE)
   # The GPU tests host renderer surfaces on an off-screen X11 window, created
   # with a GLX visual because the OpenGL back-end derives its framebuffer config
@@ -118,6 +139,9 @@ if(BUILD_VULKAN_RENDERER)
   if(Vulkan_FOUND)
     target_link_libraries(unit-tests Vulkan::Vulkan)
     target_compile_definitions(unit-tests PRIVATE AEON_TEST_HAVE_VULKAN)
+    if(NOT APPLE)
+      target_compile_definitions(unit-tests PRIVATE AEON_TEST_HAVE_VULKAN_WINDOW)
+    endif()
   endif()
 endif()
 if(MSVC)

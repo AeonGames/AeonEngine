@@ -208,7 +208,7 @@ void main()
             vec3 ndc = clip.xyz / clip.w;
             uv_min = min ( uv_min, ndc.xy * 0.5 + 0.5 );
             uv_max = max ( uv_max, ndc.xy * 0.5 + 0.5 );
-#ifdef VULKAN
+#if defined(VULKAN) || defined(METAL)
             nearest = min ( nearest, ndc.z );             // window depth [0,1]
 #else
             nearest = min ( nearest, ndc.z * 0.5 + 0.5 ); // GL NDC [-1,1] -> [0,1]

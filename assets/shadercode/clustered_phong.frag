@@ -1,5 +1,8 @@
 #version 450
-#ifdef VULKAN
+#if defined(METAL)
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_samplerless_texture_functions : require
+#elif defined(VULKAN)
 #extension GL_EXT_nonuniform_qualifier : require
 #extension GL_EXT_buffer_reference : require
 #else
@@ -48,7 +51,22 @@ struct GpuMaterial
 // (e.g. an unregistered material's UINT32_MAX) must be rejected before the read
 // or it dereferences a wild GPU address (VK_ERROR_DEVICE_LOST, READ_INVALID).
 const uint MATERIAL_CAPACITY = 4096u;
-#ifdef VULKAN
+#if defined(METAL)
+// Metal has no Vulkan buffer-device-address equivalent. Keep the material
+// records in a regular storage buffer. Each bindless slot is one combined
+// texture/sampler pair, matching Vulkan's global descriptor array; .x selects
+// that pair and .y remains unused.
+const uint BINDLESS_TEXTURE_CAPACITY = 16384u;
+layout(set = 2, binding = 0) uniform sampler2D global_textures[BINDLESS_TEXTURE_CAPACITY];
+layout(set = 7, binding = 0, std430) readonly buffer Bindless
+{
+      GpuMaterial materials[];
+};
+layout(location = 5) flat in uint vMaterialIndex;
+#define MATERIAL_INDEX  ( vMaterialIndex < MATERIAL_CAPACITY ? vMaterialIndex : 0u )
+#define MAT_REC         materials[MATERIAL_INDEX]
+#define MAT_TEX(i)      global_textures[nonuniformEXT ( MAT_REC.texture_refs[i].x )]
+#elif defined(VULKAN)
 layout(set = 2, binding = 0) uniform sampler2D global_textures[];
 // Material records reached by buffer device address (BDA): the push constant
 // carries a 64-bit pointer to the global material storage buffer, so the shader

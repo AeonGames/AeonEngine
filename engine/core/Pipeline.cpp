@@ -15,6 +15,7 @@ limitations under the License.
 */
 
 #include <unordered_map>
+#include "aeongames/CRC.hpp"
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/ProtoBufClasses.hpp"
 #include "aeongames/ProtoBufHelpers.hpp"
@@ -286,6 +287,25 @@ namespace AeonGames
                std::string_view{};
     }
 
+    const ShaderInterface* Pipeline::GetShaderInterface ( ShaderType aType,
+            std::string_view aRenderer, uint32_t aComputeStageIndex ) const
+    {
+        const std::vector<ShaderInterface>* interfaces = ResolveVariant ( mShaderInterfaces, aRenderer );
+        if ( interfaces == nullptr )
+        {
+            return nullptr;
+        }
+        for ( const ShaderInterface& shader_interface : *interfaces )
+        {
+            if ( shader_interface.stage == aType &&
+                 ( aType != ShaderType::COMP || shader_interface.compute_stage_index == aComputeStageIndex ) )
+            {
+                return &shader_interface;
+            }
+        }
+        return nullptr;
+    }
+
     void Pipeline::LoadFromMemory ( const void* aBuffer, size_t aBufferSize )
     {
         LoadFromProtoBufObject<Pipeline, PipelineMsg, "AEONPLN"_mgk> ( *this, aBuffer, aBufferSize );
@@ -302,6 +322,7 @@ namespace AeonGames
             variants.clear();
         }
         mComputeVariants.clear();
+        mShaderInterfaces.clear();
         auto copy_stage = [] ( std::unordered_map<std::string, std::string>& aDst, const auto & aSrc )
         {
             for ( const auto& entry : aSrc )
@@ -318,6 +339,44 @@ namespace AeonGames
         {
             std::vector<std::string>& stages = mComputeVariants[entry.first];
             stages.assign ( entry.second.stage().begin(), entry.second.stage().end() );
+        }
+        for ( const auto& entry : aPipelineMsg.shader_interface() )
+        {
+            std::vector<ShaderInterface>& interfaces = mShaderInterfaces[entry.first];
+            interfaces.reserve ( entry.second.stage_size() );
+            for ( const auto& source : entry.second.stage() )
+            {
+                ShaderInterface shader_interface{};
+                shader_interface.stage = static_cast<ShaderType> ( source.stage() );
+                shader_interface.compute_stage_index = source.compute_stage_index();
+                shader_interface.entry_point = source.entry_point();
+                shader_interface.local_size = { source.local_size_x(), source.local_size_y(), source.local_size_z() };
+                shader_interface.fragment_output_count = source.fragment_output_count();
+                shader_interface.resources.reserve ( source.resource_size() );
+                for ( const auto& source_resource : source.resource() )
+                {
+                    ShaderResource resource{};
+                    resource.name = source_resource.name();
+                    resource.name_hash = crc32i ( resource.name.data(), resource.name.size() );
+                    resource.set = source_resource.set();
+                    resource.binding = source_resource.binding();
+                    resource.count = source_resource.count();
+                    resource.type = static_cast<ShaderResourceType> ( source_resource.type() );
+                    shader_interface.resources.push_back ( std::move ( resource ) );
+                }
+                shader_interface.inputs.reserve ( source.input_size() );
+                for ( const auto& source_input : source.input() )
+                {
+                    ShaderInput input{};
+                    input.name = source_input.name();
+                    input.name_hash = crc32i ( input.name.data(), input.name.size() );
+                    input.location = source_input.location();
+                    input.components = source_input.components();
+                    input.scalar_type = static_cast<ShaderInputScalarType> ( source_input.scalar_type() );
+                    shader_interface.inputs.push_back ( std::move ( input ) );
+                }
+                interfaces.push_back ( std::move ( shader_interface ) );
+            }
         }
         if ( aPipelineMsg.has_raster_state() )
         {
@@ -393,6 +452,7 @@ namespace AeonGames
             variants.clear();
         }
         mComputeVariants.clear();
+        mShaderInterfaces.clear();
         mRasterState = {};
         mDepthStencilState = {};
         mBlendState = {};

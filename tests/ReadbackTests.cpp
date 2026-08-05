@@ -105,13 +105,24 @@ namespace AeonGames
         DestroyHiddenRenderWindow ( window );
     }
 
+#ifdef AEON_TEST_HAVE_OPENGL
     TEST ( ReadbackTest, OpenGLEmptyFrame )
     {
         RunEmptyFrameReadbackTest ( "OpenGL" );
     }
+#endif
 
+#ifdef AEON_TEST_HAVE_VULKAN_WINDOW
     TEST ( ReadbackTest, VulkanEmptyFrame )
     {
         RunEmptyFrameReadbackTest ( "Vulkan" );
     }
+#endif
+
+#ifdef AEON_TEST_HAVE_METAL
+    TEST ( ReadbackTest, MetalEmptyFrame )
+    {
+        RunEmptyFrameReadbackTest ( "Metal" );
+    }
+#endif
 }
