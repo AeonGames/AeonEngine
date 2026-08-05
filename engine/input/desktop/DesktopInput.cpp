@@ -103,12 +103,12 @@ namespace AeonGames
 
     int32_t DesktopInput::GetMouseDeltaX() const
     {
-        return mMouseX - mPrevMouseX;
+        return mMouseDeltaX;
     }
 
     int32_t DesktopInput::GetMouseDeltaY() const
     {
-        return mMouseY - mPrevMouseY;
+        return mMouseDeltaY;
     }
 
     float DesktopInput::GetMouseWheelDelta() const
@@ -169,8 +169,16 @@ namespace AeonGames
 
     void DesktopInput::OnMouseMove ( int32_t aX, int32_t aY )
     {
+        mMouseDeltaX += aX - mMouseX;
+        mMouseDeltaY += aY - mMouseY;
         mMouseX = aX;
         mMouseY = aY;
+    }
+
+    void DesktopInput::OnMouseDelta ( int32_t aDeltaX, int32_t aDeltaY )
+    {
+        mMouseDeltaX += aDeltaX;
+        mMouseDeltaY += aDeltaY;
     }
 
     void DesktopInput::OnMouseButton ( int32_t aButton, bool aPressed, int32_t aX, int32_t aY )
@@ -179,8 +187,7 @@ namespace AeonGames
         {
             mMouseButtonState[static_cast<size_t> ( aButton )] = aPressed;
         }
-        mMouseX = aX;
-        mMouseY = aY;
+        OnMouseMove ( aX, aY );
     }
 
     void DesktopInput::OnMouseWheel ( float aDeltaX, float aDeltaY )
@@ -197,6 +204,10 @@ namespace AeonGames
         mMouseButtonState.fill ( false );
         mKeyModifiers = KeyModifier_None;
         mTextInput.clear();
+        mMouseDeltaX = 0;
+        mMouseDeltaY = 0;
+        mWheelDeltaX = 0.0f;
+        mWheelDeltaY = 0.0f;
     }
 
     void DesktopInput::OnFocusGained()
@@ -208,8 +219,8 @@ namespace AeonGames
     {
         mPrevKeyState = mKeyState;
         mPrevMouseButtonState = mMouseButtonState;
-        mPrevMouseX = mMouseX;
-        mPrevMouseY = mMouseY;
+        mMouseDeltaX = 0;
+        mMouseDeltaY = 0;
         mWheelDeltaX = 0.0f;
         mWheelDeltaY = 0.0f;
     }

@@ -309,7 +309,7 @@ namespace AeonGames
         SetInputSystem ( nullptr );
         if ( mRenderer )
         {
-            mRenderer->DetachWindow ( this );
+            mRenderer->DetachWindow ( ( __bridge void* ) mNSView );
         }
         @autoreleasepool
         {
@@ -344,12 +344,17 @@ namespace AeonGames
     {
         bool running{true};
         std::chrono::high_resolution_clock::time_point last_time{std::chrono::high_resolution_clock::now() };
+        std::array<bool, kMacKeyCodeCount> modifier_key_state{};
+        bool window_focused{};
+        bool previous_cursor_captured{};
+        bool cursor_hidden{};
         aScene.SetInputSystem ( mInputSystem.get() );
 
         @autoreleasepool
         {
             [mNSWindow makeKeyAndOrderFront:nil];
             [NSApp activateIgnoringOtherApps:YES];
+            window_focused = [mNSWindow isKeyWindow];
 
             NSRect frame = [[mNSWindow contentView] frame];
             Resize ( static_cast<uint32_t> ( frame.size.width ), static_cast<uint32_t> ( frame.size.height ) );
@@ -483,7 +488,17 @@ namespace AeonGames
                             {
                                 break;
                             }
+                            const size_t key_code = [event keyCode];
+                            if ( key_code >= modifier_key_state.size() )
+                            {
+                                break;
+                            }
                             bool pressed = ( flags & key_flag ) != 0;
+                            if ( key != KeyCode::CapsLock && pressed )
+                            {
+                                pressed = !modifier_key_state[key_code];
+                            }
+                            modifier_key_state[key_code] = pressed;
                             bool consumed = mGuiOverlay && mGuiOverlay->OnKeyEvent ( key, pressed );
                             if ( !consumed && mInputSystem )
                             {
@@ -541,7 +556,15 @@ namespace AeonGames
                             bool consumed = mGuiOverlay && mGuiOverlay->OnMouseMove ( x, y );
                             if ( !consumed && mInputSystem )
                             {
-                                mInputSystem->OnMouseMove ( x, y );
+                                if ( mInputSystem->IsRelativeMouseMode() )
+                                {
+                                    mInputSystem->OnMouseDelta ( static_cast<int32_t> ( [event deltaX] ),
+                                                                 -static_cast<int32_t> ( [event deltaY] ) );
+                                }
+                                else
+                                {
+                                    mInputSystem->OnMouseMove ( x, y );
+                                }
                             }
                         }
                         break;
@@ -572,32 +595,6 @@ namespace AeonGames
                             }
                         }
                         break;
-                        case NSEventTypeAppKitDefined:
-                        {
-                            // Window focus changes arrive as AppKit-defined
-                            // events with specific subtypes.
-                            switch ( [event subtype] )
-                            {
-                            case NSEventSubtypeWindowExposed:
-                                break;
-                            case NSEventSubtypeApplicationActivated:
-                                if ( mInputSystem )
-                                {
-                                    mInputSystem->OnFocusGained();
-                                    mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [NSEvent modifierFlags] ) );
-                                }
-                                break;
-                            case NSEventSubtypeApplicationDeactivated:
-                                if ( mInputSystem )
-                                {
-                                    mInputSystem->OnFocusLost();
-                                }
-                                break;
-                            default:
-                                break;
-                            }
-                        }
-                        break;
                         default:
                             break;
                         }
@@ -615,6 +612,28 @@ namespace AeonGames
                     {
                         running = false;
                         break;
+                    }
+
+                    bool current_window_focused = [mNSWindow isKeyWindow];
+                    if ( current_window_focused != window_focused )
+                    {
+                        if ( mInputSystem )
+                        {
+                            if ( current_window_focused )
+                            {
+                                mInputSystem->OnFocusGained();
+                                mInputSystem->SetKeyModifiers ( TranslateNSModifiers ( [NSEvent modifierFlags] ) );
+                            }
+                            else
+                            {
+                                mInputSystem->OnFocusLost();
+                            }
+                        }
+                        if ( !current_window_focused )
+                        {
+                            modifier_key_state.fill ( false );
+                        }
+                        window_focused = current_window_focused;
                     }
 
                     // Check for resize
@@ -636,10 +655,9 @@ namespace AeonGames
                     if ( mInputSystem )
                     {
                         // Apply cursor capture / relative-mouse-mode requests.
-                        static bool prev_cursor_captured = false;
-                        static bool cursor_hidden = false;
-                        bool cursor_captured = mInputSystem->IsCursorCaptured() || mInputSystem->IsRelativeMouseMode();
-                        if ( cursor_captured != prev_cursor_captured )
+                        bool cursor_captured = window_focused
+                                               && ( mInputSystem->IsCursorCaptured() || mInputSystem->IsRelativeMouseMode() );
+                        if ( cursor_captured != previous_cursor_captured )
                         {
                             if ( cursor_captured )
                             {
@@ -659,25 +677,8 @@ namespace AeonGames
                                     cursor_hidden = false;
                                 }
                             }
-                            prev_cursor_captured = cursor_captured;
+                            previous_cursor_captured = cursor_captured;
                         }
-                        // In relative-mouse mode, recenter the cursor in the
-                        // window each frame so deltas keep accumulating.
-                        if ( mInputSystem->IsRelativeMouseMode() )
-                        {
-                            NSRect content = [[mNSWindow contentView] frame];
-                            NSPoint center_view = NSMakePoint ( content.size.width / 2.0, content.size.height / 2.0 );
-                            NSRect center_rect = [mNSWindow convertRectToScreen:NSMakeRect ( center_view.x, center_view.y, 0, 0 )];
-                            // CGWarpMouseCursorPosition uses top-left screen
-                            // coordinates; flip Y from Cocoa's bottom-left.
-                            CGFloat screen_height = [[NSScreen mainScreen] frame].size.height;
-                            CGPoint warp = CGPointMake ( center_rect.origin.x, screen_height - center_rect.origin.y );
-                            CGWarpMouseCursorPosition ( warp );
-                            int32_t cx = static_cast<int32_t> ( content.size.width / 2.0 );
-                            int32_t cy = static_cast<int32_t> ( content.size.height / 2.0 );
-                            mInputSystem->OnMouseMove ( cx, cy );
-                        }
-                        mInputSystem->Update();
                     }
                     aScene.Update ( delta.count() );
                     last_time = current_time;
@@ -724,7 +725,19 @@ namespace AeonGames
                         // the shading pass and composites the overlay.
                         mRenderer->RenderScene ( ( __bridge void* ) mNSView, aScene, mGuiOverlay.get() );
                     }
+                    if ( mInputSystem )
+                    {
+                        mInputSystem->Update();
+                    }
                 }
+            }
+            if ( previous_cursor_captured )
+            {
+                CGAssociateMouseAndMouseCursorPosition ( true );
+            }
+            if ( cursor_hidden )
+            {
+                [NSCursor unhide];
             }
         }
     }

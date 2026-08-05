@@ -110,9 +110,8 @@ namespace AeonGames
         /** Returns the current cursor-capture request state. */
         virtual bool IsCursorCaptured() const = 0;
         /** Requests relative-mouse mode (mouse deltas without absolute position).
-         *  Front-ends should observe IsRelativeMouseMode() and warp the cursor
-         *  to a fixed point each frame so deltas accumulate without the cursor
-         *  leaving the window. */
+         *  Front-ends should observe IsRelativeMouseMode() and inject native
+         *  relative motion when available, or recenter the cursor each frame. */
         virtual void SetRelativeMouseMode ( bool aRelative ) = 0;
         /** Returns the current relative-mouse-mode request state. */
         virtual bool IsRelativeMouseMode() const = 0;
@@ -163,6 +162,11 @@ namespace AeonGames
          * @param aY Y coordinate in window space.
          */
         virtual void OnMouseMove ( int32_t aX, int32_t aY ) = 0;
+        /** Injects relative mouse movement without changing the absolute cursor position.
+         * @param aDeltaX Horizontal movement since the previous event.
+         * @param aDeltaY Vertical movement since the previous event.
+         */
+        virtual void OnMouseDelta ( int32_t aDeltaX, int32_t aDeltaY ) = 0;
         /** Injects a mouse button event into the input system.
          * @param aButton Normalized button identifier (see MouseButton).
          * @param aPressed true if the button was pressed, false if released.
