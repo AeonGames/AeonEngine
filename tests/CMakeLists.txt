@@ -44,6 +44,7 @@ set(TEST_SRCS
     DependencyMapTests.cpp
     CRCTests.cpp
     KeyCodeTests.cpp
+    DesktopInputTests.cpp
     SceneTests.cpp
     MatrixTests.cpp
     TransformTests.cpp
@@ -78,6 +79,7 @@ source_group("Tested" FILES ${TESTED_SRCS})
 source_group("Tests" FILES ${TEST_SRCS})
 
 add_executable(unit-tests ${TEST_SRCS} ${TESTED_SRCS})
+add_dependencies(unit-tests DesktopInput)
 
 if(GTEST_LIBRARY AND GTEST_LIBRARY_DEBUG)
   set(GTEST_LIBRARIES optimized ${GTEST_LIBRARY} debug ${GTEST_LIBRARY_DEBUG})

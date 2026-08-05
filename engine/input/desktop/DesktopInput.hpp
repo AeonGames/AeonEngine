@@ -73,6 +73,7 @@ namespace AeonGames
         void SetKeyModifiers ( uint32_t aModifiers ) override;
         void OnChar ( uint32_t aCodepoint ) override;
         void OnMouseMove ( int32_t aX, int32_t aY ) override;
+        void OnMouseDelta ( int32_t aDeltaX, int32_t aDeltaY ) override;
         void OnMouseButton ( int32_t aButton, bool aPressed, int32_t aX, int32_t aY ) override;
         void OnMouseWheel ( float aDeltaX, float aDeltaY ) override;
         void OnFocusLost() override;
@@ -95,8 +96,8 @@ namespace AeonGames
 
         int32_t mMouseX{};
         int32_t mMouseY{};
-        int32_t mPrevMouseX{};
-        int32_t mPrevMouseY{};
+        int32_t mMouseDeltaX{};
+        int32_t mMouseDeltaY{};
 
         float mWheelDeltaX{};
         float mWheelDeltaY{};
