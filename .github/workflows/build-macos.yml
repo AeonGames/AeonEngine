@@ -26,6 +26,7 @@ jobs:
 
     - name: '🍎 Install dependencies'
       run: |
+        brew untap aws/tap || true
         brew update
         brew install \
           flex \
@@ -72,7 +73,7 @@ jobs:
       run: |
         export PATH="/opt/homebrew/opt/bison/bin:$PATH"
         export PKG_CONFIG_PATH="/opt/homebrew/lib/pkgconfig:$PKG_CONFIG_PATH"
-        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON -DBUILD_METAL_RENDERER=ON -DCMAKE_OSX_DEPLOYMENT_TARGET=13.0
+        cmake -B build -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}} -DUSE_AEONGUI=ON -DBUILD_METAL_RENDERER=ON -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3
         cmake --build build --parallel "$(sysctl -n hw.ncpu)"
 
     - name: '🧪 Run TESTS'
