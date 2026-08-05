@@ -41,6 +41,7 @@ limitations under the License.
 #include "pipeline.pb.h"
 #include "RenderTestWindow.h"
 
+#ifdef AEON_TEST_HAVE_METAL
 namespace AeonGames
 {
     namespace
@@ -281,7 +282,6 @@ namespace AeonGames
         };
     }
 
-#ifdef AEON_TEST_HAVE_METAL
     TEST ( RendererParityTest, MetalBindlessTexturedStaticAndInstanced )
     {
         void* window = CreateHiddenRenderWindow();
@@ -954,5 +954,5 @@ namespace AeonGames
         renderer.reset();
         DestroyHiddenRenderWindow ( window );
     }
-#endif
 }
+#endif
