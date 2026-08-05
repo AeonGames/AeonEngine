@@ -22,10 +22,10 @@ limitations under the License.
 
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 #include <type_traits>
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
-#include "aeongames/LogLevel.hpp"
 #include "Factory.h"
 #include "aeongames/StringId.hpp"
 #include "aeongames/ProtoBufClasses.hpp"
@@ -80,7 +80,6 @@ namespace AeonGames
         {
             if ( parent == nullptr )
             {
-                std::cout << LogLevel::Error << "Node has no parent and thus no assigned index." << std::endl;
                 throw std::runtime_error ( "Node has no parent and thus no assigned index." );
             }
             auto index = std::find_if ( parent->mNodes.begin(), parent->mNodes.end(),

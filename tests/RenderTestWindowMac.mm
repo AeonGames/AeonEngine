@@ -43,12 +43,15 @@ namespace AeonGames
                 throw std::runtime_error ( "macOS render tests must create AppKit windows on the main thread" );
             }
             [NSApplication sharedApplication];
-NSWindow* window = [[NSWindow alloc] initWithContentRect:NSMakeRect ( 0, 0, 64, 64 )
-                    styleMask:NSWindowStyleMaskBorderless
-                    backing:NSBackingStoreBuffered
-                    defer:NO];
+            NSWindow* window = [[NSWindow alloc] initWithContentRect:NSMakeRect ( 0, 0, 64, 64 )
+                                styleMask:NSWindowStyleMaskBorderless
+                                backing:NSBackingStoreBuffered
+                                defer:NO];
+            // Under ARC the dictionary owns the window; the default
+            // releasedWhenClosed would make -close over-release it.
+            window.releasedWhenClosed = NO;
             NSView* view = window.contentView;
-[view setWantsLayer:YES];
+            [view setWantsLayer:YES];
             void* handle = ( __bridge void* ) view;
             TestWindows() [[NSValue valueWithPointer:handle]] = window;
             return handle;

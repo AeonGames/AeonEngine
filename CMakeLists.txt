@@ -141,6 +141,11 @@ if(BUILD_METAL_RENDERER)
 endif()
 option(USE_AEONGUI "Use the AeonGUI library for the user interface" OFF)
 
+# libc++ only exposes floating point std::to_chars, which std::format needs, from macOS 13.3 on.
+if(APPLE AND USE_AEONGUI AND CMAKE_OSX_DEPLOYMENT_TARGET AND CMAKE_OSX_DEPLOYMENT_TARGET VERSION_LESS 13.3)
+  message(FATAL_ERROR "USE_AEONGUI requires CMAKE_OSX_DEPLOYMENT_TARGET >= 13.3")
+endif()
+
 if(USE_AEONGUI)
   if(MSVC)
     find_package(aeongui CONFIG REQUIRED)
