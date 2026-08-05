@@ -2205,8 +2205,15 @@ namespace AeonGames
                     continue;
                 }
                 const RenderItem& head = queue[i];
+                // The batch is drawn with one vertex-buffer binding taken from
+                // the representative mesh, and the geometry pool is per-stride,
+                // so a run must not span strides: the other arena's meshes would
+                // be fetched from the wrong buffer at a base vertex that only
+                // indexes their own.
+                const size_t head_stride = head.mMesh->GetStride();
                 size_t j = i + 1;
-                while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) )
+                while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) &&
+                        queue[j].mMesh->GetStride() == head_stride )
                 {
                     ++j;
                 }
