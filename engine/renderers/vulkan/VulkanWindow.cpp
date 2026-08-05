@@ -464,9 +464,9 @@ namespace AeonGames
         mVkSwapchainImages.resize ( mSwapchainImageCount );
         mVkSwapchainImageViews.resize ( mSwapchainImageCount );
         if ( VkResult result = vkGetSwapchainImagesKHR ( mVulkanRenderer.GetDevice(),
-                               mVkSwapchainKHR,
-                               &mSwapchainImageCount,
-                               mVkSwapchainImages.data() ) )
+            mVkSwapchainKHR,
+            &mSwapchainImageCount,
+            mVkSwapchainImages.data() ) )
         {
             std::ostringstream stream;
             stream << "Get swapchain images failed: ( " << GetVulkanResultString ( result ) << " )";
@@ -3183,6 +3183,8 @@ namespace AeonGames
             return ! ( value != nullptr && value[0] == '0' );
         } ();
         params.occlusion[0] = occlusion_enabled ? 1.0f : 0.0f;
+        // Compaction only pays off when the draw count itself is GPU-sourced.
+        params.occlusion[1] = mVulkanRenderer.HasDrawIndirectCount() ? 1.0f : 0.0f;
         mClusterParams[mFrameIndex].WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 
@@ -3237,7 +3239,7 @@ namespace AeonGames
         for ( uint32_t frame = 0; frame < kFramesInFlight; ++frame )
         {
             mFrameParamsDescriptorSets[frame] = CreateDescriptorSet ( device, mFrameParamsDescriptorPool,
-                                                mVulkanRenderer.GetDescriptorSetLayout ( frame_params_layout_create_info ) );
+                mVulkanRenderer.GetDescriptorSetLayout ( frame_params_layout_create_info ) );
             const std::array<const VulkanBuffer*, 7> frame_params_buffers
             {
                 &mMatrices[frame], &mGlobals[frame], &mClusterParams[frame], &mLights[frame],
@@ -3260,7 +3262,7 @@ namespace AeonGames
             vkUpdateDescriptorSets ( device, static_cast<uint32_t> ( frame_params_writes.size() ), frame_params_writes.data(), 0, nullptr );
 
             mShadowMapsDescriptorSets[frame] = CreateDescriptorSet ( device, mShadowMapsDescriptorPool,
-                                               mVulkanRenderer.GetDescriptorSetLayout ( shadow_maps_layout_create_info ) );
+                mVulkanRenderer.GetDescriptorSetLayout ( shadow_maps_layout_create_info ) );
             // The point shadow array is a single (not per-frame) resource, so
             // every frame's set points at the same view.
             const std::array<VkImageView, 3> shadow_map_views
@@ -3519,8 +3521,8 @@ namespace AeonGames
         // so the CPU can get up to kFramesInFlight frames ahead of the GPU
         // rather than stalling on a single global fence every frame.
         if ( VkResult result = vkWaitForFences ( mVulkanRenderer.GetDevice(), 1,
-                               &mVkFences[mFrameIndex],
-                               VK_TRUE, UINT64_MAX ) )
+            &mVkFences[mFrameIndex],
+            VK_TRUE, UINT64_MAX ) )
         {
             std::cout << LogLevel::Error << GetVulkanResultString ( result ) << "  " << __func__ << " " << __LINE__ << " " << std::endl;
             if ( result == VK_ERROR_DEVICE_LOST )
@@ -4067,8 +4069,8 @@ namespace AeonGames
         // A single object: hardware-instanced aInstanceCount times (e.g. the
         // editor grid draws one line matrix repeated across gl_InstanceIndex).
         RenderCommon ( { &aModelMatrix, 1 }, aMesh, aPipeline, aMaterial, aTopology,
-                       aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
-                       aSkinnedVertices, aRenderPass );
+                     aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
+                     aSkinnedVertices, aRenderPass );
     }
 
 #ifndef NDEBUG
@@ -4152,8 +4154,8 @@ namespace AeonGames
         const bool packed_shadow_maps =
             aPipeline->GetDescriptorSetBindingCount ( Mesh::BindingLocations::SHADOW_MAP ) > 1;
         if ( packed_frame_params )
-        {
-            bind ( Mesh::BindingLocations::MATRICES, mFrameParamsDescriptorSets[mFrameIndex] );
+    {
+        bind ( Mesh::BindingLocations::MATRICES, mFrameParamsDescriptorSets[mFrameIndex] );
         }
         else
         {
@@ -4166,8 +4168,8 @@ namespace AeonGames
             bind ( Mesh::BindingLocations::POINT_SHADOW_PARAMS, mPointShadowParamsDescriptorSet );
         }
         if ( packed_shadow_maps )
-        {
-            bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapsDescriptorSets[mFrameIndex] );
+    {
+        bind ( Mesh::BindingLocations::SHADOW_MAP, mShadowMapsDescriptorSets[mFrameIndex] );
         }
         else
         {
@@ -4301,18 +4303,18 @@ namespace AeonGames
                                           RenderPass aRenderPass ) const
     {
         if ( aMeshes.empty() )
-        {
-            return;
-        }
-        // Same pass-pipeline selection as RenderCommon: the shadow / depth-pre
-        // passes substitute the renderer's shadow-depth / cluster-mark pipeline.
-        const VulkanPipeline* pipeline = nullptr;
-        switch ( aRenderPass )
-        {
-        case RenderPass::ShadowPass:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline,
-                       *aMeshes.front(),
-                       mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
+    {
+        return;
+    }
+    // Same pass-pipeline selection as RenderCommon: the shadow / depth-pre
+    // passes substitute the renderer's shadow-depth / cluster-mark pipeline.
+    const VulkanPipeline* pipeline = nullptr;
+    switch ( aRenderPass )
+    {
+    case RenderPass::ShadowPass:
+        pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline,
+            *aMeshes.front(),
+            mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
             break;
         case RenderPass::DepthPrePass:
             pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline, *aMeshes.front() );
@@ -4324,9 +4326,9 @@ namespace AeonGames
         vkCmdBindPipeline ( mVkCommandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline->GetVkPipeline() );
         vkCmdSetPrimitiveTopology ( mVkCommandBuffer, VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST );
         switch ( aRenderPass )
-        {
-        case RenderPass::ShadowPass:
-            BindShadowPassSets ( pipeline );
+    {
+    case RenderPass::ShadowPass:
+        BindShadowPassSets ( pipeline );
             break;
         case RenderPass::DepthPrePass:
             BindDepthPrePassSets ( pipeline );
@@ -4342,8 +4344,8 @@ namespace AeonGames
         // then upload the per-instance bindless material indices the fragment
         // shader reads through the flat varying.
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass )
-        {
-            if ( const VkPushConstantRange& material_buffer = pipeline->GetPushConstantMaterialBuffer(); material_buffer.size != 0 )
+    {
+        if ( const VkPushConstantRange& material_buffer = pipeline->GetPushConstantMaterialBuffer(); material_buffer.size != 0 )
             {
                 VkDeviceAddress material_buffer_address = mVulkanRenderer.GetMaterialStorageBufferDeviceAddress();
                 vkCmdPushConstants ( mVkCommandBuffer, pipeline->GetPipelineLayout(),
@@ -4368,8 +4370,8 @@ namespace AeonGames
         uint32_t instance_base = 0;
         size_t i = 0;
         while ( i < aMeshes.size() )
-        {
-            const Mesh* mesh = aMeshes[i];
+    {
+        const Mesh* mesh = aMeshes[i];
             uint32_t run = 1;
             while ( i + run < aMeshes.size() && aMeshes[i + run] == mesh )
             {
@@ -4477,7 +4479,7 @@ namespace AeonGames
         mCulledShadingBatches.push_back ( CulledShadingBatch
         {
             mVulkanRenderer.GetVulkanPipeline ( aShadingPipeline, aRepresentativeMesh ),
-                           &aRepresentativeMesh, commands, draw_count, models, materials, padded
+            &aRepresentativeMesh, commands, draw_count, models, materials, padded
         } );
     }
 
@@ -4554,22 +4556,22 @@ namespace AeonGames
                                       RenderPass aRenderPass ) const
     {
         if ( aModelMatrices.empty() )
-        {
-            return;
-        }
-        // Resolve the optional pre-skinned vertex buffer produced by the compute
-        // skinning pre-pass. When present it is bound as the vertex input in
-        // place of the mesh's rest-pose vertices (the index buffer still comes
-        // from the mesh), using its compact 56-byte stride (weight data dropped)
-        // instead of the mesh's own 64-byte stride. Batched instancing is never
-        // skinned, so those callers pass a null accessor.
-        VkBuffer skinned_vertex_buffer = VK_NULL_HANDLE;
-        VkDeviceSize skinned_vertex_offset = 0;
-        VkDeviceSize skinned_vertex_stride = 0;
-        if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
-        {
-            const VulkanStorageMemoryPoolBuffer* storage_pool_buffer =
-                reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aSkinnedVertices->GetMemoryPoolBuffer() );
+    {
+        return;
+    }
+    // Resolve the optional pre-skinned vertex buffer produced by the compute
+    // skinning pre-pass. When present it is bound as the vertex input in
+    // place of the mesh's rest-pose vertices (the index buffer still comes
+    // from the mesh), using its compact 56-byte stride (weight data dropped)
+    // instead of the mesh's own 64-byte stride. Batched instancing is never
+    // skinned, so those callers pass a null accessor.
+    VkBuffer skinned_vertex_buffer = VK_NULL_HANDLE;
+    VkDeviceSize skinned_vertex_offset = 0;
+    VkDeviceSize skinned_vertex_stride = 0;
+    if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
+    {
+        const VulkanStorageMemoryPoolBuffer* storage_pool_buffer =
+            reinterpret_cast<const VulkanStorageMemoryPoolBuffer*> ( aSkinnedVertices->GetMemoryPoolBuffer() );
             skinned_vertex_buffer =
                 reinterpret_cast<const VulkanBuffer&> ( storage_pool_buffer->GetBuffer() ).GetBuffer();
             skinned_vertex_offset = aSkinnedVertices->GetOffset();
@@ -4583,11 +4585,11 @@ namespace AeonGames
         // the multiview render pass the pipeline must be created against.
         const VulkanPipeline* pipeline = nullptr;
         switch ( aRenderPass )
-        {
-        case RenderPass::ShadowPass:
-            pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline,
-                       aMesh,
-                       mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
+    {
+    case RenderPass::ShadowPass:
+        pipeline = mVulkanRenderer.GetVulkanPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline,
+            aMesh,
+            mInPointShadowPass ? mVkPointShadowRenderPass : mVkShadowRenderPass );
             break;
         case RenderPass::DepthPrePass:
             pipeline = mVulkanRenderer.GetVulkanPipeline ( mClusterMarkPipeline, aMesh );
@@ -4601,9 +4603,9 @@ namespace AeonGames
         // Bind the engine-owned descriptor sets this pass needs. Shared with the
         // sibling draw path so the set list has a single definition.
         switch ( aRenderPass )
-        {
-        case RenderPass::ShadowPass:
-            BindShadowPassSets ( pipeline );
+    {
+    case RenderPass::ShadowPass:
+        BindShadowPassSets ( pipeline );
             break;
         case RenderPass::DepthPrePass:
             BindDepthPrePassSets ( pipeline );
@@ -4617,12 +4619,12 @@ namespace AeonGames
         // push constant) every instance is driven from the per-object matrix
         // buffer (InstanceMatrices), indexed by gl_InstanceIndex.
         if ( const VkPushConstantRange& push_constant_model_matrix = pipeline->GetPushConstantModelMatrix() ; push_constant_model_matrix.size != 0 && aModelMatrices.size() == 1 )
-        {
-            vkCmdPushConstants ( mVkCommandBuffer,
-                                 pipeline->GetPipelineLayout(),
-                                 push_constant_model_matrix.stageFlags,
-                                 push_constant_model_matrix.offset, push_constant_model_matrix.size,
-                                 aModelMatrices[0].GetMatrix4x4() );
+    {
+        vkCmdPushConstants ( mVkCommandBuffer,
+                             pipeline->GetPipelineLayout(),
+                             push_constant_model_matrix.stageFlags,
+                             push_constant_model_matrix.offset, push_constant_model_matrix.size,
+                             aModelMatrices[0].GetMatrix4x4() );
         }
         else
         {
@@ -4631,8 +4633,8 @@ namespace AeonGames
         // Material state applies only to the shading pass; the substituted
         // shadow/depth pipelines ignore it.
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass && aMaterial != nullptr )
-        {
-            const VulkanMaterial* vulkan_material = mVulkanRenderer.GetVulkanMaterial ( *aMaterial );
+    {
+        const VulkanMaterial* vulkan_material = mVulkanRenderer.GetVulkanMaterial ( *aMaterial );
             vulkan_material->Bind ( mVkCommandBuffer, *pipeline );
             // Per-instance bindless material index (replaces the removed
             // material-index push constant): one entry per instance so the
@@ -4651,9 +4653,9 @@ namespace AeonGames
         // the fetch by their base vertex / first index; skinned and private meshes
         // report zero.
         if ( aMesh.GetIndexCount() )
-        {
-            VkDrawIndexedIndirectCommand command{};
-            command.indexCount = ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount();
+    {
+        VkDrawIndexedIndirectCommand command{};
+        command.indexCount = ( aVertexCount != 0xffffffff ) ? aVertexCount : aMesh.GetIndexCount();
             command.instanceCount = aInstanceCount;
             command.firstIndex = vulkan_mesh->GetFirstIndex() + aVertexStart;
             command.vertexOffset = static_cast<int32_t> ( vulkan_mesh->GetBaseVertex() );
@@ -4694,8 +4696,8 @@ namespace AeonGames
         // each instance reads its own transform from InstanceMatrices. Batches
         // are never skinned, so no pre-skinned vertex buffer is forwarded.
         RenderCommon ( aModelMatrices, aMesh, aPipeline, aMaterial, aTopology,
-                       aVertexStart, aVertexCount,
-                       static_cast<uint32_t> ( aModelMatrices.size() ), 0, nullptr, aRenderPass );
+        aVertexStart, aVertexCount,
+        static_cast<uint32_t> ( aModelMatrices.size() ), 0, nullptr, aRenderPass );
     }
 
     void VulkanWindow::Dispatch ( const Pipeline& aPipeline,

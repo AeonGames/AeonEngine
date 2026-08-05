@@ -119,7 +119,7 @@ layout(binding = 1, std140) uniform ClusterParams
     mat4  cull_inverse_projection;
     uvec4 cull_cluster_grid;
     vec4  cull_cluster_screen;
-    vec4  cull_cluster_occlusion; // .x = Hi-Z occlusion enable
+    vec4  cull_cluster_occlusion; // .x = Hi-Z occlusion enable, .y = compact draws
 };
 // Hi-Z depth pyramid (max-reduced), level 0 at half the depth resolution. An
 // instance is rejected only when its nearest projected depth is behind the
@@ -237,14 +237,28 @@ void main()
         }
     }
 
-    if ( !visible )
+    // Compaction packs survivors into the front of the list so a
+    // draw-count-driven indirect pass submits only them. Where the backend has
+    // no drawIndirectCount the whole padded list is drawn regardless, so
+    // compacting buys nothing and only makes slot -- and therefore which model
+    // matrix a command indexes through first_instance -- depend on atomic
+    // arrival order, which varies frame to frame.
+    uint slot;
+    if ( cull_cluster_occlusion.y > 0.5 )
     {
-        return;
+        if ( !visible )
+        {
+            return;
+        }
+        slot = atomicAdd ( draw_count, 1u );
+        draw_commands[slot].instance_count = 1u;
     }
-
-    uint slot = atomicAdd ( draw_count, 1u );
+    else
+    {
+        slot = index;
+        draw_commands[slot].instance_count = visible ? 1u : 0u;
+    }
     draw_commands[slot].index_count    = inst.draw.x;
-    draw_commands[slot].instance_count = 1u;
     draw_commands[slot].first_index    = inst.draw.y;
     draw_commands[slot].vertex_offset  = int ( inst.draw.z );
     draw_commands[slot].first_instance = slot;
