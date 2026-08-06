@@ -206,5 +206,32 @@ namespace AeonGames
             return nullptr;
         }
     }
+
+    /** @brief Construct a renderer with custom settings, returning nullptr
+     *  (instead of throwing) when the backend is unavailable on the host. */
+    inline std::unique_ptr<Renderer> TryConstructRenderer ( const char* aRendererName, void* aWindow, const RendererSettings& aSettings )
+    {
+#ifdef AEON_TEST_HAVE_VULKAN
+        if ( std::string_view{ aRendererName } == "Vulkan" && !IsVulkanAvailableOnHost() )
+        {
+            std::cerr << aRendererName << " renderer unavailable on this host: no compatible Vulkan driver." << std::endl;
+            return nullptr;
+        }
+#endif
+        try
+        {
+            return ConstructRenderer ( std::string ( aRendererName ), aWindow, aSettings );
+        }
+        catch ( const std::exception& e )
+        {
+            std::cerr << aRendererName << " renderer unavailable on this host: " << e.what() << std::endl;
+            return nullptr;
+        }
+        catch ( ... )
+        {
+            std::cerr << aRendererName << " renderer unavailable on this host." << std::endl;
+            return nullptr;
+        }
+    }
 }
 #endif
