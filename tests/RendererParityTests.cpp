@@ -287,7 +287,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
 
         Mesh mesh;
@@ -338,7 +341,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
 
         Mesh mesh;
@@ -379,7 +385,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         renderer->SetClearColor ( window, 0.0f, 0.0f, 0.0f, 1.0f );
         const SolidGuiOverlay overlay{64, 64, {0, 0, 128, 128}};
@@ -416,7 +425,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         renderer->SetClearColor ( window, 0.0f, 0.0f, 0.0f, 1.0f );
         // Premultiplied BGRA: the top half is red, the bottom half fully
@@ -451,7 +463,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
 
         Pipeline pipeline;
@@ -497,7 +512,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         renderer->SetClearColor ( window, 0.0f, 0.0f, 0.0f, 1.0f );
 
@@ -560,8 +578,11 @@ namespace AeonGames
         settings.mDirectionalShadowMapResolution = 32;
         settings.mSpotShadowMapResolution = 32;
         settings.mPointShadowMapResolution = 32;
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string {"Metal"}, window, settings );
-        ASSERT_NE ( renderer, nullptr );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window, settings );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         renderer->SetClearColor ( window, 0.0f, 0.25f, 0.5f, 1.0f );
 
@@ -623,8 +644,11 @@ namespace AeonGames
         ASSERT_NE ( window, nullptr );
         RendererSettings settings{};
         settings.mDirectionalShadowMapResolution = 32;
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string {"Metal"}, window, settings );
-        ASSERT_NE ( renderer, nullptr );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window, settings );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         renderer->SetClearColor ( window, 0.0f, 0.0f, 0.0f, 1.0f );
         renderer->SetProjectionMatrix ( window, Matrix4x4{} );
@@ -705,8 +729,11 @@ namespace AeonGames
         settings.mSkyboxEnvironmentFaceSize = 8;
         settings.mPrefilteredEnvironmentFaceSize = 8;
         settings.mPrefilteredEnvironmentMipCount = 3;
-        std::unique_ptr<Renderer> renderer = ConstructRenderer ( std::string {"Metal"}, window, settings );
-        ASSERT_NE ( renderer, nullptr );
+        std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window, settings );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
 
         std::vector<float> environment_pixels ( 16 * 8 * 3 );
@@ -748,7 +775,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         renderer->SetClearColor ( window, 0.0f, 0.0f, 0.0f, 1.0f );
         Matrix4x4 projection{};
@@ -789,7 +819,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         Matrix4x4 projection{};
         projection.Perspective ( 60.0f, 1.0f, 1.0f, 100.0f );
@@ -833,7 +866,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 64, 64 );
         Matrix4x4 projection{};
         projection.Perspective ( 60.0f, 1.0f, 1.0f, 100.0f );
@@ -906,7 +942,10 @@ namespace AeonGames
         void* window = CreateHiddenRenderWindow();
         ASSERT_NE ( window, nullptr );
         std::unique_ptr<Renderer> renderer = TryConstructRenderer ( "Metal", window );
-        ASSERT_NE ( renderer, nullptr );
+        if ( renderer == nullptr )
+        {
+            GTEST_SKIP() << "Metal renderer unavailable on this host.";
+        }
         renderer->ResizeViewport ( window, 0, 0, 320, 180 );
         Scene scene;
         const size_t scene_size = GetResourceSize ( "scenes/main.txt" );
