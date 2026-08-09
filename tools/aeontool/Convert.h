@@ -53,6 +53,8 @@ namespace AeonGames
             AEONSCNT,
             AEONCLNB,
             AEONCLNT,
+            AEONMDLB,
+            AEONMDLT,
         };
         FileType GetFileType ( const char* aMagic ) const;
         std::string mInputFile;
