@@ -189,12 +189,15 @@ aeontool pipeline -i pbr -o pbr.txt
 ## File Format Specifications
 
 ### Magic Numbers
-AeonEngine files use magic numbers for format identification:
-- `AEONPLN` - Pipeline files (binary with `\0`, text without)
-- `AEONMTL` - Material files (binary with `\0`, text without)
-- `AEONMSH` - Mesh files (binary with `\0`, text without)
-- `AEONSKLB` - Skeleton binary files
-- `AEONSKLT` - Skeleton text files
+AeonEngine files use magic numbers for format identification. Each is seven
+characters followed by `\0` in binary files and by a newline in text files:
+- `AEONPLN` - Pipeline files
+- `AEONMTL` - Material files
+- `AEONMSH` - Mesh files
+- `AEONSKL` - Skeleton files
+- `AEONSCN` - Scene files
+- `AEONCLN` - Collision files
+- `AEONMDL` - Model files
 
 ### Binary vs Text Formats
 - **Binary format**: Optimized for runtime loading, smaller file size
