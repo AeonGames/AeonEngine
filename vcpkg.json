@@ -13,6 +13,7 @@
     },
     "spirv-tools",
     "shaderc",
+    "sqlite3",
     "vulkan",
     "zlib",
     "qtbase",

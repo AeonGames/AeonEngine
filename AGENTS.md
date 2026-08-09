@@ -66,6 +66,11 @@ may remain in a build tree configured with Ninja, so trust `CMAKE_GENERATOR` in 
   not change OpenGL/Vulkan merely to share code; preserve their behavior and validate Metal against
   the same public `Renderer` contract.
 - **Never commit `docs/*.pdf`** — local, gitignored reference papers.
+- **Never commit Synty assets.** The `synty/` SIDEKICK packages, anything extracted from them, and
+  anything cooked from them (`.msh`/`.skl`/`.mdl`/`.mtl`, baked palette PNGs) are licensed art that
+  may not be redistributed — derived files included. `synty/` is gitignored; keep cooked output
+  outside the worktree or under an ignored path, and never stage it into this public repo. It
+  belongs in the internal network repo instead. Tooling that *reads* those assets is fine to commit.
 
 ## Architecture must-knows
 

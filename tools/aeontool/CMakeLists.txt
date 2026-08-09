@@ -12,6 +12,8 @@
 # License for the specific language governing permissions and limitations under
 # the License.
 include(${CMAKE_SOURCE_DIR}/cmake/base64.cmake)
+find_package(PNG REQUIRED)
+find_package(SQLite3 REQUIRED)
 set(AEONTOOL_HEADERS
   Tool.h
   Convert.h
@@ -19,6 +21,7 @@ set(AEONTOOL_HEADERS
   Base64.h
   PipelineTool.h
   Index.h
+  Sidekick.h
 )
 set(AEONTOOL_SOURCES
   Main.cpp
@@ -27,16 +30,19 @@ set(AEONTOOL_SOURCES
   Base64.cpp
   PipelineTool.cpp
   Index.cpp
+  Sidekick.cpp
 )
 
 include_directories(${ZLIB_INCLUDE_DIR}
                     ${PROTOBUF_INCLUDE_DIR}
+                    ${PNG_PNG_INCLUDE_DIR}
                     ${CMAKE_SOURCE_DIR}/include
                     ${CMAKE_BINARY_DIR}/proto
                     ${CMAKE_BINARY_DIR}/engine)
 
 add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})
-target_link_libraries(aeontool ProtoBufClasses AeonEngine ${ZLIB_LIBRARIES})
+target_link_libraries(aeontool ProtoBufClasses AeonEngine ${ZLIB_LIBRARIES}
+                      ${PNG_LIBRARIES} SQLite::SQLite3)
 if(MSVC)
   set_target_properties(
     aeontool

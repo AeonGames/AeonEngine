@@ -79,3 +79,8 @@ doxygen.log
 
 # Local reference papers (never committed)
 docs/*.pdf
+
+# Licensed third-party art (Synty SIDEKICK packages and anything cooked from
+# them). Redistribution is not permitted, not even for derived/converted assets,
+# so none of it may reach a public repository. Keep it on internal storage.
+synty/
