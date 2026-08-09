@@ -34,6 +34,7 @@ limitations under the License.
 #include "Base64.h"
 #include "PipelineTool.h"
 #include "Index.h"
+#include "Sidekick.h"
 
 int main ( int argc, char *argv[] )
 {
@@ -45,6 +46,7 @@ int main ( int argc, char *argv[] )
         { "base64", [] { return std::make_unique<AeonGames::Base64>(); } },
         { "pipeline", [] { return std::make_unique<AeonGames::PipelineTool>(); } },
         { "index", [] { return std::make_unique<AeonGames::Index>(); } },
+        { "sidekick", [] { return std::make_unique<AeonGames::Sidekick>(); } },
     };
 #ifdef _MSC_VER
     _CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF );
