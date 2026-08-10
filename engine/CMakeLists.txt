@@ -79,6 +79,8 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Renderer.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/SoundSystem.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/InputSystem.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Database.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/UserPath.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/KeyCode.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/ActionMap.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/CRC.hpp
@@ -107,6 +109,8 @@ set(ENGINE_CORE_SOURCES
     core/Animation.cpp
     core/SoundSystem.cpp
     core/InputSystem.cpp
+    core/Database.cpp
+    core/UserPath.cpp
     core/KeyCode.cpp
     core/ActionMap.cpp
     core/Utilities.cpp
@@ -199,6 +203,7 @@ if(USE_AEONGUI)
   add_subdirectory(gui/aeongui)
 endif()
 add_subdirectory(images)
+add_subdirectory(databases)
 add_subdirectory(input/desktop)
 add_subdirectory(sound/portaudio)
 add_subdirectory(sound/oggvorbis)
