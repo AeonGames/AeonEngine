@@ -811,7 +811,9 @@ namespace AeonGames
                 if ( frametime_target != 0u )
                 {
                     const auto ft0 = std::chrono::high_resolution_clock::now();
+                    BeginScreenshotFrame ( mWindowId );
                     mRenderer->RenderScene ( mWindowId, aScene, mGuiOverlay.get() );
+                    EndScreenshotFrame ( mWindowId );
                     mRenderer->Finish ( mWindowId );
                     const auto ft1 = std::chrono::high_resolution_clock::now();
                     const double ft_ms = std::chrono::duration<double, std::milli> ( ft1 - ft0 ).count();
@@ -831,7 +833,9 @@ namespace AeonGames
                 }
                 else
                 {
+                    BeginScreenshotFrame ( mWindowId );
                     mRenderer->RenderScene ( mWindowId, aScene, mGuiOverlay.get() );
+                    EndScreenshotFrame ( mWindowId );
                 }
 
                 // End-of-frame input bookkeeping. Done after the scene has read
