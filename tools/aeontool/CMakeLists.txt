@@ -22,6 +22,7 @@ set(AEONTOOL_HEADERS
   PipelineTool.h
   Index.h
   Sidekick.h
+  SidekickDatabase.h
 )
 set(AEONTOOL_SOURCES
   Main.cpp
@@ -31,6 +32,7 @@ set(AEONTOOL_SOURCES
   PipelineTool.cpp
   Index.cpp
   Sidekick.cpp
+  SidekickDatabase.cpp
 )
 
 include_directories(${ZLIB_INCLUDE_DIR}
