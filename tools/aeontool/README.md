@@ -198,6 +198,7 @@ characters followed by `\0` in binary files and by a newline in text files:
 - `AEONSCN` - Scene files
 - `AEONCLN` - Collision files
 - `AEONMDL` - Model files
+- `AEONANM` - Animation files
 
 ### Binary vs Text Formats
 - **Binary format**: Optimized for runtime loading, smaller file size
