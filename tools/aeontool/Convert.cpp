@@ -27,6 +27,7 @@ limitations under the License.
 #include "skeleton.pb.h"
 #include "scene.pb.h"
 #include "model.pb.h"
+#include "animation.pb.h"
 // <windows.h> (pulled in via Platform.hpp) defines near/far as empty macros,
 // which clash with the Near/Far accessors generated for collision.pb.h.
 #if defined(near)
@@ -495,6 +496,7 @@ namespace AeonGames
         SceneMsg scene_buffer;
         CollisionMsg collision_buffer;
         ModelMsg model_buffer;
+        AnimationMsg animation_buffer;
         ::google::protobuf::Message* message = nullptr;
         char magick_number[8] = { 0 };
         bool binary_input = false;
@@ -564,6 +566,13 @@ namespace AeonGames
             /* coverity[fallthrough] */
             case FileType::AEONMDLT:
                 message = &model_buffer;
+                break;
+            /* coverity[unterminated_case] */
+            case FileType::AEONANMB:
+                binary_input = true;
+            /* coverity[fallthrough] */
+            case FileType::AEONANMT:
+                message = &animation_buffer;
                 break;
             default:
                 file.close();
@@ -714,6 +723,11 @@ namespace AeonGames
             {
                 retval = ( type[3] == '\0' ) ? Convert::FileType::AEONMDLB :
                          Convert::FileType::AEONMDLT;
+            }
+            else if ( strncmp ( type, "ANM", 3 ) == 0 )
+            {
+                retval = ( type[3] == '\0' ) ? Convert::FileType::AEONANMB :
+                         Convert::FileType::AEONANMT;
             }
         }
         return retval;
