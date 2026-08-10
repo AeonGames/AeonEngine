@@ -23,6 +23,10 @@ Run headless from the repository root:
 
     blender -b --factory-startup -noaudio --python tools/blender/sidekick_batch.py -- \\
         --in <dir with SK_*.fbx> --out game/sidekick [--recipe <character.sk>]
+
+The input directories come out of unitypackage_extract.py; a .unitypackage
+stores every asset under its GUID rather than its name, so plain tar leaves the
+.fbx unnamed.
 """
 
 import math
