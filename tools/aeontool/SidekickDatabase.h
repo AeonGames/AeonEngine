@@ -16,6 +16,8 @@ limitations under the License.
 #ifndef AEONGAMES_SIDEKICKDATABASE_H
 #define AEONGAMES_SIDEKICKDATABASE_H
 #include <string>
+#include <utility>
+#include <vector>
 #include "Tool.h"
 
 namespace AeonGames
@@ -55,6 +57,10 @@ namespace AeonGames
         std::string mMeshPath{};
         std::string mResourcePath{"sidekick/parts"};
         std::string mMeshExtension{"msh"};
+        std::string mSkeleton{"sidekick/parts/skeleton.skl"};
+        std::string mPipeline{"shaders/clustered_phong"};
+        std::string mMaterial{"sidekick/parts/character.mtl"};
+        std::vector<std::pair<std::string, std::string>> mAnimations{};
     };
 }
 #endif

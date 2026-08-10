@@ -110,7 +110,15 @@ namespace AeonGames
             " reflection INTEGER NOT NULL, emission INTEGER NOT NULL, opacity INTEGER NOT NULL,"
             " PRIMARY KEY ( palette_id, slot_id ) );"
             "CREATE INDEX character_outfit_by_faction ON character_outfit ( faction_id );"
-            "CREATE INDEX character_part_by_type ON character_part ( part_type_id );";
+            "CREATE INDEX character_part_by_type ON character_part ( part_type_id );"
+            // Every part is cooked against one rig and shaded the same way, so
+            // the library carries its own skeleton and shading rather than
+            // relying on the runtime being told out of band.
+            "CREATE TABLE character_library ("
+            " id INTEGER PRIMARY KEY CHECK ( id = 1 ),"
+            " skeleton TEXT NOT NULL, pipeline TEXT NOT NULL, material TEXT NOT NULL );"
+            "CREATE TABLE character_animation ("
+            " name TEXT PRIMARY KEY, path TEXT NOT NULL );";
 
         /** @brief Owns a sqlite handle so an exception cannot leak it. */
         class Database
@@ -277,6 +285,28 @@ namespace AeonGames
             {
                 mMeshExtension = value ( i, "--mesh-extension" );
             }
+            else if ( option == "--skeleton" )
+            {
+                mSkeleton = value ( i, "--skeleton" );
+            }
+            else if ( option == "--pipeline" )
+            {
+                mPipeline = value ( i, "--pipeline" );
+            }
+            else if ( option == "--material" )
+            {
+                mMaterial = value ( i, "--material" );
+            }
+            else if ( option == "-a" || option == "--animation" )
+            {
+                const std::string assignment{value ( i, "--animation" ) };
+                const size_t separator = assignment.find ( '=' );
+                if ( separator == std::string::npos )
+                {
+                    throw std::runtime_error ( "Expected --animation <name>=<path>, got " + assignment + "." );
+                }
+                mAnimations.emplace_back ( assignment.substr ( 0, separator ), assignment.substr ( separator + 1 ) );
+            }
             else if ( option == "-h" || option == "--help" )
             {
                 std::cout << "Usage: aeontool sidekickdb [options]\n"
@@ -287,6 +317,13 @@ namespace AeonGames
                           << "  -p, --prefix <path>       Resource path the mesh references use\n"
                           << "                            (default: sidekick/parts)\n"
                           << "      --mesh-extension <e>  Extension of the cooked meshes (default: msh)\n"
+                          << "      --skeleton <path>     Skeleton every part is rigged to\n"
+                          << "                            (default: sidekick/parts/skeleton.skl)\n"
+                          << "      --pipeline <path>     Pipeline characters are drawn with\n"
+                          << "                            (default: shaders/clustered_phong)\n"
+                          << "      --material <path>     Material the composed palette is applied to\n"
+                          << "                            (default: sidekick/parts/character.mtl)\n"
+                          << "  -a, --animation <n>=<p>   Animation available to every character, repeatable\n"
                           << "  -h, --help                Show this help" << std::endl;
                 return true;
             }
@@ -530,6 +567,25 @@ namespace AeonGames
                 {
                     insert.Bind ( 3 + channel, ParseColor ( Column ( read, 2 + channel ) ) );
                 }
+                insert.Run();
+            }
+        }
+
+        {
+            Statement insert{destination, "INSERT INTO character_library ( id, skeleton, pipeline, material )"
+                                          " VALUES ( 1, ?, ?, ? )"};
+            insert.Bind ( 1, mSkeleton );
+            insert.Bind ( 2, mPipeline );
+            insert.Bind ( 3, mMaterial );
+            insert.Run();
+        }
+
+        {
+            Statement insert{destination, "INSERT INTO character_animation ( name, path ) VALUES ( ?, ? )"};
+            for ( const auto& animation : mAnimations )
+            {
+                insert.Bind ( 1, animation.first );
+                insert.Bind ( 2, animation.second );
                 insert.Run();
             }
         }

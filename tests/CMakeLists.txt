@@ -34,6 +34,7 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Container.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Database.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/DatabaseSchema.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/CharacterLibrary.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/UserPath.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/UniqueAnyPtr.hpp)
 set(TEST_SRCS
@@ -50,6 +51,7 @@ set(TEST_SRCS
     DesktopInputTests.cpp
     DatabaseTests.cpp
     DatabaseSchemaTests.cpp
+    CharacterLibraryTests.cpp
     SceneTests.cpp
     MatrixTests.cpp
     TransformTests.cpp
