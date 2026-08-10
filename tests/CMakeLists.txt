@@ -32,6 +32,8 @@ set(TESTED_SRCS
     ${CMAKE_SOURCE_DIR}/include/aeongames/ResourceCache.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Archive.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Container.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/Database.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/UserPath.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/UniqueAnyPtr.hpp)
 set(TEST_SRCS
     Main.cpp
@@ -45,6 +47,7 @@ set(TEST_SRCS
     CRCTests.cpp
     KeyCodeTests.cpp
     DesktopInputTests.cpp
+    DatabaseTests.cpp
     SceneTests.cpp
     MatrixTests.cpp
     TransformTests.cpp
@@ -80,6 +83,9 @@ source_group("Tests" FILES ${TEST_SRCS})
 
 add_executable(unit-tests ${TEST_SRCS} ${TESTED_SRCS})
 add_dependencies(unit-tests DesktopInput)
+if(TARGET SQLiteDatabase)
+  add_dependencies(unit-tests SQLiteDatabase)
+endif()
 
 if(GTEST_LIBRARY AND GTEST_LIBRARY_DEBUG)
   set(GTEST_LIBRARIES optimized ${GTEST_LIBRARY} debug ${GTEST_LIBRARY_DEBUG})

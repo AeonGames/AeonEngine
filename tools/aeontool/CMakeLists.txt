@@ -44,7 +44,7 @@ include_directories(${ZLIB_INCLUDE_DIR}
 
 add_executable(aeontool ${AEONTOOL_HEADERS} ${AEONTOOL_SOURCES})
 target_link_libraries(aeontool ProtoBufClasses AeonEngine ${ZLIB_LIBRARIES}
-                      ${PNG_LIBRARIES} SQLite::SQLite3)
+                      ${PNG_LIBRARIES} SQLite3::SQLite3)
 if(MSVC)
   set_target_properties(
     aeontool
