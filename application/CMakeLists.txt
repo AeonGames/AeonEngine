@@ -13,7 +13,9 @@
 # the License.
 
 set(EXECUTABLE_HEADERS Window.h)
-set(EXECUTABLE_SOURCES Main.cpp)
+set(EXECUTABLE_SOURCES Main.cpp Screenshot.cpp)
+
+find_package(PNG REQUIRED)
 
 if(UNIX AND NOT APPLE)
   find_package(X11 REQUIRED)
@@ -29,12 +31,13 @@ elseif(WIN32)
   list(APPEND EXECUTABLE_SOURCES windows.cpp)
 endif()
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/include ${PNG_PNG_INCLUDE_DIR})
 add_executable(game ${EXECUTABLE_HEADERS} ${EXECUTABLE_SOURCES})
 if(APPLE)
-  target_link_libraries(game "-framework Cocoa" AeonEngine)
+  target_link_libraries(game "-framework Cocoa" AeonEngine ${PNG_LIBRARIES})
 else()
-  target_link_libraries(game ${X11_LIBRARIES} ${OPENGL_LIBRARIES} AeonEngine)
+  target_link_libraries(game ${X11_LIBRARIES} ${OPENGL_LIBRARIES} AeonEngine
+                        ${PNG_LIBRARIES})
 endif()
 add_dependencies(game AeonEngine)
 

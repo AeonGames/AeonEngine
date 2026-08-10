@@ -723,7 +723,9 @@ namespace AeonGames
                         // window frustum, runs the depth pre-pass and light
                         // culling when the scene has a lighting pipeline, submits
                         // the shading pass and composites the overlay.
+                        BeginScreenshotFrame ( ( __bridge void* ) mNSView );
                         mRenderer->RenderScene ( ( __bridge void* ) mNSView, aScene, mGuiOverlay.get() );
+                        EndScreenshotFrame ( ( __bridge void* ) mNSView );
                     }
                     if ( mInputSystem )
                     {

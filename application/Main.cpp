@@ -26,6 +26,7 @@ limitations under the License.
 #include <cassert>
 #include <iostream>
 #include <cstdint>
+#include <cstdlib>
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -57,7 +58,9 @@ int Main ( int argc, char *argv[] )
         bool fullscreen{false};
         std::string renderer_name{};
         std::string scene_path{};
-        std::array<AeonGames::OptionHandler, 3> option_handlers
+        std::string screenshot_path{};
+        std::string screenshot_frame{};
+        std::array<AeonGames::OptionHandler, 5> option_handlers
         {
             AeonGames::OptionHandler{
                 'r',
@@ -76,6 +79,18 @@ int Main ( int argc, char *argv[] )
                 "fullscreen",
                 ArgumentExists,
                 &fullscreen
+            },
+            AeonGames::OptionHandler{
+                'p',
+                "screenshot",
+                GetArgumentIntoString,
+                &screenshot_path
+            },
+            AeonGames::OptionHandler{
+                'n',
+                "screenshot-frame",
+                GetArgumentIntoString,
+                &screenshot_frame
             },
         };
 
@@ -106,6 +121,13 @@ int Main ( int argc, char *argv[] )
         }
 
         /* Renderer is available from here on.*/
+        if ( !screenshot_path.empty() )
+        {
+            // Default late enough for the scene to stream in and settle.
+            window->SetScreenshot ( screenshot_path,
+                                    screenshot_frame.empty() ? 30u :
+                                    static_cast<uint32_t> ( std::strtoul ( screenshot_frame.c_str(), nullptr, 10 ) ) );
+        }
         if ( !scene_path.empty() )
         {
             scene.Load ( scene_path );

@@ -884,7 +884,9 @@ namespace AeonGames
                 // frustum, runs the depth pre-pass and light culling when the
                 // scene has a lighting pipeline, submits the shading pass and
                 // composites the overlay.
+                BeginScreenshotFrame ( reinterpret_cast<void*> ( mWindowId ) );
                 mRenderer->RenderScene ( reinterpret_cast<void*> ( mWindowId ), aScene, mGuiOverlay.get() );
+                EndScreenshotFrame ( reinterpret_cast<void*> ( mWindowId ) );
             }
             // End-of-frame input bookkeeping. Done after the scene has read
             // this frame's input so deltas/edges are valid during Update().

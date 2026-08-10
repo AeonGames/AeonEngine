@@ -69,6 +69,15 @@ namespace AeonGames
                 mRenderer->ToggleLightType ( aType );
             }
         }
+        /** @brief Capture frame @p aFrame into @p aPath as a PNG, then exit.
+         * @param aPath Destination file, empty to disable.
+         * @param aFrame Zero-based frame index; later frames give the scene time
+         *        to stream in and the camera to settle. */
+        void SetScreenshot ( const std::string& aPath, uint32_t aFrame );
+        /// @brief Arms the pending capture. Call immediately before RenderScene.
+        void BeginScreenshotFrame ( void* aWindowId );
+        /// @brief Writes the armed capture and exits. Call right after RenderScene.
+        void EndScreenshotFrame ( void* aWindowId );
     private:
 #if defined(_WIN32)
         HWND mWindowId {};
@@ -86,6 +95,9 @@ namespace AeonGames
         std::unique_ptr<GuiOverlay> mGuiOverlay {};
         std::unique_ptr<InputSystem> mInputSystem {};
         float mAspectRatio{1.0f};
+        std::string mScreenshotPath{};
+        uint32_t mScreenshotFrame{0};
+        uint32_t mFrameCounter{0};
     };
 }
 #endif
