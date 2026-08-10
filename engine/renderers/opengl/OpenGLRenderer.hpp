@@ -123,6 +123,10 @@ namespace AeonGames
         /// @brief True when the GL_ARB_bindless_texture path is active; gates the
         ///        resident-handle / global material SSBO rendering path.
         bool HasBindlessTexture() const;
+        /// @brief True when GL_ARB_indirect_parameters is available, so culled
+        ///        batches draw through glMultiDrawElementsIndirectCount. The cull
+        ///        compute must compact its output to match; see GpuClusterParams.
+        bool HasIndirectParameters() const;
         const RendererSettings& GetSettings() const;
         /// @brief Write a material record into the global bindless material SSBO
         ///        and return its index (selected per draw by the MaterialIndex
