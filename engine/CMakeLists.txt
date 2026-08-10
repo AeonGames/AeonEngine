@@ -81,6 +81,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/InputSystem.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Database.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/DatabaseSchema.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/CharacterLibrary.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/UserPath.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/KeyCode.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/ActionMap.hpp
@@ -112,6 +113,7 @@ set(ENGINE_CORE_SOURCES
     core/InputSystem.cpp
     core/Database.cpp
     core/DatabaseSchema.cpp
+    core/CharacterLibrary.cpp
     core/UserPath.cpp
     core/KeyCode.cpp
     core/ActionMap.cpp
