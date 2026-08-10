@@ -717,16 +717,30 @@ namespace AeonGames
             mOpenGLRenderer.BindMesh ( *batch.mRepresentativeMesh );
             const OpenGLBuffer& commands_buffer =
                 reinterpret_cast<const OpenGLBuffer&> ( batch.mCommands.GetMemoryPoolBuffer()->GetBuffer() );
-            const OpenGLBuffer& count_buffer =
-                reinterpret_cast<const OpenGLBuffer&> ( batch.mCount.GetMemoryPoolBuffer()->GetBuffer() );
             glBindBuffer ( GL_DRAW_INDIRECT_BUFFER, commands_buffer.GetBufferId() );
-            glBindBuffer ( GL_PARAMETER_BUFFER, count_buffer.GetBufferId() );
             OPENGL_CHECK_ERROR_NO_THROW;
-            glMultiDrawElementsIndirectCount ( GL_TRIANGLES, GL_UNSIGNED_INT,
-                                               reinterpret_cast<const void*> ( static_cast<uintptr_t> ( batch.mCommands.GetOffset() ) ),
-                                               static_cast<GLintptr> ( batch.mCount.GetOffset() ),
-                                               static_cast<GLsizei> ( batch.mMaxDraws ),
-                                               sizeof ( DrawElementsIndirectCommand ) );
+            if ( mOpenGLRenderer.HasIndirectParameters() )
+            {
+                const OpenGLBuffer& count_buffer =
+                    reinterpret_cast<const OpenGLBuffer&> ( batch.mCount.GetMemoryPoolBuffer()->GetBuffer() );
+                glBindBuffer ( GL_PARAMETER_BUFFER, count_buffer.GetBufferId() );
+                OPENGL_CHECK_ERROR_NO_THROW;
+                glMultiDrawElementsIndirectCount ( GL_TRIANGLES, GL_UNSIGNED_INT,
+                                                   reinterpret_cast<const void*> ( static_cast<uintptr_t> ( batch.mCommands.GetOffset() ) ),
+                                                   static_cast<GLintptr> ( batch.mCount.GetOffset() ),
+                                                   static_cast<GLsizei> ( batch.mMaxDraws ),
+                                                   sizeof ( DrawElementsIndirectCommand ) );
+            }
+            else
+            {
+                // Without a GPU-read count the cull compute leaves the list
+                // padded, so submit all of it; culled commands carry an
+                // instance_count of zero.
+                glMultiDrawElementsIndirect ( GL_TRIANGLES, GL_UNSIGNED_INT,
+                                              reinterpret_cast<const void*> ( static_cast<uintptr_t> ( batch.mCommands.GetOffset() ) ),
+                                              static_cast<GLsizei> ( batch.mMaxDraws ),
+                                              sizeof ( DrawElementsIndirectCommand ) );
+            }
             OPENGL_CHECK_ERROR_NO_THROW;
         }
         glBindBuffer ( GL_DRAW_INDIRECT_BUFFER, 0 );
@@ -1927,6 +1941,10 @@ for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
         // Hi-Z occlusion culling toggle for the GPU cull compute (data-driven;
         // AEON_HIZ_OCCLUSION=0 disables it for A/B comparison, default on).
         params.occlusion[0] = HiZOcclusionEnabled() ? 1.0f : 0.0f;
+        // Compaction. glMultiDrawElementsIndirectCount reads a GPU-written count,
+        // which cull.comp only maintains when this is set; without it the count
+        // stays zero and every pooled static draw is silently dropped.
+        params.occlusion[1] = mOpenGLRenderer.HasIndirectParameters() ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 

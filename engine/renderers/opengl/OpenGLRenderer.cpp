@@ -1353,6 +1353,11 @@ void main()
         return mHasBindlessTexture;
     }
 
+    bool OpenGLRenderer::HasIndirectParameters() const
+    {
+        return mHasIndirectParameters;
+    }
+
     const RendererSettings& OpenGLRenderer::GetSettings() const
     {
         return mSettings;
