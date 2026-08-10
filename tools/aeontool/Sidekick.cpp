@@ -596,6 +596,18 @@ namespace AeonGames
             {
                 mMeshExtension = value ( i, "--mesh-extension" );
             }
+            else if ( option == "-a" || option == "--animation" )
+            {
+                const std::string entry{value ( i, "--animation" ) };
+                const size_t separator = entry.find ( '=' );
+                if ( separator == std::string::npos || separator == 0 || ( separator + 1 ) == entry.size() )
+                {
+                    std::ostringstream stream;
+                    stream << "--animation expects <name>=<file>, got " << entry << ".";
+                    throw std::runtime_error ( stream.str() );
+                }
+                mAnimations.emplace_back ( entry.substr ( 0, separator ), entry.substr ( separator + 1 ) );
+            }
             else if ( option == "-b" || option == "--binary" )
             {
                 mBinary = true;
@@ -614,6 +626,9 @@ namespace AeonGames
                           << "      --pipeline <path>     default_pipeline reference (default: shaders/clustered_phong)\n"
                           << "      --skeleton <path>     Skeleton reference (default: <prefix>/skeletons/skeleton.skl)\n"
                           << "      --mesh-extension <e>  Extension of the mesh assets to reference (default: msh)\n"
+                          << "  -a, --animation <n>=<f>   Reference animation <n> at <prefix>/animations/<f>;\n"
+                          << "                            repeatable. The character packs ship no animation,\n"
+                          << "                            see tools/blender/sidekick_anim.py\n"
                           << "  -b, --binary              Write binary assets instead of text\n"
                           << "  -h, --help                Show this help" << std::endl;
                 return true;
@@ -764,6 +779,12 @@ namespace AeonGames
             }
             AssemblyMsg* assembly = model.add_assembly();
             assembly->mutable_mesh()->set_path ( mResourcePath + "/meshes/" + part.mName + "." + mMeshExtension );
+        }
+        for ( const auto& animation : mAnimations )
+        {
+            AnimationRefMsg* reference = model.add_animation();
+            reference->set_name ( animation.first );
+            reference->mutable_reference()->set_path ( mResourcePath + "/animations/" + animation.second );
         }
         const std::string model_path = ( output / ( mName + model_extension ) ).string();
         WriteMessage ( model, model_path, "AEONMDL", mBinary );

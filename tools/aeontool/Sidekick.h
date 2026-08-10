@@ -16,6 +16,8 @@ limitations under the License.
 #ifndef AEONGAMES_SIDEKICK_H
 #define AEONGAMES_SIDEKICK_H
 #include <string>
+#include <utility>
+#include <vector>
 #include "Tool.h"
 
 namespace AeonGames
@@ -60,6 +62,8 @@ namespace AeonGames
         std::string mMeshExtension{"msh"};
         std::string mSkeletonPath{};
         std::string mName{};
+        /// Animation name to file name, resolved under <prefix>/animations/.
+        std::vector<std::pair<std::string, std::string>> mAnimations{};
         bool mBinary{false};
     };
 }
