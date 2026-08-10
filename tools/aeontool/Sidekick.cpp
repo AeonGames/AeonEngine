@@ -55,6 +55,12 @@ namespace AeonGames
         constexpr uint32_t kPaletteSize = 32;
         /** Synty marks texels that no colour property owns with magenta. */
         constexpr std::array<uint8_t, 4> kUnusedTexel{255, 0, 255, 255};
+        /** Synty's own material ships _Metallic 0 and _Glossiness 0.5, so Sidekick
+            characters are flat-shaded non-metals. The engine's defaults are
+            metallic 1 / roughness 1, which would discard the base colour, so the
+            factors are always written out explicitly. */
+        constexpr float kMetallicFactor = 0.0f;
+        constexpr float kRoughnessFactor = 0.5f;
 
         /** @brief One Sidekick colour channel and the AeonEngine slot it feeds. */
         struct ChannelDesc
@@ -66,15 +72,21 @@ namespace AeonGames
             bool mInvert;          ///< Synty stores smoothness; the engine wants roughness.
         };
 
+        /* Only the colour palette drives a sampler. The metallic, smoothness,
+           reflection, emission and opacity channels store 0xFF0000 for every
+           colour property the character leaves unset, which is a sentinel rather
+           than a value: fed to a metallic-roughness shader it reads as metallic
+           1.0 and roughness 0.045, i.e. a black mirror. They are still baked so
+           the data is on disk once a shader knows how to interpret it. */
         constexpr std::array<ChannelDesc, 6> kChannels
         {
             {
-                { "MainColor",  "ColorMap",      "T_ColorMap.png",      "DiffuseMap",   false },
-                { "Metallic",   "MetallicMap",   "T_MetallicMap.png",   "MetallicMap",  false },
-                { "Smoothness", "RoughnessMap",  "T_SmoothnessMap.png", "RoughnessMap", true  },
-                { "Reflection", "ReflectionMap", "T_ReflectionMap.png", nullptr,        false },
-                { "Emission",   "EmissiveMap",   "T_EmissionMap.png",   "EmissiveMap",  false },
-                { "Opacity",    "OpacityMap",    "T_OpacityMap.png",    nullptr,        false },
+                { "MainColor",  "ColorMap",      "T_ColorMap.png",      "DiffuseMap", false },
+                { "Metallic",   "MetallicMap",   "T_MetallicMap.png",   nullptr,      false },
+                { "Smoothness", "RoughnessMap",  "T_SmoothnessMap.png", nullptr,      true  },
+                { "Reflection", "ReflectionMap", "T_ReflectionMap.png", nullptr,      false },
+                { "Emission",   "EmissiveMap",   "T_EmissionMap.png",   nullptr,      false },
+                { "Opacity",    "OpacityMap",    "T_OpacityMap.png",    nullptr,      false },
             }
         };
 
@@ -704,6 +716,25 @@ namespace AeonGames
         }
 
         MaterialMsg material{};
+        {
+            PropertyMsg* base_color = material.add_property();
+            base_color->set_name ( "BaseColorFactor" );
+            base_color->mutable_vector4()->set_x ( 1.0f );
+            base_color->mutable_vector4()->set_y ( 1.0f );
+            base_color->mutable_vector4()->set_z ( 1.0f );
+            base_color->mutable_vector4()->set_w ( 1.0f );
+            PropertyMsg* metallic = material.add_property();
+            metallic->set_name ( "MetallicFactor" );
+            metallic->set_scalar_float ( kMetallicFactor );
+            PropertyMsg* roughness = material.add_property();
+            roughness->set_name ( "RoughnessFactor" );
+            roughness->set_scalar_float ( kRoughnessFactor );
+            PropertyMsg* emissive = material.add_property();
+            emissive->set_name ( "EmissiveFactor" );
+            emissive->mutable_vector3()->set_x ( 0.0f );
+            emissive->mutable_vector3()->set_y ( 0.0f );
+            emissive->mutable_vector3()->set_z ( 0.0f );
+        }
         for ( size_t channel = 0; channel < kChannels.size(); ++channel )
         {
             if ( kChannels[channel].mSampler == nullptr )
