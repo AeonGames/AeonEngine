@@ -4,7 +4,7 @@ Cross-platform, plugin-based 3D game engine in C++20. Vulkan (primary), OpenGL 4
 and native Metal 3 on Apple Silicon/macOS 13+. Protocol Buffers for every asset, Blender for
 content authoring.
 Read [README.md](README.md) for the feature list, platform matrix and full dependency install steps.
-**Work in progress** — expect churn; check [TODO.md](TODO.md) for direction.
+**Work in progress** — expect churn.
 
 ## Build, test, run
 
