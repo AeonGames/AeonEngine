@@ -21,6 +21,7 @@ limitations under the License.
 #include <cstring>
 #include <filesystem>
 #include <iostream>
+#include <map>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -492,33 +493,75 @@ namespace AeonGames
 
         size_t outfits = 0;
         {
-            Statement read{source, "SELECT id, ptr_species, name FROM sk_part_preset"};
+            /** Synty splits one character over several preset rows, one per body
+                region, tied together only by sharing a name and a species. Taken
+                on its own a row is a bare head or a pair of legs, so the rows are
+                gathered back into whole characters here. */
+            struct Character
+            {
+                int64_t mId{0};
+                int64_t mSpecies{0};
+                int64_t mFaction{0};
+                std::string mName{};
+                bool mComplete{true};
+                std::vector<int64_t> mParts{};
+            };
+            std::map<std::pair<int64_t, std::string>, Character> characters;
+            {
+                Statement read{source, "SELECT id, ptr_species, name FROM sk_part_preset ORDER BY id"};
+                while ( read.Step() )
+                {
+                    const int64_t id = sqlite3_column_int64 ( read.Get(), 0 );
+                    const int64_t species = sqlite3_column_int64 ( read.Get(), 1 );
+                    const std::string name = Column ( read, 2 );
+                    Character& character = characters[ {species, name}];
+                    if ( character.mId == 0 )
+                    {
+                        character.mId = id;
+                        character.mSpecies = species;
+                        character.mName = name;
+                    }
+                    const auto faction = outfit_faction.find ( id );
+                    if ( character.mFaction == 0 && faction != outfit_faction.end() )
+                    {
+                        character.mFaction = faction->second;
+                    }
+                    const auto members = outfit_parts.find ( id );
+                    if ( incomplete.find ( id ) != incomplete.end() || members == outfit_parts.end() )
+                    {
+                        // A character missing a region cannot be built at all.
+                        character.mComplete = false;
+                        continue;
+                    }
+                    character.mParts.insert ( character.mParts.end(),
+                                              members->second.begin(), members->second.end() );
+                }
+            }
+
             Statement insert{destination, "INSERT INTO character_outfit ( id, faction_id, species_id, name ) VALUES ( ?, ?, ?, ? )"};
             Statement link{destination, "INSERT OR IGNORE INTO character_outfit_part ( outfit_id, part_id ) VALUES ( ?, ? )"};
-            while ( read.Step() )
+            for ( const auto& entry : characters )
             {
-                const int64_t id = sqlite3_column_int64 ( read.Get(), 0 );
-                const auto members = outfit_parts.find ( id );
-                if ( incomplete.find ( id ) != incomplete.end() || members == outfit_parts.end() )
+                const Character& character = entry.second;
+                if ( !character.mComplete || character.mParts.empty() )
                 {
                     continue;
                 }
-                insert.Bind ( 1, id );
-                const auto faction = outfit_faction.find ( id );
-                if ( faction != outfit_faction.end() )
+                insert.Bind ( 1, character.mId );
+                if ( character.mFaction != 0 )
                 {
-                    insert.Bind ( 2, faction->second );
+                    insert.Bind ( 2, character.mFaction );
                 }
                 else
                 {
                     insert.BindNull ( 2 );
                 }
-                insert.Bind ( 3, sqlite3_column_int64 ( read.Get(), 1 ) );
-                insert.Bind ( 4, Column ( read, 2 ) );
+                insert.Bind ( 3, character.mSpecies );
+                insert.Bind ( 4, character.mName );
                 insert.Run();
-                for ( int64_t part : members->second )
+                for ( int64_t part : character.mParts )
                 {
-                    link.Bind ( 1, id );
+                    link.Bind ( 1, character.mId );
                     link.Bind ( 2, part );
                     link.Run();
                 }
