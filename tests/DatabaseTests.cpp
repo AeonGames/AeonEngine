@@ -202,10 +202,16 @@ namespace AeonGames
     {
         SetApplicationName ( "AeonEngineDatabaseTest" );
         const std::filesystem::path data = GetUserPath ( UserDirectory::Data );
+        const std::filesystem::path cache = GetUserPath ( UserDirectory::Cache );
         SetApplicationName ( "AeonEngine" );
 
         ASSERT_TRUE ( std::filesystem::is_directory ( data ) );
         EXPECT_NE ( data.string().find ( "AeonEngineDatabaseTest" ), std::string::npos );
+        // A relative path would put saves wherever the process was launched from.
+        EXPECT_TRUE ( data.is_absolute() );
+        EXPECT_TRUE ( cache.is_absolute() );
+        EXPECT_NE ( cache.string().find ( "AeonEngineDatabaseTest" ), std::string::npos );
+        EXPECT_NE ( data, cache );
 
         std::unique_ptr<Database> database = ConstructDatabase ( StringId{"SQLite"} );
         ASSERT_NE ( database, nullptr );
@@ -216,5 +222,6 @@ namespace AeonGames
 
         std::error_code error{};
         std::filesystem::remove_all ( data, error );
+        std::filesystem::remove_all ( cache, error );
     }
 }

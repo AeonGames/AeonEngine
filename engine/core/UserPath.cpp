@@ -107,7 +107,10 @@ namespace AeonGames
 #endif
         }
 
-        std::filesystem::path PlatformRoot ( UserDirectory aDirectory )
+        /** The whole per-user location, application folder included: only the
+            platform knows whether the kinds are separate directories or one
+            directory with a subfolder. */
+        std::filesystem::path PlatformPath ( UserDirectory aDirectory )
         {
 #if defined(_WIN32)
             // Local rather than roaming: saves and world state are large and
@@ -123,41 +126,53 @@ namespace AeonGames
             {
                 base = EnvironmentPath ( "LOCALAPPDATA" );
             }
-            return base / ( aDirectory == UserDirectory::Cache ? "cache" : "" );
+            if ( base.empty() )
+            {
+                // Without this the path would be relative and the directory
+                // would land wherever the process happens to be running.
+                base = HomePath() / "AppData" / "Local";
+            }
+            const std::filesystem::path path = base / kOrganization / gApplicationName;
+            // Windows has no separate cache location, so it hangs off the
+            // application's own directory rather than sitting above it.
+            return ( aDirectory == UserDirectory::Cache ) ? path / "cache" : path;
 #elif defined(__APPLE__)
             const std::filesystem::path home = HomePath();
-            switch ( aDirectory )
-            {
-            case UserDirectory::Cache:
-                return home / "Library" / "Caches";
-            case UserDirectory::Config:
-            case UserDirectory::Data:
-            default:
-                return home / "Library" / "Application Support";
-            }
+            const std::filesystem::path base = ( aDirectory == UserDirectory::Cache ) ?
+                                               home / "Library" / "Caches" :
+                                               home / "Library" / "Application Support";
+            return base / kOrganization / gApplicationName;
 #else
             // XDG base directories. A dotted directory straight in $HOME is the
             // older convention and is what the specification exists to replace.
             const std::filesystem::path home = HomePath();
+            std::filesystem::path base{};
             switch ( aDirectory )
             {
             case UserDirectory::Config:
-            {
-                const std::filesystem::path configured = EnvironmentPath ( "XDG_CONFIG_HOME" );
-                return configured.empty() ? home / ".config" : configured;
-            }
+                base = EnvironmentPath ( "XDG_CONFIG_HOME" );
+                if ( base.empty() )
+                {
+                    base = home / ".config";
+                }
+                break;
             case UserDirectory::Cache:
-            {
-                const std::filesystem::path configured = EnvironmentPath ( "XDG_CACHE_HOME" );
-                return configured.empty() ? home / ".cache" : configured;
-            }
+                base = EnvironmentPath ( "XDG_CACHE_HOME" );
+                if ( base.empty() )
+                {
+                    base = home / ".cache";
+                }
+                break;
             case UserDirectory::Data:
             default:
-            {
-                const std::filesystem::path configured = EnvironmentPath ( "XDG_DATA_HOME" );
-                return configured.empty() ? home / ".local" / "share" : configured;
+                base = EnvironmentPath ( "XDG_DATA_HOME" );
+                if ( base.empty() )
+                {
+                    base = home / ".local" / "share";
+                }
+                break;
             }
-            }
+            return base / kOrganization / gApplicationName;
 #endif
         }
 
@@ -205,7 +220,7 @@ namespace AeonGames
         // Only the platform layout separates the three by location; an override
         // is one directory, so the kinds are kept apart by name underneath it.
         const std::filesystem::path path = root.empty() ?
-                                           PlatformRoot ( aDirectory ) / kOrganization / gApplicationName :
+                                           PlatformPath ( aDirectory ) :
                                            root / SubDirectory ( aDirectory );
         std::error_code error{};
         std::filesystem::create_directories ( path, error );
