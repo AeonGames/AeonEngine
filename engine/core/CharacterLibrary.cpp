@@ -24,7 +24,14 @@ limitations under the License.
 #include "aeongames/ResourceCache.hpp"
 #include "aeongames/Texture.hpp"
 
+#ifdef _MSC_VER
+#pragma warning( push )
+#pragma warning( disable : PROTOBUF_WARNINGS )
+#endif
 #include "model.pb.h"
+#ifdef _MSC_VER
+#pragma warning( pop )
+#endif
 
 #include <array>
 #include <sstream>
