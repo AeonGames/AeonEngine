@@ -14,6 +14,11 @@
 include(${CMAKE_SOURCE_DIR}/cmake/base64.cmake)
 find_package(PNG REQUIRED)
 find_package(SQLite3 REQUIRED)
+# FindSQLite3 only defines SQLite3::SQLite3 from CMake 4.3 on, before that the
+# imported target is named SQLite::SQLite3.
+if(NOT TARGET SQLite3::SQLite3 AND TARGET SQLite::SQLite3)
+  add_library(SQLite3::SQLite3 ALIAS SQLite::SQLite3)
+endif()
 set(AEONTOOL_HEADERS
   Tool.h
   Convert.h
