@@ -103,8 +103,8 @@ namespace AeonGames
     Property CharacterController::GetProperty ( const StringId& aId ) const
     {
         switch ( aId )
-    {
-    case CharacterControllerPropertyIds[0]:
+        {
+        case CharacterControllerPropertyIds[0]:
             return GetMoveSpeed();
         case CharacterControllerPropertyIds[1]:
             return GetTurnSpeed();
@@ -175,7 +175,7 @@ namespace AeonGames
 
         // Map current input intent to a named animation clip. The names
         // must match the animations declared in the model's .mdl file
-        // (see game/aerin/aerin.txt for the canonical list). Forward +
+        // (see assets/aerin/aerin.blend for the canonical list). Forward +
         // strafe combinations use the dedicated "strafe walk" clips when
         // available; pure strafing or pure turning fall back to the
         // in-place strafe and turn clips. With no input the character

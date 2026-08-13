@@ -291,9 +291,11 @@ class MDL_OT_exporter(bpy.types.Operator):
                                 if not self.force:
                                     print("\t\tSkipping image (already exists):", target)
                                     continue
-                            node.image.filepath_raw = target
-                            node.image.save()
-                            node.image.filepath_raw = original_filepath
+                            # save(filepath=...) loads the source before
+                            # writing the copy. Repointing filepath_raw first
+                            # instead leaves nothing to save when the image was
+                            # never loaded, which is the norm in background mode.
+                            node.image.save(filepath=target)
             elif object.type == 'ARMATURE':
                 # Export armature as skeleton file
                 if self.export_skeleton:

@@ -52,7 +52,9 @@ tags
 # Binary assets
 *.pln
 *.msh
+*.mdl
 *.skl
+*.anm
 *.mtl
 *.tga
 *.cln

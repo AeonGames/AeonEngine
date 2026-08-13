@@ -151,15 +151,7 @@ node {
     name: "Model Component"
     property {
       name: "Model"
-      string: "aerin/aerin.txt"
-    }
-    property {
-      name: "Active Animation"
-      string: "Idle"
-    }
-    property {
-      name: "Starting Frame"
-      double: 0
+      string: "aerin/aerin"
     }
   }
   component {
