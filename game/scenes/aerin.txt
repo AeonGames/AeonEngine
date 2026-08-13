@@ -18,7 +18,7 @@ node {
     name: "Model Component"
     property {
       name: "Model"
-      string: "aerin/aerin.txt"
+      string: "aerin/aerin"
     }
     property {
       name: "Active Animation"

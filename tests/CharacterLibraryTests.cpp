@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+#include "aeongames/AeonEngine.hpp"
 #include "aeongames/CharacterLibrary.hpp"
 #include "aeongames/Database.hpp"
 #include "aeongames/Material.hpp"
@@ -75,15 +76,15 @@ namespace AeonGames
                 mDatabase->Open ( ( mRoot / "characters.db" ).string(), Database::OpenMode::ReadWriteCreate );
                 mDatabase->Execute ( kSchema );
                 mDatabase->Execute (
-                    "INSERT INTO character_library VALUES ( 1, 'aerin/skeletons/skeleton.txt',"
-                    " 'shaders/clustered_phong', 'aerin/materials/body.txt' );"
-                    "INSERT INTO character_animation VALUES ( 'Idle', 'aerin/animations/Idle.txt' );"
+                    "INSERT INTO character_library VALUES ( 1, 'aerin/skeletons/skeleton',"
+                    " 'shaders/clustered_phong', 'aerin/materials/body' );"
+                    "INSERT INTO character_animation VALUES ( 'Idle', 'aerin/animations/Idle' );"
                     "INSERT INTO character_faction VALUES ( 1, 'Villagers' ), ( 2, 'Guards' );"
                     "INSERT INTO character_part_type VALUES ( 1, 'TORS', 'Torso' ), ( 2, 'LEGS', 'Legs' );"
                     "INSERT INTO character_part VALUES"
-                    " ( 1, 1, 'Body', 'aerin/meshes/Body.txt' ),"
-                    " ( 2, 2, 'Bottoms', 'aerin/meshes/Bottoms.txt' ),"
-                    " ( 3, 1, 'Tops', 'aerin/meshes/Tops.txt' );"
+                    " ( 1, 1, 'Body', 'aerin/meshes/Body' ),"
+                    " ( 2, 2, 'Bottoms', 'aerin/meshes/Bottoms' ),"
+                    " ( 3, 1, 'Tops', 'aerin/meshes/Tops' );"
                     "INSERT INTO character_outfit VALUES ( 1, 1, NULL, 'Peasant' ), ( 2, 2, NULL, 'Sentry' ),"
                     " ( 3, 1, NULL, 'Empty' );"
                     "INSERT INTO character_outfit_part VALUES ( 1, 1 ), ( 1, 2 ), ( 2, 1 ), ( 2, 3 );"
@@ -101,6 +102,13 @@ namespace AeonGames
                 mDatabase.reset();
                 std::error_code error{};
                 std::filesystem::remove_all ( mRoot, error );
+            }
+            /** The parts point at the aerin assets, which the optional aerin
+                target cooks out of a .blend, so they are absent unless Blender
+                is installed. */
+            static bool HasCharacterAssets()
+            {
+                return GetResourceSize ( "aerin/meshes/Body" ) != 0;
             }
             std::filesystem::path mRoot{};
             std::unique_ptr<Database> mDatabase{};
@@ -125,6 +133,10 @@ namespace AeonGames
 
     TEST_F ( CharacterLibraryTest, ComposesAModelOutOfTheOutfitParts )
     {
+        if ( !HasCharacterAssets() )
+        {
+            GTEST_SKIP() << "The aerin assets are not installed; build the aerin target.";
+        }
         const CharacterLibrary::Outfit outfit{1, 1, "Peasant"};
         const CharacterLibrary::Palette palette{1, "Autumn"};
         const ResourceId id = mLibrary->Compose ( outfit, palette );
@@ -141,6 +153,10 @@ namespace AeonGames
     /** A crowd of NPCs in the same outfit and colours is one model, not many. */
     TEST_F ( CharacterLibraryTest, SharesOneModelPerOutfitAndPalette )
     {
+        if ( !HasCharacterAssets() )
+        {
+            GTEST_SKIP() << "The aerin assets are not installed; build the aerin target.";
+        }
         const CharacterLibrary::Outfit outfit{1, 1, "Peasant"};
         const CharacterLibrary::Palette autumn{1, "Autumn"};
         const CharacterLibrary::Palette winter{2, "Winter"};
@@ -158,6 +174,10 @@ namespace AeonGames
         the material the composed model uses. */
     TEST_F ( CharacterLibraryTest, PaintsThePaletteIntoTheMaterialTexture )
     {
+        if ( !HasCharacterAssets() )
+        {
+            GTEST_SKIP() << "The aerin assets are not installed; build the aerin target.";
+        }
         const ResourceId id = mLibrary->Compose ( { 1, 1, "Peasant" }, { 1, "Autumn" } );
         const Model* model = id.Cast<Model>();
         ASSERT_NE ( model, nullptr );
@@ -189,6 +209,10 @@ namespace AeonGames
 
     TEST_F ( CharacterLibraryTest, RecolouringReusesTheMeshesButNotTheMaterial )
     {
+        if ( !HasCharacterAssets() )
+        {
+            GTEST_SKIP() << "The aerin assets are not installed; build the aerin target.";
+        }
         const Model* autumn = mLibrary->Compose ( { 1, 1, "Peasant" }, { 1, "Autumn" } ).Cast<Model>();
         const Model* winter = mLibrary->Compose ( { 1, 1, "Peasant" }, { 2, "Winter" } ).Cast<Model>();
         ASSERT_NE ( autumn, nullptr );

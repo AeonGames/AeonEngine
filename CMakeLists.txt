@@ -263,7 +263,6 @@ if(BUILD_METAL_RENDERER)
 endif()
 add_subdirectory(tools/blender)
 add_subdirectory(engine)
-add_subdirectory(assets)
 option(BUILD_STANDALONE_APPLICATION "Build the standalone application" ON)
 if(BUILD_STANDALONE_APPLICATION)
   add_subdirectory(application)
@@ -411,6 +410,12 @@ add_custom_target(
           ${CMAKE_SOURCE_DIR}/proto/collision.proto
   COMMENT "Generating Protocol Buffers Python Code")
 
+include(blender)
+
+# Cooking assets out of .blend files needs both the module above and the
+# generated Python protobuf modules, so the asset directory comes after them.
+add_subdirectory(assets)
+
 #
 # Game asset generation (incremental).
 #
@@ -485,46 +490,6 @@ if(TARGET game)
 endif()
 if(TARGET unit-tests)
   add_dependencies(unit-tests game-assets)
-endif()
-
-#
-# Blender Execution target
-#
-find_program(BLENDER_EXECUTABLE
-             NAMES blender blender.exe
-             HINTS ENV ProgramFiles
-             PATH_SUFFIXES "Blender Foundation/Blender")
-if(BLENDER_EXECUTABLE)
-  get_filename_component(BLENDER_PATH "${BLENDER_EXECUTABLE}" DIRECTORY)
-  execute_process(COMMAND "${BLENDER_EXECUTABLE}" --version
-                  OUTPUT_VARIABLE BLENDER_VERSION)
-  string(REGEX MATCH
-               "Blender [^ \\t]+"
-               BLENDER_VERSION
-               "${BLENDER_VERSION}")
-  string(REGEX
-         REPLACE "Blender ([^ ]+)"
-                 "\\1"
-                 BLENDER_VERSION
-                 "${BLENDER_VERSION}")
-  find_program(BLENDER_Python3_EXECUTABLE
-               NAMES python python.exe
-               PATHS "${BLENDER_PATH}/${BLENDER_VERSION}/python/bin"
-               NO_DEFAULT_PATH)
-
-  # Right now this is just a shortcut to running Blender, it was supposed to set
-  # everything up so exporters were registered and ready to run without making
-  # changes to the Blender configuration, but that idea didn't work out in the
-  # end. The target is still useful and I may expand on it later on, so it stays
-  # for now.
-  add_custom_target(
-    run-blender
-    COMMAND "${BLENDER_EXECUTABLE}"
-    DEPENDS generate-python-protobuf-source
-    SOURCES ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_mesh_msh/export.py
-            ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_skeleton_skl/export.py
-            ${CMAKE_SOURCE_DIR}/tools/blender/addons/io_animation_anm/export.py
-    COMMENT "Running Blender")
 endif()
 
 #
