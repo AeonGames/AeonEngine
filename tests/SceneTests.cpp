@@ -351,6 +351,49 @@ namespace AeonGames
         EXPECT_EQ ( scene.Serialize(), serialized );
     }
 
+    /** What the Blender scene exporter emits for an empty parented to a mesh:
+        a marker node nested under its parent, addressable by name. */
+    TEST_F ( SceneTest, DeserializesANestedMarkerNode )
+    {
+        constexpr char kSceneWithMarker[] =
+            "AEONSCN\n"
+            "name: \"markers\"\n"
+            "node {\n"
+            "  name: \"Anchor\"\n"
+            "  local {\n"
+            "    Scale { x: 1 y: 1 z: 1 }\n"
+            "    Rotation { w: 1 }\n"
+            "    Translation { x: 3 }\n"
+            "  }\n"
+            "  node {\n"
+            "    name: \"Mark\"\n"
+            "    local {\n"
+            "      Scale { x: 1 y: 1 z: 1 }\n"
+            "      Rotation { w: 1 }\n"
+            "      Translation { y: 2 }\n"
+            "    }\n"
+            "    component {\n"
+            "      name: \"Marker\"\n"
+            "      property { name: \"Type\" string: \"Spawn\" }\n"
+            "    }\n"
+            "  }\n"
+            "}\n";
+        Scene scene;
+        scene.Deserialize ( kSceneWithMarker );
+
+        const Node* mark = scene.Find ( [] ( const Node & aNode )
+        {
+            return aNode.GetName() == "Mark";
+        } );
+        ASSERT_NE ( mark, nullptr );
+        EXPECT_EQ ( mark->GetGlobalTransform().GetTranslation(), ( Vector3{3, 2, 0} ) );
+
+        ASSERT_EQ ( mark->GetComponentCount(), 1u );
+        const Component* marker = mark->GetComponent ( "Marker"_crc32 );
+        ASSERT_NE ( marker, nullptr );
+        EXPECT_EQ ( std::get<std::string> ( marker->GetProperty ( "Type" ) ), "Spawn" );
+    }
+
     TEST_F ( SceneTest, GetScene )
     {
         EXPECT_EQ ( a->GetScene(), &mScene );
