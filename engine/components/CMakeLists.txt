@@ -4,6 +4,7 @@ set(NODES_HEADERS
   SpotLight.h
   DirectionalLight.h
   Camera.h
+  Marker.h
   OverTheShoulderCamera.hpp
   OrbitalCamera.hpp
   CharacterController.hpp
@@ -16,6 +17,7 @@ set(NODES_SOURCES
   SpotLight.cpp
   DirectionalLight.cpp
   Camera.cpp
+  Marker.cpp
   OverTheShoulderCamera.cpp
   OrbitalCamera.cpp
   CharacterController.cpp

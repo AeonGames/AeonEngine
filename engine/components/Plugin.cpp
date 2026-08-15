@@ -19,6 +19,7 @@ limitations under the License.
 #include "aeongames/StringId.hpp"
 #include "ModelComponent.h"
 #include "Camera.h"
+#include "Marker.h"
 #include "OverTheShoulderCamera.hpp"
 #include "OrbitalCamera.hpp"
 #include "CharacterController.hpp"
@@ -40,6 +41,10 @@ extern "C"
         AeonGames::RegisterComponentConstructor ( AeonGames::Camera::GetClassId(), []()
         {
             return std::make_unique<AeonGames::Camera>();
+        } );
+        AeonGames::RegisterComponentConstructor ( AeonGames::Marker::GetClassId(), []()
+        {
+            return std::make_unique<AeonGames::Marker>();
         } );
         AeonGames::RegisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId(), []()
         {
@@ -80,6 +85,7 @@ extern "C"
     {
         AeonGames::UnregisterComponentConstructor ( AeonGames::ModelComponent::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::Camera::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::Marker::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::OrbitalCamera::GetClassId() );
         AeonGames::UnregisterComponentConstructor ( AeonGames::CharacterController::GetClassId() );

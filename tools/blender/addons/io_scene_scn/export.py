@@ -26,6 +26,9 @@ import google.protobuf.text_format
 # Scene (per-.blend). Kept in sync with the definitions in __init__.py.
 _GAME_ROOT_PROP = "aeon_game_root"
 
+# Per-object marker kind exported as the Marker component's Type property.
+_MARKER_TYPE_PROP = "aeon_marker_type"
+
 # Blender cameras (and spot/sun lights) look down their local -Z axis with +Y
 # up. The engine convention is +X right, +Y forward (the view direction), +Z up
 # (see Matrix4x4::Frustum, "glFrustum, +X right, +Y forward, +Z up"). Rotating
@@ -217,6 +220,16 @@ class SCN_OT_exporter(bpy.types.Operator):
         prop = component.property.add()
         prop.name = "Model"
         prop.path = model_path
+
+    def _add_marker_component(self, node_msg, obj):
+        if obj.instance_collection is not None:
+            print("Marker", obj.name, "instances collection",
+                  obj.instance_collection.name, "which is not exported")
+        component = node_msg.component.add()
+        component.name = "Marker"
+        prop = component.property.add()
+        prop.name = "Type"
+        prop.string = getattr(obj, _MARKER_TYPE_PROP, "") or ""
 
     def _add_light_component(self, node_msg, light):
         color = light.color  # linear RGB, 0..1
@@ -429,38 +442,69 @@ class SCN_OT_exporter(bpy.types.Operator):
                 wm.progress_end()
             scene_buffer.name = export_name
 
-        # 2. One node per object (mesh instances, lights, cameras). Hidden
-        #    objects are skipped so they do not appear in the exported scene.
+        # 2. One node per object (mesh instances, lights, cameras, markers),
+        #    mirroring Blender's parenting so an attachment marker moves with
+        #    whatever it hangs off. Hidden objects are skipped so they do not
+        #    appear in the exported scene.
         camera_nodes = {}
+        exportable = []
         for obj in scene.objects:
             if self._is_hidden(obj):
                 print("Skipping hidden object", obj.name)
                 continue
             if obj.type == 'MESH':
-                model_path = mesh_to_model.get(obj.data)
-                if model_path is None:
+                if mesh_to_model.get(obj.data) is None:
                     print("Skipping mesh node", obj.name, "(no model exported)")
                     continue
-                node = scene_buffer.node.add()
-                node.name = obj.name
-                self._set_transform(node.local, obj.matrix_world)
-                self._add_model_component(node, model_path)
-            elif obj.type == 'LIGHT':
-                node = scene_buffer.node.add()
-                node.name = obj.name
-                self._set_transform(node.local, obj.matrix_world)
-                self._add_light_component(node, obj.data)
-            elif obj.type == 'CAMERA':
-                node = scene_buffer.node.add()
-                node.name = obj.name
-                # Reorient from Blender's -Z-forward/+Y-up camera frame to the
-                # engine's +Y-forward/+Z-up frame so the view direction matches.
-                self._set_transform(node.local,
-                                    obj.matrix_world @ _BLENDER_TO_ENGINE_CAMERA)
-                self._add_camera_component(node, obj.data)
-                camera_nodes[obj] = obj.data
-            else:
+            elif obj.type not in ('LIGHT', 'CAMERA', 'EMPTY'):
                 print("Skipping object", obj.name, "of type", obj.type)
+                continue
+            exportable.append(obj)
+
+        # Re-root anything whose parent was skipped onto its nearest exported
+        # ancestor, or onto the scene when it has none.
+        exported = set(exportable)
+        children = {}
+        for obj in exportable:
+            parent = obj.parent
+            while parent is not None and parent not in exported:
+                parent = parent.parent
+            if parent is not None and obj.parent_type != 'OBJECT':
+                print("Object", obj.name, "uses", obj.parent_type,
+                      "parenting, which a node tree cannot express; exporting "
+                      "it relative to", parent.name)
+            children.setdefault(parent, []).append(obj)
+
+        stack = [(None, scene_buffer)]
+        while stack:
+            parent, container = stack.pop()
+            for obj in children.get(parent, ()):
+                node = container.node.add()
+                node.name = obj.name
+                # Matches obj.matrix_local for plain object parenting, and
+                # stays correct when an ancestor was skipped or the object is
+                # bone/vertex parented.
+                matrix = obj.matrix_world
+                if parent is not None:
+                    matrix = parent.matrix_world.inverted_safe() @ matrix
+                if obj.type == 'MESH':
+                    self._set_transform(node.local, matrix)
+                    self._add_model_component(node, mesh_to_model[obj.data])
+                elif obj.type == 'LIGHT':
+                    self._set_transform(node.local, matrix)
+                    self._add_light_component(node, obj.data)
+                elif obj.type == 'CAMERA':
+                    # Reorient from Blender's -Z-forward/+Y-up camera frame to
+                    # the engine's +Y-forward/+Z-up frame so the view direction
+                    # matches.
+                    self._set_transform(node.local,
+                                        matrix @ _BLENDER_TO_ENGINE_CAMERA)
+                    self._add_camera_component(node, obj.data)
+                    camera_nodes[obj] = obj.data
+                else:
+                    self._set_transform(node.local, matrix)
+                    self._add_marker_component(node, obj)
+                stack.append((obj, node))
 
         # 3. Scene-level active camera (drives the default view/projection).
         active_camera = scene.camera

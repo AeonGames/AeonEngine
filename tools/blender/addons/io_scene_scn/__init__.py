@@ -39,6 +39,9 @@ _SESSION_GAME_ROOT = "aeon_game_root"
 # Property stored on the Scene, so it is saved inside the .blend file and acts
 # as a per-project override of the global preference.
 _SCENE_GAME_ROOT = "aeon_game_root"
+# Property stored on each Object, tagging what an empty marks. Kept in sync
+# with _MARKER_TYPE_PROP in export.py.
+_OBJECT_MARKER_TYPE = "aeon_marker_type"
 
 
 class AeonScnAddonPreferences(bpy.types.AddonPreferences):
@@ -92,11 +95,22 @@ def register():
             subtype="DIR_PATH",
             default=""
         )
+    # Kind of marker an empty stands for, exported as the Marker component's
+    # Type property.
+    if not hasattr(bpy.types.Object, _OBJECT_MARKER_TYPE):
+        bpy.types.Object.aeon_marker_type = bpy.props.StringProperty(
+            name="Marker Type",
+            description="Kind of marker this empty stands for, e.g. Spawn or "
+                        "Attach. Exported as the Marker component's Type",
+            default=""
+        )
     bpy.types.TOPBAR_MT_file_export.append(scn_menu_func)
 
 
 def unregister():
     bpy.types.TOPBAR_MT_file_export.remove(scn_menu_func)
+    if hasattr(bpy.types.Object, _OBJECT_MARKER_TYPE):
+        del bpy.types.Object.aeon_marker_type
     if hasattr(bpy.types.WindowManager, _SESSION_GAME_ROOT):
         del bpy.types.WindowManager.aeon_game_root
     if hasattr(bpy.types.Scene, "aeon_export_name"):
