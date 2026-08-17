@@ -195,7 +195,7 @@ class ANM_OT_exporter(bpy.types.Operator):
             if self.as_text:
                 text_path = self.directory + os.sep + action.name + ".txt"
                 print("Writting", text_path, ".")
-                out = open(text_path, "wt")
+                out = open(text_path, "wt", newline="\n")
                 out.write("AEONANM\n")
                 out.write(
                     google.protobuf.text_format.MessageToString(animation_buffer))

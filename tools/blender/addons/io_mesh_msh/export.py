@@ -393,7 +393,7 @@ class MSH_OT_exporterCommon():
         if self.as_text:
             text_path = self.filepath.replace('.msh', '.txt')
             print("Writting", text_path, ".")
-            out = open(text_path, "wt")
+            out = open(text_path, "wt", newline="\n")
             out.write("AEONMSH\n")
             out.write(google.protobuf.text_format.MessageToString(mesh_buffer))
             out.close()
