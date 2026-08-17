@@ -77,7 +77,11 @@ namespace AeonGames
 
     void Scene::Load ( const std::string& aFilename )
     {
-        Load ( crc32i ( aFilename.c_str(), aFilename.size() ) );
+        const uint32_t crc = crc32i ( aFilename.c_str(), aFilename.size() );
+        // Registering the name is what lets an extensionless path fall back to
+        // the candidate extensions; the resolver works off the crc alone.
+        RegisterResourceString ( crc, aFilename );
+        Load ( crc );
     }
     void Scene::Load ( uint32_t aId )
     {

@@ -461,7 +461,7 @@ namespace AeonGames
     // still has the final say on the actual resource type.
     static constexpr const char* const kResourceExtensionPreference[]
     {
-        ".txt", ".pln", ".msh", ".mdl", ".mtl", ".skl", ".anm", ".cln"
+        ".txt", ".pln", ".msh", ".mdl", ".scn", ".mtl", ".skl", ".anm", ".cln"
     };
 
     static bool ResourceInPackages ( uint32_t crc )

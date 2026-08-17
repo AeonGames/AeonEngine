@@ -34,12 +34,16 @@ may remain in a build tree configured with Ninja, so trust `CMAKE_GENERATOR` in 
 - CI ([.github/workflows](.github/workflows)) builds MSVC, MSYS2 (mingw64/ucrt64/clang64), Linux
   (gcc/clang), macOS — all with `-DUSE_AEONGUI=ON` followed by `ctest`. Keep changes portable.
 - Git LFS is required (`*.msh`, `*.b64`). Without `git lfs install` those files are pointer stubs.
-- Assets cooked from `.blend` files (`aerin`, `backdrop`, `polesign`) are **optional, opt-in targets**,
-  never part of `ALL`. CMake picks the newest installed Blender; when none is found it prints a
-  status message and skips those targets instead of failing. `blender-python-venv` builds a venv
-  out of Blender's own interpreter under `<build>/blender-venv` and installs the protobuf runtime
-  the generated `*_pb2.py` ask for. `scenes/aerin.txt` and the `CharacterLibrary` tests need
-  `make aerin` first; `scenes/main.txt` deliberately does not.
+- Assets cooked from `.blend` files (`aerin`, `backdrop`, `polesign`, `sponza`) are **optional,
+  opt-in targets**, never part of `ALL`. CMake picks the newest installed Blender; when none is
+  found it prints a status message and skips those targets instead of failing. Each is stamped
+  under `<build>/blender-assets`, so cooking one lasts until its `.blend`, its textures or an
+  exporter changes. `blender-python-venv` builds a venv out of Blender's own interpreter under
+  `<build>/blender-venv` and installs the protobuf runtime the generated `*_pb2.py` ask for.
+  `scenes/aerin.txt` and the `CharacterLibrary` tests need `make aerin` first, and
+  `scenes/sponza` needs `make sponza` (~5 min, 91 models); `scenes/main.txt` deliberately needs
+  neither. `add_blender_asset(... MODE SCENE)` cooks a scene `.blend` (whole scene plus one model
+  per mesh datablock); the default `MODE MODEL` cooks the `.blend` into a single model.
 
 ## Layout
 
@@ -125,6 +129,7 @@ may remain in a build tree configured with Ninja, so trust `CMAKE_GENERATOR` in 
 | `.vscode/*.json`, `Doxyfile`, `.git/hooks/{pre-commit,commit-msg}` | CMake configure | the matching template in [cmake](cmake) |
 | `game/**/*.png`, `game/images/*.svg`, `*.msh`/`*.mtl`/`*.skl`/`*.cln` | asset targets / aeontool | source assets under [assets](assets) or the Blender exporters |
 | `game/aerin/**`, `game/backdrop/**`, `game/polesign/**` (`*.mdl`/`*.msh`/`*.mtl`/`*.skl`/`*.anm`/`*.png`) | `make aerin` / `backdrop` / `polesign` | the matching `.blend` under [assets](assets) |
+| `game/sponza/**` and `game/scenes/sponza.scn` | `make sponza` | [assets/sponza/sponza.blend](assets/sponza/sponza.blend) |
 
 Calling a GL entry point that is not listed in `glFunctions.txt` compiles but yields a null pointer
 at runtime — add the name there first.
