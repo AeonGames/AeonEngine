@@ -41,6 +41,25 @@ class MSH_OT_exporterCommon():
         self.as_text = as_text
 
     @staticmethod
+    def _has_vertex_colors(mesh):
+        # A mesh can carry a colour layer it never uses: importers (and Blender
+        # itself) add one filled with opaque white. Exporting that costs 16
+        # bytes a vertex and splits the renderers' per-stride geometry pools
+        # for nothing, so treat an all-white layer as no colour at all.
+        if len(mesh.color_attributes) == 0:
+            return False
+        layer = mesh.color_attributes[0]
+        count = len(layer.data)
+        if count == 0:
+            return False
+        values = [0.0] * (count * 4)
+        try:
+            layer.data.foreach_get("color", values)
+        except (RuntimeError, TypeError, AttributeError):
+            return True
+        return any(value != 1.0 for value in values)
+
+    @staticmethod
     def _select_uv_layer(mesh):
         # Return the UV layer Blender uses when rendering (active_render),
         # which matches the look authored in the .blend. Fall back to the
@@ -138,9 +157,10 @@ class MSH_OT_exporterCommon():
                 if color_layer:
                     vertex.extend([color_layer.data[loop.index].color[0],
                                 color_layer.data[loop.index].color[1],
-                                color_layer.data[loop.index].color[2]])
+                                color_layer.data[loop.index].color[2],
+                                color_layer.data[loop.index].color[3]])
                 else:
-                    vertex.extend([1.0, 1.0, 1.0])
+                    vertex.extend([1.0, 1.0, 1.0, 1.0])
 
         #print("Generating Vertex", loop.index)
         return [loop.index, vertex]
@@ -257,13 +277,16 @@ class MSH_OT_exporterCommon():
             attribute.Flags = mesh_pb2.AttributeMsg.NORMALIZED
             vertex_struct_string += '8B'
 
-        if(len(mesh.color_attributes) > 0 and self.export_colors):
+        if(self.export_colors and self._has_vertex_colors(mesh)):
             attribute = mesh_buffer.Attribute.add()
             attribute.Semantic = mesh_pb2.AttributeMsg.COLOR
             attribute.Type = mesh_pb2.AttributeMsg.FLOAT
             attribute.Size = 4
             attribute.Flags = mesh_pb2.AttributeMsg.NONE
-            vertex_struct_string += '3f'
+            # Must stay in step with Size: the engine derives the vertex stride
+            # from the declared attributes, so packing fewer floats than are
+            # declared misreads every vertex after the first.
+            vertex_struct_string += '4f'
 
         # Restrict to the polygons that reference the requested material slot
         # when a split was asked for; otherwise process the whole mesh.
