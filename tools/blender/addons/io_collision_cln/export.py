@@ -473,7 +473,7 @@ class CLN_OT_exporter(bpy.types.Operator):
         print("Done.")
 
         print("Writting", self.filepath.replace('.cln', '.txt'), ".")
-        out = open(self.filepath.replace('.cln', '.txt'), "wt")
+        out = open(self.filepath.replace('.cln', '.txt'), "wt", newline="\n")
         out.write("AEONCLN\n")
         out.write(google.protobuf.text_format.MessageToString(collision_buffer))
         out.close()

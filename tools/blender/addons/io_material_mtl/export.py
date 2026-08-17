@@ -185,7 +185,7 @@ class MTL_OT_exporterCommon():
         if self.as_text:
             text_path = self.filepath.replace('.mtl', '.txt')
             print("Writting", text_path, ".")
-            out = open(text_path, "wt")
+            out = open(text_path, "wt", newline="\n")
             out.write("AEONMTL\n")
             out.write(google.protobuf.text_format.MessageToString(material_buffer))
             out.close()

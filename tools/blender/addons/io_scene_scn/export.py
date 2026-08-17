@@ -29,6 +29,19 @@ _GAME_ROOT_PROP = "aeon_game_root"
 # Per-object marker kind exported as the Marker component's Type property.
 _MARKER_TYPE_PROP = "aeon_marker_type"
 
+# Per-object override naming which camera component a camera exports as.
+_CAMERA_COMPONENT_PROP = "aeon_camera_component"
+
+# Fallback extension for an environment image with no file on disk. Kept local
+# rather than imported so this add-on does not need io_material_mtl loaded.
+_ENVIRONMENT_EXTENSION_MAP = {
+    'HDR': '.hdr',
+    'OPEN_EXR': '.exr',
+    'OPEN_EXR_MULTILAYER': '.exr',
+    'PNG': '.png',
+    'TIFF': '.tif',
+}
+
 # Blender cameras (and spot/sun lights) look down their local -Z axis with +Y
 # up. The engine convention is +X right, +Y forward (the view direction), +Z up
 # (see Matrix4x4::Frustum, "glFrustum, +X right, +Y forward, +Z up"). Rotating
@@ -270,15 +283,50 @@ class SCN_OT_exporter(bpy.types.Operator):
             self._add_float_property(component, "Radius",
                                      _engine_light_radius(light))
 
-    def _add_camera_component(self, node_msg, camera):
+    def _add_camera_component(self, node_msg, obj, camera):
         component = node_msg.component.add()
-        component.name = "Camera"
+        # Both Camera and Free Camera are driven by the same three values; the
+        # free-fly ones (move/look speed) keep their component defaults.
+        component.name = getattr(obj, _CAMERA_COMPONENT_PROP, "") or "Camera"
         # The engine's Matrix4x4::Perspective takes the VERTICAL field of view
         # in DEGREES (tan(fov * PI / 360)).
         self._add_float_property(component, "Field of View",
                                  math.degrees(camera.angle_y))
         self._add_float_property(component, "Near Plane", camera.clip_start)
         self._add_float_property(component, "Far Plane", camera.clip_end)
+
+    # -- world environment ---------------------------------------------------
+    @staticmethod
+    def _world_environment_image(world):
+        '''The image feeding the world background, i.e. the scene's skybox.'''
+        if world is None or not world.use_nodes or world.node_tree is None:
+            return None
+        for node in world.node_tree.nodes:
+            if node.bl_idname == "ShaderNodeTexEnvironment" and node.image:
+                return node.image
+        return None
+
+    def _export_environment_map(self, scene_buffer, world, assets_dir,
+                                resource_prefix):
+        image = self._world_environment_image(world)
+        if image is None:
+            return
+        basename = os.path.basename(image.filepath_raw) if image.filepath_raw else ""
+        if not basename:
+            basename = image.name
+            if not os.path.splitext(basename)[1]:
+                basename += _ENVIRONMENT_EXTENSION_MAP.get(image.file_format,
+                                                           '.hdr')
+        target = os.path.join(assets_dir, "textures", basename)
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        source = os.path.normcase(os.path.abspath(
+            bpy.path.abspath(image.filepath_raw))) if image.filepath_raw else ""
+        if source != os.path.normcase(os.path.abspath(target)) and \
+                (self.force or not os.path.exists(target)):
+            # save(filepath=...) loads the source first and leaves the image
+            # datablock pointing at its original file.
+            image.save(filepath=target)
+        scene_buffer.environment_map.path = resource_prefix + "textures/" + basename
 
     # -- per-mesh model export ----------------------------------------------
     def _export_model(self, context, representative, model_name, outdir,
@@ -499,7 +547,7 @@ class SCN_OT_exporter(bpy.types.Operator):
                     # matches.
                     self._set_transform(node.local,
                                         matrix @ _BLENDER_TO_ENGINE_CAMERA)
-                    self._add_camera_component(node, obj.data)
+                    self._add_camera_component(node, obj, obj.data)
                     camera_nodes[obj] = obj.data
                 else:
                     self._set_transform(node.local, matrix)
@@ -522,7 +570,12 @@ class SCN_OT_exporter(bpy.types.Operator):
         #     scene lights) when the scene references a lighting pipeline;
         #     without it geometry renders unlit. Default to the engine's
         #     stock lighting program so exported scenes are lit out of the box.
-        scene_buffer.lighting_pipeline.path = "shaders/lighting.txt"
+        scene_buffer.lighting_pipeline.path = "shaders/lighting"
+
+        # 3c. Skybox / image based lighting, taken from the world's environment
+        #     texture so the .blend stays the single source for it.
+        self._export_environment_map(scene_buffer, scene.world, assets_dir,
+                                     prefix)
 
         # 4. Write the scene file under <game root>/scenes. It lives in its own
         #    directory, separate from the per-scene asset folder, so there is no
@@ -530,7 +583,7 @@ class SCN_OT_exporter(bpy.types.Operator):
         if self.as_text:
             scn_path = os.path.join(scenes_dir, name + ".txt")
             print("Writing", scn_path, ".")
-            with open(scn_path, "wt") as out:
+            with open(scn_path, "wt", newline="\n") as out:
                 out.write("AEONSCN\n")
                 out.write(google.protobuf.text_format.MessageToString(
                     scene_buffer))

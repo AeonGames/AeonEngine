@@ -42,6 +42,9 @@ _SCENE_GAME_ROOT = "aeon_game_root"
 # Property stored on each Object, tagging what an empty marks. Kept in sync
 # with _MARKER_TYPE_PROP in export.py.
 _OBJECT_MARKER_TYPE = "aeon_marker_type"
+# Property stored on each Object, naming which camera component a camera
+# exports as. Kept in sync with _CAMERA_COMPONENT_PROP in export.py.
+_OBJECT_CAMERA_COMPONENT = "aeon_camera_component"
 
 
 class AeonScnAddonPreferences(bpy.types.AddonPreferences):
@@ -104,11 +107,26 @@ def register():
                         "Attach. Exported as the Marker component's Type",
             default=""
         )
+    # Which camera component a camera object exports as. Only the components
+    # driven purely by field of view and clipping planes are offered; the
+    # others need values with no Blender equivalent.
+    if not hasattr(bpy.types.Object, _OBJECT_CAMERA_COMPONENT):
+        bpy.types.Object.aeon_camera_component = bpy.props.EnumProperty(
+            name="Camera Component",
+            description="Engine component this camera exports as",
+            items=[
+                ("Camera", "Camera", "Plain camera fixed to its node"),
+                ("Free Camera", "Free Camera", "Free-fly debug camera"),
+            ],
+            default="Camera"
+        )
     bpy.types.TOPBAR_MT_file_export.append(scn_menu_func)
 
 
 def unregister():
     bpy.types.TOPBAR_MT_file_export.remove(scn_menu_func)
+    if hasattr(bpy.types.Object, _OBJECT_CAMERA_COMPONENT):
+        del bpy.types.Object.aeon_camera_component
     if hasattr(bpy.types.Object, _OBJECT_MARKER_TYPE):
         del bpy.types.Object.aeon_marker_type
     if hasattr(bpy.types.WindowManager, _SESSION_GAME_ROOT):

@@ -174,7 +174,9 @@ class MDL_OT_exporter(bpy.types.Operator):
                 mat_ext = ".txt" if self.as_text else ".mtl"
                 # Skinning is applied in a compute pre-pass, so meshes are drawn
                 # with the static-mesh clustered Phong pipeline regardless of rig state.
-                pipeline_path = "shaders/clustered_phong.txt"
+                # Referenced without an extension so the engine picks the text or
+                # binary form, whichever the game tree holds.
+                pipeline_path = "shaders/clustered_phong"
 
                 materials = object.data.materials
                 # Determine which material slots actually have geometry.
@@ -348,7 +350,7 @@ class MDL_OT_exporter(bpy.types.Operator):
         if self.as_text:
             text_path = mdl_filepath.replace('.mdl', '.txt')
             print("Writting", text_path, ".")
-            out = open(text_path, "wt")
+            out = open(text_path, "wt", newline="\n")
             out.write("AEONMDL\n")
             out.write(
                 google.protobuf.text_format.MessageToString(model_buffer))

@@ -83,7 +83,7 @@ class SKL_OT_exporter(bpy.types.Operator):
         if self.as_text:
             text_path = self.filepath.replace('.skl', '.txt')
             print("Writting", text_path, ".")
-            out = open(text_path, "wt")
+            out = open(text_path, "wt", newline="\n")
             out.write("AEONSKL\n")
             out.write(google.protobuf.text_format.MessageToString(skeleton_buffer))
             out.close()
