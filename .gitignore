@@ -53,6 +53,7 @@ tags
 *.pln
 *.msh
 *.mdl
+*.scn
 *.skl
 *.anm
 *.mtl
@@ -69,6 +70,8 @@ game/config
 # the binary .pln are covered by *.pln above.)
 game/shaders/*.txt
 game/**/*.png
+# Environment maps are cooked into the game tree from the source under assets/.
+game/**/*.hdr
 # Engine-level fallback textures, committed (loaded unconditionally at startup).
 !game/textures/default.png
 !game/textures/flat_normal.png

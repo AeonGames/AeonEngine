@@ -182,16 +182,26 @@ endif()
 #                   BLEND <file>
 #                   DESTINATION <directory>
 #                   RESOURCE_PREFIX <prefix>
+#                   [MODE MODEL|SCENE]
 #                   [MODEL_NAME <name>]
 #                   [TEXTURES <file>...])
 #
 # BLEND, DESTINATION and TEXTURES are relative to the repository root;
 # RESOURCE_PREFIX is the path the generated references are prefixed with,
-# relative to the game resource root. The target is never part of ALL.
+# relative to the game resource root. MODEL cooks the .blend into a single
+# model, SCENE cooks it into a scene plus one model per mesh datablock. The
+# target is never part of ALL, and re-runs only when its .blend, its textures
+# or an exporter changes.
 function(add_blender_asset name)
-  cmake_parse_arguments(ASSET "" "BLEND;DESTINATION;RESOURCE_PREFIX;MODEL_NAME" "TEXTURES" ${ARGN})
+  cmake_parse_arguments(ASSET "" "BLEND;DESTINATION;RESOURCE_PREFIX;MODE;MODEL_NAME" "TEXTURES" ${ARGN})
   if(NOT ASSET_BLEND OR NOT ASSET_DESTINATION OR NOT ASSET_RESOURCE_PREFIX)
     message(FATAL_ERROR "add_blender_asset(${name}) requires BLEND, DESTINATION and RESOURCE_PREFIX")
+  endif()
+  if(NOT ASSET_MODE)
+    set(ASSET_MODE MODEL)
+  endif()
+  if(NOT ASSET_MODE STREQUAL "MODEL" AND NOT ASSET_MODE STREQUAL "SCENE")
+    message(FATAL_ERROR "add_blender_asset(${name}) MODE must be MODEL or SCENE")
   endif()
   if(NOT ASSET_MODEL_NAME)
     set(ASSET_MODEL_NAME "${name}")
@@ -202,9 +212,9 @@ function(add_blender_asset name)
     return()
   endif()
 
+  set(texture_sources)
   set(texture_command)
   if(ASSET_TEXTURES)
-    set(texture_sources)
     foreach(texture IN LISTS ASSET_TEXTURES)
       list(APPEND texture_sources "${CMAKE_SOURCE_DIR}/${texture}")
     endforeach()
@@ -215,8 +225,20 @@ function(add_blender_asset name)
                 "${CMAKE_SOURCE_DIR}/${ASSET_DESTINATION}/textures/")
   endif()
 
-  add_custom_target(
-    ${name}
+  set(mode_argument)
+  if(ASSET_MODE STREQUAL "SCENE")
+    set(mode_argument --scene)
+  endif()
+
+  # Cooking is slow, so gate it on a stamp: the .blend is the input, and the
+  # exporters are listed too so changing one re-cooks everything it produces.
+  # Not CONFIGURE_DEPENDS: adding an exporter is rare and warrants a configure.
+  file(GLOB blender_exporters
+       "${CMAKE_SOURCE_DIR}/tools/blender/addons/*/export.py")
+  set(stamp "${CMAKE_BINARY_DIR}/blender-assets/${name}.stamp")
+
+  add_custom_command(
+    OUTPUT ${stamp}
     COMMAND ${CMAKE_COMMAND} -E make_directory
             "${CMAKE_SOURCE_DIR}/${ASSET_DESTINATION}/textures"
     COMMAND ${CMAKE_COMMAND} -E env
@@ -229,13 +251,22 @@ function(add_blender_asset name)
             --prefix "${ASSET_RESOURCE_PREFIX}"
             --name "${ASSET_MODEL_NAME}"
             --venv "${BLENDER_VENV}"
+            ${mode_argument}
     ${texture_command}
-    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-    SOURCES ${CMAKE_SOURCE_DIR}/${ASSET_BLEND}
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+            "${CMAKE_BINARY_DIR}/blender-assets"
+    COMMAND ${CMAKE_COMMAND} -E touch ${stamp}
+    DEPENDS ${CMAKE_SOURCE_DIR}/${ASSET_BLEND}
             ${CMAKE_SOURCE_DIR}/tools/blender/export_asset.py
+            ${blender_exporters}
+            ${texture_sources}
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
     COMMENT "Cooking ${name} assets with Blender"
     USES_TERMINAL
     VERBATIM)
 
+  add_custom_target(${name} DEPENDS ${stamp}
+                    SOURCES ${CMAKE_SOURCE_DIR}/${ASSET_BLEND}
+                            ${CMAKE_SOURCE_DIR}/tools/blender/export_asset.py)
   add_dependencies(${name} generate-python-protobuf-source blender-python-venv)
 endfunction()

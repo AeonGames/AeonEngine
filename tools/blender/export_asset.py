@@ -13,10 +13,11 @@
 # limitations under the License.
 """Cook the currently open .blend into engine assets.
 
-Drives the io_model_mdl exporter, which writes the model plus its meshes,
-skeleton, animations, materials and textures. Textures packed into the .blend
-are written out alongside the ones that live loose on disk, so materials
-resolve either way.
+A model .blend becomes a single model through io_model_mdl. A scene .blend
+becomes a scene through io_scene_scn, which writes one model per mesh
+datablock plus the nodes for lights, cameras and markers. Either way,
+textures packed into the .blend are written out alongside the ones that live
+loose on disk, so materials resolve.
 
 Run headless from the repository root:
 
@@ -34,14 +35,16 @@ import traceback
 
 import bpy
 
-# io_model_mdl checks these through addon_utils and silently skips whole asset
-# categories when they are not enabled, so all of them are enabled up front.
+# io_model_mdl and io_scene_scn check these through addon_utils and silently
+# skip whole asset categories when they are not enabled, so all of them are
+# enabled up front.
 _ADDON_MODULES = (
     "io_mesh_msh",
     "io_skeleton_skl",
     "io_animation_anm",
     "io_material_mtl",
     "io_model_mdl",
+    "io_scene_scn",
 )
 
 
@@ -51,7 +54,7 @@ def _parse_args(argv):
     else:
         argv = []
     options = {"out": None, "prefix": "", "name": None, "venv": None,
-               "text": False, "force": True}
+               "text": False, "force": True, "scene": False}
     index = 0
     while index < len(argv):
         argument = argv[index]
@@ -67,6 +70,8 @@ def _parse_args(argv):
         elif argument == "--venv":
             index += 1
             options["venv"] = argv[index]
+        elif argument == "--scene":
+            options["scene"] = True
         elif argument == "--text":
             options["text"] = True
         elif argument == "--no-force":
@@ -77,7 +82,8 @@ def _parse_args(argv):
     if not options["out"]:
         raise SystemExit(
             "Usage: --out <directory> --prefix <resource prefix> "
-            "[--name <model name>] [--venv <directory>] [--text] [--no-force]")
+            "[--name <model name>] [--venv <directory>] [--scene] [--text] "
+            "[--no-force]")
     if not options["name"]:
         options["name"] = os.path.splitext(
             os.path.basename(bpy.data.filepath))[0] or "model"
@@ -141,6 +147,21 @@ def main():
 
     directory = os.path.abspath(options["out"]) + os.sep
     os.makedirs(directory, exist_ok=True)
+
+    if options["scene"]:
+        # io_scene_scn lays a scene out as <game root>/scenes/<name> plus
+        # <game root>/<name>, so it takes the root rather than the asset
+        # directory --out names.
+        bpy.ops.export_scene.scn(
+            'EXEC_DEFAULT',
+            game_root=os.path.dirname(os.path.abspath(options["out"])) + os.sep,
+            export_name=options["name"],
+            remember_game_root=False,
+            as_text=options["text"],
+            export_models=True,
+            force=options["force"])
+        return
+
     # io_model_mdl names the model file after the scene.
     bpy.context.scene.name = options["name"]
 
