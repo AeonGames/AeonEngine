@@ -57,6 +57,13 @@
 
           tick = [&window] ( double now ) // 'now' is a DOMHighResTimeStamp in ms
           {
+              if ( lastTime == 0.0 )
+              {
+                  // First tick: 'now' is measured from the timestamp origin, so
+                  // without this the whole load time counts as one frame's delta
+                  // and the counter reads 1 until the surplus drains.
+                  lastTime = now;
+              }
               double delta = now - lastTime;
               lastTime = now;
 

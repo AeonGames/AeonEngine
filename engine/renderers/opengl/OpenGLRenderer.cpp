@@ -172,13 +172,13 @@ void main()
 
     /// @brief Overlay screen-quad vertex data (positions and texture coordinates).
     const float vertices[] =
-    {
-        // positions   // texCoords
-        -1.0f,  1.0f,  0.0f, 0.0f,
-        -1.0f, -1.0f,  0.0f, 1.0f,
-        1.0f, -1.0f,  1.0f, 1.0f,
-        1.0f,  1.0f,  1.0f, 0.0f
-    };
+        {
+            // positions   // texCoords
+            -1.0f,  1.0f,  0.0f, 0.0f,
+            -1.0f, -1.0f,  0.0f, 1.0f,
+            1.0f, -1.0f,  1.0f, 1.0f,
+            1.0f,  1.0f,  1.0f, 0.0f
+        };
     /// @brief Total byte size of the overlay vertex data.
     constexpr GLuint vertex_size{sizeof ( vertices ) };
 
@@ -186,13 +186,13 @@ void main()
     static PFNWGLGETEXTENSIONSSTRINGARBPROC wglGetExtensionsString = nullptr;
     static PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribs = nullptr;
     const int ContextAttribs[] =
-    {
-        WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
-        WGL_CONTEXT_MINOR_VERSION_ARB, 5,
-        WGL_CONTEXT_PROFILE_MASK_ARB,
-        WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
-        0
-    };
+        {
+            WGL_CONTEXT_MAJOR_VERSION_ARB, 4,
+            WGL_CONTEXT_MINOR_VERSION_ARB, 5,
+            WGL_CONTEXT_PROFILE_MASK_ARB,
+            WGL_CONTEXT_CORE_PROFILE_BIT_ARB,
+            0
+        };
 
     static ATOM gRendererWindowClass{0};
     static std::atomic<size_t> mRendererCount{0};
@@ -372,12 +372,12 @@ void main()
     }
 #elif defined(__unix__)
     static int context_attribs[] =
-    {
-        GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
-        GLX_CONTEXT_MINOR_VERSION_ARB, 5,
-        GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
-        None
-    };
+        {
+            GLX_CONTEXT_MAJOR_VERSION_ARB, 4,
+            GLX_CONTEXT_MINOR_VERSION_ARB, 5,
+            GLX_CONTEXT_PROFILE_MASK_ARB, GLX_CONTEXT_CORE_PROFILE_BIT_ARB,
+            None
+        };
 
     static GLXFBConfig GetGLXConfig ( Display* display, ::Window window )
     {
@@ -398,16 +398,16 @@ void main()
 
         ( void ) std::remove_if ( frame_buffer_configs, frame_buffer_configs + frame_buffer_config_count,
                                   [display, xwvid] ( const GLXFBConfig & x ) -> bool
-        {
-            XVisualInfo *xvi = glXGetVisualFromFBConfig ( display, x );
-            if ( xvi && xvi->visualid == xwvid )
-            {
-                XFree ( xvi );
-                return false;
-            }
-            XFree ( xvi );
-            return true;
-        } );
+                                  {
+                                      XVisualInfo *xvi = glXGetVisualFromFBConfig ( display, x );
+                                      if ( xvi && xvi->visualid == xwvid )
+    {
+        XFree ( xvi );
+            return false;
+        }
+        XFree ( xvi );
+        return true;
+                                  } );
 
         GLXFBConfig result = frame_buffer_configs[ 0 ];
         XFree ( frame_buffer_configs );
@@ -420,19 +420,19 @@ void main()
         if ( mRendererCount == 0 )
         {
             XSetErrorHandler ( [] ( Display * mDisplay, XErrorEvent * error_event ) -> int
-            {
-                char error_string[1024];
-                XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
-                std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
-                std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
-                return 0;
-            } );
+                               {
+                                   char error_string[1024];
+                                   XGetErrorText ( mDisplay, error_event->error_code, error_string, 1024 );
+                                   std::cout << AeonGames::LogLevel::Error << error_string << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Error Code " << static_cast<int> ( error_event->error_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Request Code " << static_cast<int> ( error_event->request_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Minor Code " << static_cast<int> ( error_event->minor_code ) << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Display " << error_event->display << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Resource Id " << error_event->resourceid << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Serial " << error_event->serial << std::endl;
+                                   std::cout << AeonGames::LogLevel::Error << "Type " << error_event->type << std::endl;
+                                   return 0;
+                               } );
             if ( mDisplay )
             {
                 XCloseDisplay ( mDisplay );
@@ -455,7 +455,7 @@ void main()
         GLXFBConfig glxconfig = GetGLXConfig ( mDisplay, reinterpret_cast<::Window> ( aWindow ) );
 
         if ( nullptr == ( mOpenGLContext = glXCreateContextAttribsARB ( mDisplay, glxconfig, nullptr,
-            True, context_attribs ) ) )
+                                           True, context_attribs ) ) )
         {
             std::cout << LogLevel::Error << "glXCreateContextAttribsARB Failed." << std::endl;
             throw std::runtime_error ( "glXCreateContextAttribsARB Failed." );
@@ -541,19 +541,19 @@ void main()
         glGetIntegerv ( GL_MAJOR_VERSION, &major );
         glGetIntegerv ( GL_MINOR_VERSION, &minor );
         const auto has_extension = [] ( const char* aName ) -> bool
-        {
-            GLint count = 0;
-            glGetIntegerv ( GL_NUM_EXTENSIONS, &count );
-            for ( GLint i = 0; i < count; ++i )
+                                   {
+                                       GLint count = 0;
+                                       glGetIntegerv ( GL_NUM_EXTENSIONS, &count );
+                                       for ( GLint i = 0; i < count; ++i )
+    {
+        const GLubyte* extension = glGetStringi ( GL_EXTENSIONS, static_cast<GLuint> ( i ) );
+            if ( extension != nullptr && std::strcmp ( reinterpret_cast<const char * > ( extension ), aName ) == 0 )
             {
-                const GLubyte* extension = glGetStringi ( GL_EXTENSIONS, static_cast<GLuint> ( i ) );
-                if ( extension != nullptr && std::strcmp ( reinterpret_cast<const char * > ( extension ), aName ) == 0 )
-                {
-                    return true;
-                }
+                return true;
             }
-            return false;
-        };
+        }
+        return false;
+                                   };
         mHasBindlessTexture = has_extension ( "GL_ARB_bindless_texture" );
         mHasIndirectParameters = has_extension ( "GL_ARB_indirect_parameters" );
         mHasComputeShader = ( major > 4 ) || ( major == 4 && minor >= 3 );
@@ -883,28 +883,28 @@ void main()
         }
         glDepthMask ( depth_stencil_state.depth_write == PipelineToggle::ENABLED );
         glDepthFunc ( [&depth_stencil_state]
-        {
-            switch ( depth_stencil_state.depth_compare )
-        {
-        case PipelineCompareOp::NEVER:
-            return GL_NEVER;
-        case PipelineCompareOp::LESS:
-            return GL_LESS;
-        case PipelineCompareOp::EQUAL:
-            return GL_EQUAL;
-        case PipelineCompareOp::GREATER:
-            return GL_GREATER;
-        case PipelineCompareOp::NOT_EQUAL:
-            return GL_NOTEQUAL;
-        case PipelineCompareOp::GREATER_OR_EQUAL:
-            return GL_GEQUAL;
-        case PipelineCompareOp::ALWAYS:
-            return GL_ALWAYS;
-        case PipelineCompareOp::LESS_OR_EQUAL:
-        default:
-            return GL_LEQUAL;
-        }
-    }() );
+                      {
+                          switch ( depth_stencil_state.depth_compare )
+    {
+    case PipelineCompareOp::NEVER:
+        return GL_NEVER;
+    case PipelineCompareOp::LESS:
+        return GL_LESS;
+    case PipelineCompareOp::EQUAL:
+        return GL_EQUAL;
+    case PipelineCompareOp::GREATER:
+        return GL_GREATER;
+    case PipelineCompareOp::NOT_EQUAL:
+        return GL_NOTEQUAL;
+    case PipelineCompareOp::GREATER_OR_EQUAL:
+        return GL_GEQUAL;
+    case PipelineCompareOp::ALWAYS:
+        return GL_ALWAYS;
+    case PipelineCompareOp::LESS_OR_EQUAL:
+    default:
+        return GL_LEQUAL;
+    }
+                  }() );
         if ( depth_stencil_state.stencil_test == PipelineToggle::ENABLED )
         {
             glEnable ( GL_STENCIL_TEST );
@@ -1711,12 +1711,12 @@ void main()
         // shared geometry pool; poolable items sharing a pipeline draw together
         // with one indirect multi-draw.
         auto poolable = [this] ( const RenderItem & aItem ) -> bool
-        {
-            const OpenGLMesh* mesh = GetOpenGLMesh ( *aItem.mMesh );
-            return aItem.mSkinnedVertices == nullptr &&
-            aItem.mMesh->GetIndexCount() != 0 &&
-            mesh != nullptr && mesh->IsPooled();
-        };
+                        {
+                            const OpenGLMesh* mesh = GetOpenGLMesh ( *aItem.mMesh );
+                            return aItem.mSkinnedVertices == nullptr &&
+                                   aItem.mMesh->GetIndexCount() != 0 &&
+                                   mesh != nullptr && mesh->IsPooled();
+                        };
         if ( aRenderPass == RenderPass::Shading )
         {
             // GPU-driven shading: frustum-cull each pooled pipeline group on the
@@ -1732,8 +1732,15 @@ void main()
                     continue;
                 }
                 const RenderItem& head = queue[i];
+                // The batch is drawn with one vertex-buffer binding taken from
+                // the representative mesh, and the geometry pool is per-stride,
+                // so a run must not span strides: the other arena's meshes would
+                // be fetched from the wrong buffer at a base vertex that only
+                // indexes their own.
+                const size_t head_stride = head.mMesh->GetStride();
                 size_t j = i + 1;
-                while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) )
+                while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) &&
+                        queue[j].mMesh->GetStride() == head_stride )
                 {
                     ++j;
                 }
@@ -1792,8 +1799,12 @@ void main()
                 ++i;
                 continue;
             }
+            // One vertex-buffer binding serves the whole run, and the geometry
+            // pool is per-stride, so a run must not span strides.
+            const size_t head_stride = head.mMesh->GetStride();
             size_t j = i + 1;
-            while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) )
+            while ( j < count && queue[j].mPipeline == head.mPipeline && poolable ( queue[j] ) &&
+                    queue[j].mMesh->GetStride() == head_stride )
             {
                 ++j;
             }
