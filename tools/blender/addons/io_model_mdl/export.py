@@ -106,6 +106,57 @@ class MDL_OT_exporter(bpy.types.Operator):
         # Make a Blender datablock name safe to use as a filename component.
         return "".join(c if (c.isalnum() or c in "._-") else "_" for c in name)
 
+    @staticmethod
+    def _image_export_name(image):
+        basename = os.path.basename(image.filepath_raw) if image.filepath_raw else ""
+        if not basename:
+            basename = image.name
+            if not os.path.splitext(basename)[1]:
+                basename += {
+                    'PNG':  '.png',
+                    'JPEG': '.jpg',
+                    'JPEG2000': '.jp2',
+                    'TARGA': '.tga',
+                    'TARGA_RAW': '.tga',
+                    'BMP':  '.bmp',
+                    'TIFF': '.tif',
+                    'OPEN_EXR': '.exr',
+                    'OPEN_EXR_MULTILAYER': '.exr',
+                    'HDR':  '.hdr',
+                    'WEBP': '.webp',
+                }.get(image.file_format, '.png')
+        return basename
+
+    def save_texture_from_blender(self, image, seen_paths=None):
+        if image is None:
+            return False
+
+        basename = self._image_export_name(image)
+        target = os.path.join(self.directory, "textures", basename)
+        source_abs = ""
+        if image.filepath_raw:
+            source_abs = os.path.normcase(os.path.abspath(
+                bpy.path.abspath(image.filepath_raw)))
+        target_abs = os.path.normcase(os.path.abspath(target))
+
+        if source_abs and source_abs == target_abs:
+            print("\t\tSkipping image (source is destination):", target)
+            return False
+        if os.path.exists(target):
+            if not self.force:
+                print("\t\tSkipping image (already exists):", target)
+                return False
+
+        try:
+            image.save(filepath=target)
+        except Exception as exc:
+            print("\t\tFailed to save image", image.name, exc)
+            return False
+
+        if seen_paths is not None:
+            seen_paths.add(source_abs or image.name)
+        return True
+
     def draw(self, context):
         layout = self.layout
         col = layout.column(heading="Include")
@@ -151,6 +202,13 @@ class MDL_OT_exporter(bpy.types.Operator):
             os.makedirs(self.directory + "materials")
         if self.export_animations and animations_available and not os.path.exists(self.directory + "animations"):
             os.makedirs(self.directory + "animations")
+
+        seen_paths = set()
+        if self.export_textures:
+            for image in bpy.data.images:
+                if image is None or image.source not in {'FILE', 'SEQUENCE'}:
+                    continue
+                self.save_texture_from_blender(image, seen_paths)
 
         model_buffer = model_pb2.ModelMsg()
         # Store original selection
@@ -240,7 +298,10 @@ class MDL_OT_exporter(bpy.types.Operator):
                         print("\tSkipping mesh (already exists):", mesh_file)
                 if not self.export_textures:
                     continue
-                # Export all textures referenced by the mesh materials
+                # Export all textures referenced by the mesh materials.
+                # Blender already carries the source path data for these images,
+                # so this is the canonical copy step and should not be
+                # duplicated in the build system.
                 for material in object.data.materials:
                     if material is None or material.node_tree is None:
                         continue
@@ -248,56 +309,7 @@ class MDL_OT_exporter(bpy.types.Operator):
                     for node in material.node_tree.nodes:
                         print("\tNode:",node.bl_idname,node.label)
                         if node.bl_idname == "ShaderNodeTexImage" and node.image is not None:
-                            original_filepath = node.image.filepath_raw
-                            # Pick a basename: prefer the existing filepath,
-                            # but fall back to the image's datablock name
-                            # (e.g. for packed or generated images that have
-                            # no on-disk source).
-                            basename = os.path.basename(original_filepath) if original_filepath else ""
-                            if not basename:
-                                basename = node.image.name
-                                # Ensure we have a file extension so OIIO
-                                # can pick a writer.
-                                if not os.path.splitext(basename)[1]:
-                                    ext_map = {
-                                        'PNG':  '.png',
-                                        'JPEG': '.jpg',
-                                        'JPEG2000': '.jp2',
-                                        'TARGA': '.tga',
-                                        'TARGA_RAW': '.tga',
-                                        'BMP':  '.bmp',
-                                        'TIFF': '.tif',
-                                        'OPEN_EXR': '.exr',
-                                        'OPEN_EXR_MULTILAYER': '.exr',
-                                        'HDR':  '.hdr',
-                                        'WEBP': '.webp',
-                                    }
-                                    basename += ext_map.get(node.image.file_format, '.png')
-                            target = os.path.join(self.directory, "textures", basename)
-                            # Skip if the file already exists at the
-                            # destination, and especially if the source
-                            # image on disk *is* the destination -- saving
-                            # in-place can corrupt the image (Blender
-                            # truncates before reading) and at best is just
-                            # wasted I/O.
-                            try:
-                                source_abs = os.path.normcase(os.path.abspath(
-                                    bpy.path.abspath(original_filepath))) if original_filepath else ""
-                            except Exception:
-                                source_abs = ""
-                            target_abs = os.path.normcase(os.path.abspath(target))
-                            if os.path.exists(target):
-                                if source_abs == target_abs:
-                                    print("\t\tSkipping image (source is destination):", target)
-                                    continue
-                                if not self.force:
-                                    print("\t\tSkipping image (already exists):", target)
-                                    continue
-                            # save(filepath=...) loads the source before
-                            # writing the copy. Repointing filepath_raw first
-                            # instead leaves nothing to save when the image was
-                            # never loaded, which is the norm in background mode.
-                            node.image.save(filepath=target)
+                            self.save_texture_from_blender(node.image, seen_paths)
             elif object.type == 'ARMATURE':
                 # Export armature as skeleton file
                 if self.export_skeleton:
