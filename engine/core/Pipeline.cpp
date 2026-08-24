@@ -317,6 +317,11 @@ namespace AeonGames
         mDepthStencilState = {};
         mBlendState = {};
         mMultisampleState = {};
+        // Transparent draw pipelines should not write depth by default: they are
+        // ordered back-to-front and rely on the depth buffer for visibility of the
+        // underlying opaque scene, not for self-z writing that causes flicker.
+        // Explicit per-pipeline depth-write settings still win when authors opt in.
+        bool transparent_default_depth_write = false;
         for ( auto& variants : mShaderVariants )
         {
             variants.clear();
@@ -392,11 +397,33 @@ namespace AeonGames
             mRasterState.depth_bias_slope = state.depth_bias_slope();
             mRasterState.line_width = state.line_width();
         }
+        if ( aPipelineMsg.has_blend() )
+        {
+            const auto& state = aPipelineMsg.blend();
+            mBlendState.enabled = static_cast<PipelineToggle> ( state.enabled() );
+            mBlendState.color_write_mask = state.color_write_mask();
+            mBlendState.source_color = static_cast<PipelineBlendFactor> ( state.source_color() );
+            mBlendState.destination_color = static_cast<PipelineBlendFactor> ( state.destination_color() );
+            mBlendState.color_operation = static_cast<PipelineBlendOp> ( state.color_operation() );
+            mBlendState.source_alpha = static_cast<PipelineBlendFactor> ( state.source_alpha() );
+            mBlendState.destination_alpha = static_cast<PipelineBlendFactor> ( state.destination_alpha() );
+            mBlendState.alpha_operation = static_cast<PipelineBlendOp> ( state.alpha_operation() );
+            transparent_default_depth_write = ( mBlendState.enabled == PipelineToggle::ENABLED );
+        }
         if ( aPipelineMsg.has_depth_stencil() )
         {
             const auto& state = aPipelineMsg.depth_stencil();
             mDepthStencilState.depth_test = static_cast<PipelineToggle> ( state.depth_test() );
-            mDepthStencilState.depth_write = static_cast<PipelineToggle> ( state.depth_write() );
+            const bool explicit_depth_write = state.depth_write() != 0;
+            const bool defaulted_transparent_depth_write = transparent_default_depth_write && !explicit_depth_write;
+            if ( defaulted_transparent_depth_write )
+            {
+                mDepthStencilState.depth_write = PipelineToggle::DISABLED;
+            }
+            else
+            {
+                mDepthStencilState.depth_write = static_cast<PipelineToggle> ( state.depth_write() );
+            }
             mDepthStencilState.depth_compare = static_cast<PipelineCompareOp> ( state.depth_compare() );
             mDepthStencilState.depth_bounds_test = static_cast<PipelineToggle> ( state.depth_bounds_test() );
             mDepthStencilState.min_depth_bounds = state.min_depth_bounds();
@@ -413,17 +440,9 @@ namespace AeonGames
             mDepthStencilState.stencil_compare_mask = state.stencil_compare_mask();
             mDepthStencilState.stencil_write_mask = state.stencil_write_mask();
         }
-        if ( aPipelineMsg.has_blend() )
+        else if ( transparent_default_depth_write )
         {
-            const auto& state = aPipelineMsg.blend();
-            mBlendState.enabled = static_cast<PipelineToggle> ( state.enabled() );
-            mBlendState.color_write_mask = state.color_write_mask();
-            mBlendState.source_color = static_cast<PipelineBlendFactor> ( state.source_color() );
-            mBlendState.destination_color = static_cast<PipelineBlendFactor> ( state.destination_color() );
-            mBlendState.color_operation = static_cast<PipelineBlendOp> ( state.color_operation() );
-            mBlendState.source_alpha = static_cast<PipelineBlendFactor> ( state.source_alpha() );
-            mBlendState.destination_alpha = static_cast<PipelineBlendFactor> ( state.destination_alpha() );
-            mBlendState.alpha_operation = static_cast<PipelineBlendOp> ( state.alpha_operation() );
+            mDepthStencilState.depth_write = PipelineToggle::DISABLED;
         }
         if ( aPipelineMsg.has_multisample() )
         {

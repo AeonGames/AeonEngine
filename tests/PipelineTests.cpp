@@ -95,6 +95,23 @@ namespace AeonGames
         EXPECT_EQ ( pipeline.GetMultisampleState().alpha_to_coverage, PipelineToggle::DISABLED );
     }
 
+    TEST ( PipelineTests, BlendEnabledPipelinesDisableDepthWritesByDefault )
+    {
+        PipelineMsg message;
+        message.mutable_blend()->set_enabled ( PipelineMsg_Toggle_ENABLED );
+        message.mutable_blend()->set_source_color ( PipelineMsg_BlendFactor_BLEND_SOURCE_ALPHA );
+        message.mutable_blend()->set_destination_color ( PipelineMsg_BlendFactor_BLEND_ONE_MINUS_SOURCE_ALPHA );
+        message.mutable_blend()->set_source_alpha ( PipelineMsg_BlendFactor_BLEND_SOURCE_ALPHA );
+        message.mutable_blend()->set_destination_alpha ( PipelineMsg_BlendFactor_BLEND_ONE_MINUS_SOURCE_ALPHA );
+
+        Pipeline pipeline;
+        pipeline.LoadFromPBMsg ( message );
+
+        EXPECT_EQ ( pipeline.GetBlendState().enabled, PipelineToggle::ENABLED );
+        EXPECT_EQ ( pipeline.GetDepthStencilState().depth_write, PipelineToggle::DISABLED );
+        EXPECT_EQ ( pipeline.GetDepthStencilState().depth_test, PipelineToggle::ENABLED );
+    }
+
     TEST ( PipelineTests, ShaderInterfaceResolvesRendererVariant )
     {
         PipelineMsg message;

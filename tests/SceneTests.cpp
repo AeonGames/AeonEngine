@@ -28,6 +28,9 @@ limitations under the License.
 #include "aeongames/Matrix4x4.hpp"
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Transform.hpp"
+#include "aeongames/Pipeline.hpp"
+#include "aeongames/ProtoBufClasses.hpp"
+#include "pipeline.pb.h"
 
 using namespace ::testing;
 namespace AeonGames
@@ -600,7 +603,15 @@ namespace AeonGames
         // fake addresses are enough to test collection, sorting and batching.
         const Mesh* const kMeshA = reinterpret_cast<const Mesh*> ( 0x1000 );
         const Mesh* const kMeshB = reinterpret_cast<const Mesh*> ( 0x2000 );
-        const Pipeline* const kPipeline = reinterpret_cast<const Pipeline*> ( 0x3000 );
+        const Pipeline kOpaquePipeline = [] ()
+        {
+            Pipeline pipeline;
+            PipelineMsg msg;
+            msg.mutable_blend()->set_enabled ( PipelineMsg_Toggle_DISABLED );
+            pipeline.LoadFromPBMsg ( msg );
+            return pipeline;
+        }();
+        const Pipeline* const kPipeline = &kOpaquePipeline;
         const Material* const kMaterial = reinterpret_cast<const Material*> ( 0x4000 );
 
         // Minimal component that declares a single draw, standing in for
@@ -717,6 +728,45 @@ namespace AeonGames
         scene.BuildRenderQueue ( MakeCullFrustum() );
         EXPECT_EQ ( scene.GetRenderQueue().size(), 3u );
         EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 1u, 1u, 1u } ) );
+    }
+
+    TEST ( SceneRenderQueue, TransparentItemsAreSortedBackToFrontAndNeverInstanced )
+    {
+        Scene scene;
+        Node* camera = scene.Add ( std::make_unique<Node>() );
+        camera->SetGlobalTransform ( Transform { Vector3 { 1.0f, 1.0f, 1.0f }, Quaternion {}, Vector3 { 0.0f, 0.0f, 0.0f } } );
+        scene.SetCamera ( camera );
+
+        PipelineMsg opaque_msg;
+        opaque_msg.mutable_blend()->set_enabled ( PipelineMsg_Toggle_DISABLED );
+        Pipeline opaque_pipeline;
+        opaque_pipeline.LoadFromPBMsg ( opaque_msg );
+
+        PipelineMsg transparent_msg;
+        transparent_msg.mutable_blend()->set_enabled ( PipelineMsg_Toggle_ENABLED );
+        transparent_msg.mutable_blend()->set_source_color ( PipelineMsg_BlendFactor_BLEND_SOURCE_ALPHA );
+        transparent_msg.mutable_blend()->set_destination_color ( PipelineMsg_BlendFactor_BLEND_ONE_MINUS_SOURCE_ALPHA );
+        transparent_msg.mutable_blend()->set_source_alpha ( PipelineMsg_BlendFactor_BLEND_SOURCE_ALPHA );
+        transparent_msg.mutable_blend()->set_destination_alpha ( PipelineMsg_BlendFactor_BLEND_ONE_MINUS_SOURCE_ALPHA );
+        Pipeline transparent_pipeline;
+        transparent_pipeline.LoadFromPBMsg ( transparent_msg );
+
+        AddDrawable ( scene, Vector3 { 0.0f, 50.0f, -3.0f }, kMeshA, &opaque_pipeline, kMaterial );
+        AddDrawable ( scene, Vector3 { 0.0f, 50.0f, -8.0f }, kMeshA, &transparent_pipeline, kMaterial );
+        AddDrawable ( scene, Vector3 { 0.0f, 50.0f, -16.0f }, kMeshA, &transparent_pipeline, kMaterial );
+
+        scene.BuildRenderQueue ( MakeCullFrustum() );
+        ASSERT_EQ ( scene.GetRenderQueue().size(), 3u );
+        EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 1u, 1u, 1u } ) );
+
+        const auto& queue = scene.GetRenderQueue();
+        EXPECT_EQ ( queue[0].mPipeline, &opaque_pipeline );
+        EXPECT_EQ ( queue[1].mPipeline, &transparent_pipeline );
+        EXPECT_EQ ( queue[2].mPipeline, &transparent_pipeline );
+        EXPECT_GT ( ( Vector3 { queue[1].mTransform[12], queue[1].mTransform[13], queue[1].mTransform[14] } -
+                      camera->GetGlobalTransform().GetTranslation() ).GetLengthSquared(),
+                    ( Vector3 { queue[2].mTransform[12], queue[2].mTransform[13], queue[2].mTransform[14] } -
+                      camera->GetGlobalTransform().GetTranslation() ).GetLengthSquared() );
     }
 
     TEST ( SceneRenderQueue, EmptySceneProducesEmptyQueue )

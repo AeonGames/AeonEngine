@@ -772,6 +772,20 @@ namespace AeonGames
 
     void Scene::BuildRenderQueue ( const Frustum& aFrustum ) const
     {
+        const auto is_transparent = [] ( const Pipeline * aPipeline )
+        {
+            return aPipeline != nullptr && aPipeline->GetBlendState().enabled == PipelineToggle::ENABLED;
+        };
+        const auto item_distance_sq = [this] ( const RenderItem & aItem )
+        {
+            Vector3 translation { aItem.mTransform[12], aItem.mTransform[13], aItem.mTransform[14] };
+            if ( mCamera != nullptr )
+            {
+                translation -= mCamera->GetGlobalTransform().GetTranslation();
+            }
+            return translation.GetLengthSquared();
+        };
+
         // Per-node frustum culling is inherited from CullVisible; each visible
         // node appends the draws its components contribute. clear() keeps the
         // buffer capacity so steady-state frames perform no heap allocation.
@@ -780,14 +794,29 @@ namespace AeonGames
         {
             aNode.Collect ( mRenderQueue );
         } );
-        // Sort so items sharing pipeline, material and mesh become adjacent,
-        // letting ForEachRenderBatch merge them into one instanced draw. Skinned
-        // items carry a distinct skinned-vertex pointer and sort apart, so they
-        // never merge with each other or with non-skinned items. std::sort is in
-        // place, keeping this routine allocation-free.
+        // Opaque items keep the batching-friendly ordering by pipeline/material/
+        // mesh. Transparent items must be drawn back-to-front and never merged
+        // into one instanced batch, so they sort by camera distance before the
+        // resource identity keys and are left as individual draws by
+        // ForEachRenderBatch.
         std::sort ( mRenderQueue.begin(), mRenderQueue.end(),
-                    [] ( const RenderItem & aLhs, const RenderItem & aRhs )
+                    [is_transparent, item_distance_sq] ( const RenderItem & aLhs, const RenderItem & aRhs )
         {
+            const bool lhs_transparent = is_transparent ( aLhs.mPipeline );
+            const bool rhs_transparent = is_transparent ( aRhs.mPipeline );
+            if ( lhs_transparent != rhs_transparent )
+            {
+                return !lhs_transparent; // opaque first; transparent last.
+            }
+            if ( lhs_transparent )
+            {
+                const float lhs_distance = item_distance_sq ( aLhs );
+                const float rhs_distance = item_distance_sq ( aRhs );
+                if ( lhs_distance != rhs_distance )
+                {
+                    return lhs_distance > rhs_distance; // far-to-near ordering.
+                }
+            }
             if ( aLhs.mPipeline != aRhs.mPipeline )
             {
                 return aLhs.mPipeline < aRhs.mPipeline;
@@ -818,13 +847,16 @@ namespace AeonGames
         {
             const RenderItem& head = data[i];
             size_t j = i + 1;
-            // Skinned items are posed per node and must draw individually, so
-            // only non-skinned items extend a batch; the run ends as soon as a
-            // skinned item or a different pipeline/material/mesh is reached.
-            if ( head.mSkinnedVertices == nullptr )
+            // Skinned items are posed per node and must draw individually; alpha-
+            // blended items also need ordering and must not be merged into one
+            // instanced draw because their relative depths are significant.
+            const bool can_batch = head.mSkinnedVertices == nullptr &&
+                                   ( head.mPipeline == nullptr || head.mPipeline->GetBlendState().enabled != PipelineToggle::ENABLED );
+            if ( can_batch )
             {
                 while ( j < count &&
                         data[j].mSkinnedVertices == nullptr &&
+                        ( data[j].mPipeline == nullptr || data[j].mPipeline->GetBlendState().enabled != PipelineToggle::ENABLED ) &&
                         data[j].mPipeline == head.mPipeline &&
                         data[j].mMaterial == head.mMaterial &&
                         data[j].mMesh == head.mMesh )
