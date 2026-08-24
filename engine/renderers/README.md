@@ -1,20 +1,22 @@
 # AeonEngine Renderer Backends
 
-Everything under `engine/renderers/` is a **self-contained plugin DLL** implementing the
-[`Renderer`](../../include/aeongames/Renderer.hpp) interface. Two backends ship today:
+Everything under `engine/renderers/` is a **self-contained shared-library plugin** implementing the
+[`Renderer`](../../include/aeongames/Renderer.hpp) interface. Three backends ship today:
 
 | Directory | CMake target | Registered name | Notes |
 | --- | --- | --- | --- |
 | [opengl](opengl) | `OpenGLRenderer` | `"OpenGL"` | OpenGL 4.5 core + `GL_ARB_bindless_texture`; entry points loaded from [glFunctions.txt](opengl/glFunctions.txt) |
 | [vulkan](vulkan) | `VulkanRenderer` | `"Vulkan"` | Vulkan 1.x; GLSL→SPIR-V through glslang ([SPIR-V/](vulkan/SPIR-V)), reflection through SPIRV-Reflect, MoltenVK on macOS |
+| [metal](metal) | `MetalRenderer` | `"Metal"` | Native Metal 3 on Apple Silicon/macOS 13+; argument-buffer tier 2; generated MSL and interface metadata from `metal-shader-tool` |
 
 For a frame-by-frame walkthrough of the rendering path — clustered forward shading, shadow passes,
 HDR + tone map, image-based lighting, compute skinning — read
 [vulkan/RENDER_PIPELINE.md](vulkan/RENDER_PIPELINE.md). The passes it describes are shared by both
-backends.
+the OpenGL and Metal backends, while resource ownership and command recording remain API-specific.
 
-> A feature landed in one backend almost always needs its counterpart (and the shader `#ifdef VULKAN`
-> branch) **in the same change**. See [AGENTS.md](../../AGENTS.md).
+> A backend-neutral feature almost always needs Vulkan, OpenGL, and Metal implementations plus any
+> matching shader branches or renderer-scoped variants **in the same change**. See
+> [AGENTS.md](../../AGENTS.md).
 
 ## 1. What the engine owns vs. what a backend owns
 
@@ -91,8 +93,9 @@ extern "C"
   `set_property(GLOBAL APPEND PROPERTY PLUGINS <Target>)`, plus `PREFIX ""` under MinGW/MSYS so the
   DLL name matches the config entry. Gate the `add_subdirectory` behind a `BUILD_<API>_RENDERER`
   option in [../CMakeLists.txt](../CMakeLists.txt).
-- The plugin is loaded at runtime from [game/config](../../game/config) through a
-  `Plugin: "<TargetName>"` line and selected with `game.exe -r <RegisteredName>`.
+- CMake regenerates [game/config](../../game/config) from the enabled targets in the global `PLUGINS`
+  property. The plugin is loaded from its `Plugin: "<TargetName>"` entry and selected with
+  `game.exe -r <RegisteredName>` (or `game -r <RegisteredName>` on macOS).
 - Keep each plugin DLL self-contained: it may link third-party compilers (glslang) **statically**,
   but must not depend on the other renderer plugin.
 
@@ -169,9 +172,13 @@ At pipeline load each backend reflects its shaders into a *hash → slot* map:
   shared empty layout because `pSetLayouts` is dense.
 - **OpenGL** — `glGetProgramInterfaceiv` / `glGetProgramResource*` on the linked program yield
   *hash → uniform-block binding, storage-block binding or texture unit*.
+- **Metal** — each Vulkan-style descriptor set becomes an MSL argument-buffer index. The shader
+  cooker records SPIRV-Cross's compacted argument IDs in Metal-only `ShaderInterface` metadata;
+  runtime code resolves those IDs by resource name/hash instead of assuming the original GLSL
+  binding. Vertex data uses Metal buffer index 8.
 
 Adding a new engine-wide block means: add the name to `Mesh::BindingLocations`, declare it in the
-shader with both `#ifdef VULKAN` branches, and reflect + bind it in **both** backends.
+shared shader ABI, and reflect + bind it in **all three** backends.
 
 ## 5. Shaders and per-renderer variants
 
@@ -193,11 +200,11 @@ for ( uint32_t i = 0; i < aPipeline.GetComputeStageCount ( GetName() ); ++i )
 A stage may carry per-renderer variants: a renderer-specific entry overrides the default and an
 **empty** entry disables the stage for that renderer. The `PIPELINES` entry format in
 [assets/shadercode/CMakeLists.txt](../../assets/shadercode/CMakeLists.txt) expresses both —
-`point_shadow_depth` uses a multiview vertex shader with no geometry stage on Vulkan and a geometry
-shader on OpenGL:
+`point_shadow_depth` uses a multiview vertex shader with no geometry stage on Vulkan/Metal and a
+geometry shader on OpenGL:
 
 ```cmake
-"point_shadow_depth|vert=point_shadow_depth.vert|geom=point_shadow_depth.geom|frag=point_shadow_depth.frag|Vulkan:vert=point_shadow_depth_mv.vert|Vulkan:geom"
+"point_shadow_depth|vert=point_shadow_depth.vert|geom=point_shadow_depth.geom|frag=point_shadow_depth.frag|Vulkan,Metal:vert=point_shadow_depth_mv.vert|Vulkan,Metal:geom"
 ```
 
 Compute stages are **ordered**; index 0 is dispatched first (`lighting.0.comp` builds the clusters,
@@ -222,7 +229,28 @@ hardcodes a backend-specific key. Take the settings in the constructor
 (`MyRenderer ( void* aWindow, const RendererSettings& aSettings = {} )`) and expose them through
 `GetSettings()`.
 
-## 7. Adding a backend
+## 7. Native Metal architecture
+
+Metal follows the same public `Renderer` contract and `RenderScene` sequence, but its ownership and
+synchronization deliberately follow Metal rather than imitating Vulkan:
+
+- `MetalRenderer` owns the device, command queue, resource caches, bindless tables and
+  renderer-owned pipelines. Each `MetalWindow` owns its `CAMetalLayer`, triple-buffered frame pools,
+  attachments, shadow maps, command buffers/encoders, Hi-Z pyramid and environment cubes.
+- Descriptor set number maps to MSL argument-buffer index. Bindless texture/sampler pairs live in
+  set 2, material records in set 7, and clustered per-frame blocks are packed into set 0. Consume
+  generated `ShaderInterface` entries by resource hash: SPIRV-Cross may compact the argument IDs,
+  and combined samplers consume both texture and sampler IDs.
+- Render and compute work share one command buffer. Ending an encoder before compute and opening the
+  next encoder establishes ordering, so `MetalRenderer::Barrier` is intentionally a no-op.
+- GUI uploads are premultiplied `BGRA8Unorm` and blend with source factor `ONE`. Treating the overlay
+  as straight RGBA obscures or discolours the scene beneath a transparent canvas.
+
+The Metal shader path is enabled by `BUILD_METAL_RENDERER`: `aeontool` first packs the shared GLSL,
+then `metal-shader-tool` invokes glslang/SPIRV-Cross and Apple's Metal compiler to append MSL plus
+validated interface metadata to each generated pipeline.
+
+## 8. Adding a backend
 
 1. Create `engine/renderers/<api>/` with a `CMakeLists.txt` producing a `SHARED` target, append it to
    the global `PLUGINS` property, and gate it behind `BUILD_<API>_RENDERER`.
@@ -237,24 +265,28 @@ hardcodes a backend-specific key. Take the settings in the constructor
 7. Add shadows, then HDR + tone map, then image-based lighting.
 8. Override `RenderInstanced` last — the base loop is already correct.
 
-## 8. Testing and debugging
+## 9. Testing and debugging
 
 - Build and test from the MSYS2 MinGW shell: `cd mingw64 && make -j$(nproc) && ctest --output-on-failure`.
   The single gtest binary runs with the **repo root** as its working directory.
 - Run from the repo root:
   `PATH="$PWD/mingw64/bin:$PATH" ./mingw64/bin/game.exe -r OpenGL -s scenes/main.txt`
-  (`-r Vulkan` for the other backend). Renderer names are exactly `OpenGL` and `Vulkan`.
+  (`-r Vulkan` for Vulkan). On Apple Silicon:
+  `PATH="$PWD/clang64/bin:$PATH" ./clang64/bin/game -r Metal -s scenes/main.txt`.
+  Renderer names are exactly `OpenGL`, `Vulkan`, and `Metal` where those plugins are built.
 - Pipeline load logs every reflected uniform/storage block binding and sampler unit at
   `LogLevel::Debug` — the fastest way to verify a new binding.
 - Deterministic frame capture, immune to window occlusion:
   `AEON_GL_SCREENSHOT_FRAME=<n> AEON_GL_SCREENSHOT_DIR=<dir>` on OpenGL,
   `VK_INSTANCE_LAYERS=VK_LAYER_LUNARG_screenshot VK_SCREENSHOT_FRAMES=<n>` on Vulkan.
+- Validate Metal work with
+  `MTL_DEBUG_LAYER=1 MTL_SHADER_VALIDATION=1 MTL_SHADER_VALIDATION_REPORT_TO_STDERR=1`.
 - Per-pass GPU timings: `AEON_BENCH_FRAMES=<n> AEON_BENCH_WARMUP=<n>` (requires
   `RecordGpuTimestamp` / `ReadGpuTimestamps`).
-- Cross-check by rendering the same scene on both backends; a divergence is almost always a wrong
-  binding or a missing `#ifdef VULKAN` branch.
+- Cross-check by rendering the same scene on every built backend; a divergence is commonly a wrong
+  binding, stale generated interface metadata, or a missing renderer-scoped shader branch.
 
-## 9. Pitfalls that have bitten before
+## 10. Pitfalls that have bitten before
 
 | Pitfall | Detail |
 | --- | --- |
@@ -263,5 +295,8 @@ hardcodes a backend-specific key. Take the settings in the constructor
 | `std140` UBOs on OpenGL/NVIDIA | The driver's GLSL front-end mis-fetches members past the first, so the `Globals` block is an `std430` SSBO on the OpenGL branch while Vulkan keeps the UBO. Do not unify them. A full GL-SPIR-V migration was investigated and **shelved**: glslang rejects `GL_ARB_bindless_texture` when targeting SPIR-V. |
 | Vulkan descriptor set count | At most 16 sets per pipeline layout; sparse indices are allowed, but gaps must be filled with the shared empty layout. |
 | Unchecked bindless material index | An out-of-range index dereferences a wild GPU address and causes `VK_ERROR_DEVICE_LOST`. Bounds-check against `MATERIAL_CAPACITY` in the shader. |
+| Metal argument IDs | SPIRV-Cross compacts resources within an argument buffer. Use generated interface metadata; raw GLSL `binding` values are not necessarily runtime argument IDs. |
+| Metal runtime SSBO sizes | Runtime-sized buffers can add hidden `spvBufferSizeConstants`; populate them from Metal reflection or shader reads can run out of bounds. |
+| Metal drawable/overlay formats | The drawable and final tone-map target are linear `BGRA8Unorm` because the shader performs sRGB transfer. GUI pixels are premultiplied BGRA8 and require source factor `ONE`. |
 | Frames in flight | `BeginFrame` does not imply the previous frame finished. Call `Finish` before reading back GPU-written buffers, capturing the framebuffer or tearing resources down. |
 | Recursion | Engine-wide rule: no recursive functions. Traverse iteratively with an explicit, preferably fixed-size, stack. |

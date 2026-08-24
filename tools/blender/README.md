@@ -1,44 +1,98 @@
-Cooking assets from the build
-=============================
+# Blender Asset Pipeline
 
-The `.blend` files under `assets/` are cooked into engine assets by opt-in CMake
-targets, one per asset:
+## Headless asset cooking
 
-    make aerin
-    make backdrop
-    make polesign
+The `.blend` files under `assets/` are cooked by opt-in CMake targets. They are
+never part of the default build:
 
-Each runs Blender headless through `export_asset.py`, which drives the
-`io_model_mdl` exporter and writes a binary model plus its meshes, skeleton,
-animations, materials and textures into the matching `game/` directory. Textures
-packed inside a `.blend` are written out alongside the ones that live loose on
-disk, so materials resolve either way.
+| Target | Mode | Output |
+| --- | --- | --- |
+| `aerin` | Model | `game/aerin/` |
+| `backdrop` | Model | `game/backdrop/` |
+| `polesign` | Model | `game/polesign/` |
+| `sponza` | Scene | `game/scenes/sponza.scn` plus models and shared resources under `game/sponza/` |
 
-CMake picks the newest installed Blender; pass `-DBLENDER_EXECUTABLE=<path>` to
-choose a different one. When no Blender is found the configure step only prints
-a message and skips these targets.
+Build one target with the configured generator:
 
-The exporters need a protobuf runtime that Blender does not bundle. Instead of
-modifying the Blender installation, the `blender-python-venv` target builds a
-virtual environment out of Blender's own interpreter under `<build>/blender-venv`
-and installs the exact runtime version the generated `*_pb2.py` modules were
-compiled for. The asset targets depend on it, so there is nothing to install by
-hand.
+```bash
+# Windows/MSYS2
+cd mingw64 && make aerin
 
-Using the exporters interactively
-=================================
+# macOS/Ninja
+cmake --build clang64 --target sponza
+```
 
-1. Build the `generate-python-protobuf-source` and `blender-python-venv` targets.
-2. Run Blender and open Preferences -&gt; File Paths -&gt; Script Directories.
-3. Add this folder.
-4. Save preferences and restart Blender.
-5. The exporters are now listed as Import-Export add-ons on the Add-ons tab; check
-   the box next to the ones you need, they should report no errors during loading.
-6. Export from File -&gt; Export.
+Each target runs Blender headless through [export_asset.py](export_asset.py).
+Model mode drives `io_model_mdl` and writes one model plus its meshes, skeleton,
+animations, materials, and textures. Scene mode drives `io_scene_scn`, writes a
+scene, and exports one model per unique mesh datablock; objects sharing that
+datablock become instances of the same model.
 
-Blender's bundled Python still has to be able to import `google.protobuf` for the
-interactive path. Add `<build>/blender-venv/Lib/site-packages` (or
-`lib/python*/site-packages` outside Windows) to `PYTHONPATH` before launching
-Blender, or install protobuf into the Blender installation yourself.
+Packed images are exported alongside loose textures. Loose textures named in
+the CMake target are copied after export so sources under `assets/` remain
+authoritative. Cooking is stamped under `<build>/blender-assets` and reruns when
+the `.blend`, a named texture, or an exporter changes.
 
-There is only export functionality for the time being, so avoid lossing the original blend file if you want to make changes to your model down the road.
+CMake chooses the newest installed Blender. Pass
+`-DBLENDER_EXECUTABLE=<path>` to select one explicitly. When Blender or its
+bundled Python cannot be found, configuration succeeds and omits the asset
+targets.
+
+## Protobuf environment
+
+The exporters use generated Python protobuf modules, but Blender does not ship
+the matching protobuf runtime. The `blender-python-venv` target creates
+`<build>/blender-venv` with Blender's own interpreter and installs the exact
+runtime required by the generated `*_pb2.py` files. Every cook target depends on
+both this environment and `generate-python-protobuf-source`.
+
+For interactive Blender sessions, expose the venv's site-packages before launch:
+
+```bash
+# Windows layout
+export PYTHONPATH="<build>/blender-venv/Lib/site-packages"
+
+# macOS/Linux layout
+export PYTHONPATH="<build>/blender-venv/lib/pythonX.Y/site-packages"
+```
+
+## Interactive addons
+
+The primary AeonEngine exporters are:
+
+| Addon | Purpose |
+| --- | --- |
+| `io_scene_scn` | Export a complete `.scn`, one model per unique mesh, instances, markers, lights, cameras, and the world environment map |
+| `io_model_mdl` | Export a `.mdl` and orchestrate mesh, material, skeleton, animation, and texture output |
+| `io_mesh_msh` | Export mesh attributes and optional per-material-slot geometry |
+| `io_material_mtl` | Convert Principled BSDF inputs to the engine's Phong material and samplers |
+| `io_skeleton_skl` | Export an armature as `.skl` |
+| `io_animation_anm` | Export Blender actions as `.anm` clips |
+| `io_collision_cln` | Export collision geometry as `.cln` |
+| `io_images` | Export all images from the current file |
+
+The addon packager also includes the lossless bone-connect utility, the Unreal
+PSK/PSA importer, and the duplicate-mesh detector. Build all zip packages with:
+
+```bash
+cmake --build <build> --target package_blender_addons
+```
+
+Packages are written to `<build>/blender_addons/`. To run directly from the
+source tree instead:
+
+1. Build `generate-python-protobuf-source` and `blender-python-venv`.
+2. In Blender, open Preferences > File Paths > Script Directories.
+3. Add this `tools/blender` directory, save preferences, and restart Blender.
+4. Enable the required addons under Preferences > Add-ons.
+5. Use File > Export for the AeonEngine formats.
+
+`io_scene_scn` requires `io_model_mdl` and its lower-level exporters. It writes
+assets under `<game root>/<scene name>/` and the scene itself under
+`<game root>/scenes/`. Hidden objects are skipped; duplicate mesh datablocks are
+instanced; Blender sun, spot, and point lights become engine light components;
+cameras retain field of view and clipping planes; empties can become marker
+components; and a world environment image becomes the scene environment map.
+
+AeonEngine formats are export-only. Keep the original `.blend` as the editable
+source for future changes.

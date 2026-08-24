@@ -8,7 +8,7 @@
 
 ![Sponza Runtime Render on Vulkan](https://www.aeongames.com/screenshots/SponzaVulkanWindows.png)
 
-AeonEngine is a cross-platform, plugin-based 3D game engine written in C++. It supports multiple rendering backends, uses Protocol Buffers for asset serialization, and integrates with Blender for content creation workflows.
+AeonEngine is a cross-platform, plugin-based 3D game engine written in C++20. It supports multiple rendering backends, uses Protocol Buffers for asset serialization, and integrates with Blender for content creation workflows.
 
 This is the 3rd iteration of the engine, the first one was started circa 1996 and was lost on a hard drive crash, the second one was started circa 2001 and still exists, but is a mess and a patchwork of collected ideas of 15 years of trying to keep up.
 
@@ -22,14 +22,19 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 
 - **Vulkan** — Primary renderer with SPIR-V shader compilation via glslang. On macOS, Vulkan is provided through MoltenVK.
 - **OpenGL 4.5** — Secondary renderer using core profile. Disabled on macOS (Apple does not support OpenGL 4.5).
-- **Minimum common denominator** design — All uniforms use Uniform Buffer Objects (UBOs) so the same shaders work identically across Vulkan, OpenGL, and potential future backends (DirectX, Metal).
-- **Compute pipelines** — A unified Pipeline asset can carry both graphics and multiple ordered compute stages. The Renderer interface exposes `Dispatch` and `Barrier`, and both backends support Shader Storage Buffer Objects (SSBOs) with SPIR-V reflection and transient storage-buffer memory pools. Skeletal meshes are skinned on the GPU in a compute pre-pass that writes posed vertices into a buffer the mesh is drawn from, removing skinning from the vertex shader.
+- **Metal 3** — Native renderer for Apple Silicon and macOS 13+, using argument buffers, bindless resources, indirect command buffers, and Metal shader interface metadata generated from the shared GLSL sources.
+- **Shared render protocol** — `Renderer::RenderScene` owns one backend-neutral frame sequence while each plugin implements its API-specific resource binding and command recording: descriptor sets on Vulkan, reflected flat bindings on OpenGL, and argument buffers on Metal.
+- **Compute pipelines** — A unified Pipeline asset can carry both graphics and multiple ordered compute stages. Every backend supports storage buffers and transient per-frame memory; skeletal meshes are skinned on the GPU in a compute pre-pass that writes posed vertices into a buffer the mesh is drawn from.
 - **Clustered Forward+ lighting** — A compute-driven light culling pipeline bins lights into view-space clusters (`cluster_build`), culls them per cluster (`light_cull`, including a cone-vs-cluster test for spot lights), and packs a global light-index list via an atomic allocator. An optional depth pre-pass marks active clusters so only visible clusters are shaded. Per-frame lights are uploaded as an SSBO (cap 4096). A cluster light-count heatmap debug view is available.
+- **GPU visibility and submission** — CPU octree/frustum culling builds the render queue, then Hi-Z compute culling rejects static instances before indirect submission. Vulkan/OpenGL use shared geometry pools; Metal compacts same-mesh batches into indirect command ranges.
+- **Shadows** — Directional, spot, and point-light shadow maps, including cached point shadows and six-face multiview rendering where the backend supports it.
+- **HDR and reflections** — Linear `RGBA16F` scene rendering, environment skybox and GGX-prefiltered image-based lighting, screen-space reflections, deferred specular composition, ACES tone mapping, and explicit sRGB output transfer.
+- **Bindless materials** — Renderer-owned texture/sampler tables and GPU material records allow indirect batches to shade multiple materials without rebinding each draw.
 
 ### Engine Subsystems
 
 | Subsystem | Description |
-|-----------|-------------|
+| ----------- | ------------- |
 | **Scene Graph** | Hierarchical node-based scene management with component system |
 | **Math** | Vector2/3/4, Quaternion, Matrix3x3/4x4, Transform, AABB, Frustum, Plane |
 | **Lighting** | Point, spot, and directional lights with radius attenuation and cone falloff; per-pixel Blinn-Phong shading; clustered Forward+ light culling. Per-frame lights collected on the Scene and uploaded to the GPU. |
@@ -41,28 +46,37 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 
 ### Components
 
-- **Camera** — First-person/third-person camera component
+- **Camera / FreeCamera / OrbitalCamera / OverTheShoulderCamera** — Fixed, free-fly, orbit, and third-person camera behavior
 - **ModelComponent** — Model rendering component (mesh + material + pipeline)
 - **PointLight / SpotLight / DirectionalLight** — Scene illumination with radius attenuation and spot-cone falloff
 - **CharacterController** — Movement/turn controller wired to the input system
 
 ### Asset Pipeline
 
-All game assets are serialized using [Protocol Buffers](https://protobuf.dev/), including meshes, materials, pipelines, skeletons, animations, scenes, and models.
+All game assets are serialized using [Protocol Buffers](https://protobuf.dev/), including meshes, materials, pipelines, skeletons, animations, scenes, and models. Shader pipelines under `game/shaders/` and cooked Blender outputs under `game/<asset>/` are generated from sources under `assets/`; edit the source shader or `.blend`, not the generated file.
 
 ### Tools
 
-- **aeontool** — Command-line utility for asset conversion (binary ↔ text), packaging, base64 encoding, and pipeline compilation.
+- **aeontool** — Command-line utility for asset conversion (binary ↔ text), packaging, base64 encoding, pipeline compilation/variants, game indexes, and character-library transcoding. See [tools/aeontool/README.md](tools/aeontool/README.md).
 - **WorldEditor** — Qt6-based GUI editor for scene and node hierarchy editing, component management, property inspection, and renderer selection.
-- **Blender Addons** — Export meshes, materials, skeletons, animations, models, collisions, images, and scenes directly from Blender to AeonEngine formats. The model exporter splits multi-material objects into one assembly per material slot, mapping each Blender Principled BSDF to the engine's Phong material.
+- **Blender Addons** — Export meshes, materials, skeletons, animations, models, collisions, images, and complete scenes directly from Blender. The scene exporter preserves instancing and creates light, camera, marker, and environment data. See [tools/blender/README.md](tools/blender/README.md).
+- **metal-shader-tool** — macOS shader cooker that turns shared GLSL/SPIR-V into validated MSL 3.0 and records Metal argument-buffer interface metadata.
 
 ### Platforms
 
 | Platform | Toolchains | Notes |
-|----------|-----------|-------|
+| ---------- | ----------- | ------- |
 | **Windows** | MSVC (Visual Studio 2022+), MSYS2 (MinGW64, Clang64, UCRT64) | Full support (Vulkan + OpenGL) |
 | **Linux** | GCC, Clang | Full support (Vulkan + OpenGL) |
-| **macOS** | Apple Clang (via Homebrew) | Vulkan only (via MoltenVK), no standalone application |
+| **macOS** | Apple Clang, Apple Silicon | Native Metal 3 and Vulkan via MoltenVK; OpenGL 4.5 is disabled |
+
+### Documentation
+
+- [Renderer architecture and backend contract](engine/renderers/README.md) - shared frame protocol, plugin anatomy, reflection/bindings, native Metal architecture, and backend validation
+- [Vulkan render pipeline](engine/renderers/vulkan/RENDER_PIPELINE.md) - frame-by-frame clustered Forward+, shadows, GPU culling, HDR, synchronization, and descriptor design
+- [Shader authoring](.github/instructions/shaders.instructions.md) - cross-backend GLSL branches, renderer variants, binding rules, and pipeline regeneration
+- [Blender asset pipeline](tools/blender/README.md) - headless cooks, interactive exporters, scene instancing, and addon packaging
+- [AeonTool command reference](tools/aeontool/README.md) - conversion, packages, pipelines, indexes, and character-library tools
 
 ---
 
@@ -145,12 +159,13 @@ pacboy -S --needed --noconfirm \
     libogg:p \
     libvorbis:p \
     cairo:p \
-    gtest:p
+    gtest:p \
+    sqlite:p
 ```
 
 Repeat for each subplatform you want to target.
 
-#### 📥 Clone and Build
+#### 📥 Clone and Build with MSYS2
 
 ```bash
 git clone https://github.com/AeonGames/AeonEngine.git
@@ -159,7 +174,7 @@ cmake -G "MSYS Makefiles" -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
-#### 🧪 Run Tests
+#### 🧪 Run MSYS2 Tests
 
 ```bash
 cd build
@@ -206,6 +221,11 @@ sudo apt-get install -y \
     freeglut3-dev \
     mesa-common-dev \
     libcairo2-dev \
+    libpango1.0-dev \
+    libxml2-dev \
+    libjpeg-dev \
+    libsqlite3-dev \
+    sqlite3 \
     libprotobuf-dev \
     protobuf-compiler \
     mesa-vulkan-drivers \
@@ -219,10 +239,12 @@ sudo apt-get install -y \
     glslang-dev \
     glslang-tools \
     libglx-mesa0 \
-    vulkan-validationlayers
+    vulkan-validationlayers \
+    flex \
+    bison
 ```
 
-#### 📥 Clone and Build
+#### 📥 Clone and Build on Linux
 
 With GCC:
 
@@ -240,7 +262,7 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_TOOLCHAIN_FILE=cmake/clang-too
 cmake --build build
 ```
 
-#### 🧪 Run Tests
+#### 🧪 Run Linux Tests
 
 ```bash
 cd build
@@ -257,7 +279,7 @@ Dependency management uses [Microsoft's vcpkg](https://github.com/Microsoft/vcpk
 2. **Vulkan SDK** — Download and install from [LunarG](https://vulkan.lunarg.com/sdk/home).
 3. **Git for Windows** — Download and install from [git-scm.com](https://git-scm.com/downloads/win).
 
-#### 📥 Clone and Build
+#### 📥 Clone and Build with Visual Studio
 
 Open a VS Developer Command Prompt or Developer PowerShell:
 
@@ -272,7 +294,10 @@ Or open the generated `.sln` file in Visual Studio and build from the IDE.
 
 ### 🍎 macOS
 
-> **Note:** OpenGL 4.5 is not supported on macOS. Only the Vulkan renderer (via MoltenVK) is available. The standalone application is also disabled on macOS.
+> **Note:** The native Metal renderer requires Apple Silicon, macOS 13+, argument-buffer tier 2,
+> and Apple's separately downloaded Metal compiler. OpenGL 4.5 is not supported on macOS;
+> Vulkan remains available through MoltenVK. The example below enables AeonGUI, which raises the
+> deployment target to macOS 13.3+.
 
 #### 🍺 Install Dependencies with Homebrew
 
@@ -281,32 +306,60 @@ Make sure [Homebrew](https://brew.sh/) is installed, then:
 ```bash
 brew update
 brew install \
+    flex \
+    bison \
+    gnu-sed \
     cmake \
-    make \
+    ninja \
     protobuf \
     zlib \
     libpng \
     glslang \
+    spirv-cross \
     portaudio \
     libogg \
     libvorbis \
     cairo \
+    pango \
+    libxml2 \
+    libjpeg-turbo \
     googletest \
     qt6 \
     pkg-config \
-    molten-vk
+    molten-vk \
+    spirv-headers \
+    spirv-tools \
+    vulkan-extensionlayer \
+    vulkan-headers \
+    vulkan-loader \
+    vulkan-profiles \
+    vulkan-tools \
+    vulkan-utility-libraries \
+    vulkan-validationlayers \
+    vulkan-volk
 ```
 
-#### 📥 Clone and Build
+Install Apple's Metal compiler once through Xcode:
+
+```bash
+xcodebuild -downloadComponent MetalToolchain
+```
+
+#### 📥 Clone and Build on macOS
 
 ```bash
 git clone https://github.com/AeonGames/AeonEngine.git
 cd AeonEngine
-cmake -B build -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+export PATH="$(brew --prefix bison)/bin:$PATH"
+cmake -G Ninja -B build \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DUSE_AEONGUI=ON \
+    -DBUILD_METAL_RENDERER=ON \
+    -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3
+cmake --build build --parallel "$(sysctl -n hw.ncpu)"
 ```
 
-#### 🧪 Run Tests
+#### 🧪 Run macOS Tests
 
 ```bash
 cd build
@@ -315,13 +368,55 @@ ctest --output-on-failure
 
 ---
 
+## ▶️ Running
+
+Run from the repository root because [game/config](game/config) and package paths are relative to it:
+
+```bash
+# Windows/MSYS2
+PATH="$PWD/build/bin:$PATH" ./build/bin/game.exe -r Vulkan -s scenes/main.txt
+
+# Linux
+PATH="$PWD/build/bin:$PATH" ./build/bin/game -r OpenGL -s scenes/main.txt
+
+# Apple Silicon/macOS
+PATH="$PWD/build/bin:$PATH" ./build/bin/game -r Metal -s scenes/main.txt
+```
+
+Renderer names are exactly `OpenGL`, `Vulkan`, and `Metal` where built. Use `-f` for fullscreen,
+`-p <file.png>` to capture a frame, and `-n <frame>` to choose the capture frame (default: 30).
+
+## 🔄 Generated Shaders and Blender Assets
+
+Sources under [assets/shadercode](assets/shadercode) generate `game/shaders/*.txt` and `.pln` files:
+
+```bash
+cmake --build build --target shader-pipelines
+```
+
+When Metal is enabled, this target also runs `metal-shader-tool`; it requires `glslangValidator`,
+`spirv-cross`, the macOS SDK, and Apple's downloaded Metal compiler.
+
+Blender assets are opt-in because cooking can be expensive. CMake exposes `aerin`, `backdrop`,
+`polesign`, and `sponza` targets when Blender is available:
+
+```bash
+cmake --build build --target aerin
+```
+
+The `sponza` target exports a full scene and one model per unique mesh datablock. See the
+[Blender asset pipeline](tools/blender/README.md) for setup and output details.
+
+---
+
 ## ⚙️ CMake Options
 
 | Option | Default | Description |
-|--------|---------|-------------|
+| -------- | --------- | ------------- |
 | `BUILD_VULKAN_RENDERER` | `ON` | Build the Vulkan renderer plugin |
 | `BUILD_OPENGL_RENDERER` | `ON` | Build the OpenGL 4.5 renderer plugin (forced `OFF` on macOS) |
-| `BUILD_STANDALONE_APPLICATION` | `ON` | Build the standalone application/viewer (forced `OFF` on macOS) |
+| `BUILD_METAL_RENDERER` | Apple Silicon macOS: `ON`; otherwise: `OFF` | Build the native Metal 3 renderer plugin (requires macOS 13+, Apple Silicon, and argument-buffer tier 2) |
+| `BUILD_STANDALONE_APPLICATION` | `ON` | Build the standalone application/viewer |
 | `USE_AEONGUI` | `OFF` | Enable AeonGUI library for in-engine GUI overlays |
 | `USE_CLANG_TIDY` | `OFF` | Run clang-tidy static analysis during build (requires clang-tidy) |
 | `PROXY` | (empty) | Proxy server URL for network downloads during build |
@@ -347,7 +442,7 @@ python3 -m pip install autopep8 cmake-format
 
 ## 📁 Project Structure
 
-```
+```text
 AeonEngine/
 ├── application/     # Standalone game launcher/viewer
 ├── assets/          # Bundled demo assets (Aerin model, Sponza scene)
@@ -355,10 +450,12 @@ AeonEngine/
 ├── engine/          # Core engine library
 │   ├── components/  #   Camera, ModelComponent, PointLight
 │   ├── core/        #   Scene, Node, Renderer, Pipeline, Material, Mesh, etc.
+│   ├── databases/   #   Database plugins (SQLite)
 │   ├── gui/         #   AeonGUI integration (optional)
-│   ├── images/      #   Image loaders (PNG)
+│   ├── images/      #   PNG and Radiance HDR image plugins
+│   ├── input/       #   Desktop input plugin
 │   ├── math/        #   Vector, Matrix, Quaternion, Transform, AABB, Frustum
-│   ├── renderers/   #   Vulkan and OpenGL renderer plugins
+│   ├── renderers/   #   Vulkan, OpenGL, and Metal renderer plugins
 │   └── sound/       #   PortAudio + Ogg Vorbis audio
 ├── game/            # Game data (scenes, shaders, materials, meshes, models)
 ├── include/         # Public engine headers (aeongames/)
@@ -367,6 +464,7 @@ AeonEngine/
 ├── tools/
 │   ├── aeontool/    #   CLI asset conversion and packaging tool
 │   ├── blender/     #   Blender exporter addons
+│   ├── metalshader/ #   GLSL/SPIR-V reflection and Metal shader cooker
 │   └── worldeditor/ #   Qt6 scene editor GUI
 └── vcpkg-port/      # Custom vcpkg port overlays
 ```

@@ -49,9 +49,10 @@ specular composite**:
   ([MemoryPoolBuffer.hpp](../../../include/aeongames/MemoryPoolBuffer.hpp)) so the
   CPU does not stall on the GPU every frame.
 
-The same **per‑frame protocol** drives both the Vulkan and OpenGL backends; it is
-written once in [engine/core/Renderer.cpp](../../core/Renderer.cpp) as an ordered
-sequence of primitive steps that each backend implements.
+The same **per‑frame protocol** drives the Vulkan, OpenGL and native Metal
+backends; it is written once in
+[engine/core/Renderer.cpp](../../core/Renderer.cpp) as an ordered sequence of
+primitive steps that each backend implements.
 
 ---
 
@@ -193,12 +194,14 @@ flowchart TD
 ## 4. Step‑by‑step frame walkthrough
 
 ### Step 0 — CPU: scene update (before the renderer sees anything)
+
 `Scene.Update(dt)` runs a **read‑write** depth‑first sweep that advances animation,
 interpolates skeletons, and computes world transforms. A separate **read‑only**
 render sweep later collects draw items. (These two sweeps are a deliberate engine
 invariant: Update mutates, Render only reads.)
 
 ### Step 1 — `BeginFrame`
+
 [VulkanWindow.cpp](VulkanWindow.cpp) `BeginFrame`:
 
 1. Bail out when the device is lost — `VulkanRenderer` rebuilds it at the top of a
@@ -230,6 +233,7 @@ A `VK_ERROR_DEVICE_LOST` from any of these calls (or from submit/present) routes
 while `IsDeviceLost()` holds, so nothing is recorded against dead handles.
 
 ### Step 2 — Compute skinning pre‑pass
+
 For each node, `Node::Skin` may call `VulkanWindow::Skin`, which:
 
 - binds the skinning compute pipeline (stage 0),
@@ -244,6 +248,7 @@ The resulting `SkinnedVertices` accessor is threaded through the render queue an
 bound as the **vertex input** in place of the rest pose during the geometry passes.
 
 ### Step 3 — `BeginRender` → cluster build
+
 `VulkanWindow::BeginRender(lighting)`:
 
 - Enables active‑cluster culling for the frame and refreshes `ClusterParams`.
@@ -259,6 +264,7 @@ zeroed light buffers (so the clustered fragment shader safely reads zero lights)
 and opens the HDR pass directly.
 
 ### Step 4 — Shadow passes (only when lighting is present)
+
 All shadow passes render depth from a light's point of view into a dedicated
 shadow map, culling the render queue to the **light's** frustum (not the camera's).
 Order matters: **spot → point → directional**, because every shadow depth pass uses
@@ -295,11 +301,13 @@ The renderer‑owned `shadow_depth` (and multiview `point_shadow_depth`) pipelin
 **substitute** each item's own pipeline/material during these passes.
 
 ### Step 5 — Camera render queue
+
 `Scene::BuildRenderQueue(cameraFrustum)` collects every camera‑visible draw into a
 list of `RenderItem`s, sorted so that runs of identical geometry (same mesh +
 pipeline + material) are adjacent and can be merged into instanced draws.
 
 ### Step 6 — Depth pre‑pass (cluster marking)
+
 `SubmitRenderQueue(DepthPrePass)` replays the camera queue with the `cluster_mark`
 pipeline substituted. Its fragment shader computes the cluster for each covered
 pixel and sets that cluster's `ClusterActive` flag. Only `Matrices`,
@@ -316,6 +324,7 @@ The same path serves the shadow passes.
 The pre‑pass depth attachment `STORE`s, which is what makes Steps 7 and 8 possible.
 
 ### Step 7 — `EndDepthPrePass` → Hi‑Z + light cull
+
 `VulkanWindow::EndDepthPrePass`:
 
 - ends the depth pre‑pass render pass,
@@ -333,6 +342,7 @@ It deliberately does **not** reopen a render pass: the shading GPU cull in Step 
 has to run outside one.
 
 ### Step 8 — Shading pass (GPU‑driven clustered forward)
+
 `SubmitRenderQueue(Shading)` runs in three phases:
 
 1. **GPU cull, outside any render pass.** Each contiguous run of pooled items
@@ -361,6 +371,7 @@ the composite (Step 9) so it can mix the prefiltered cube map with SSR without
 double counting; only the diffuse SH irradiance is added here.
 
 ### Step 9 — `EndRender` → skybox, composite, present
+
 `VulkanWindow::EndRender`:
 
 1. If an environment map is set, draw the **skybox** into the still‑open scene
@@ -482,9 +493,10 @@ builds the matching aggregate descriptor sets, aliasing the same buffers and ima
 views the individual per‑resource sets use, so pipelines that still declare one set
 per resource are unaffected.
 
-### Shadow samplers are immutable
-The three shadow maps sample with hardware comparison. Metal only supports
-comparison samplers baked into the shader
+### MoltenVK shadow samplers are immutable
+
+The three shadow maps sample with hardware comparison. Metal through MoltenVK
+only supports comparison samplers baked into the shader
 (`VkPhysicalDevicePortabilitySubsetFeaturesKHR::mutableComparisonSamplers` is false
 on MoltenVK), which is what an **immutable sampler** compiles to. The comparison
 sampler is therefore owned by `VulkanRenderer` (device scope, not per window) and
@@ -493,7 +505,12 @@ ones in `VulkanWindow` and the reflected ones in `VulkanPipeline`. Descriptor wr
 leave `VkDescriptorImageInfo::sampler` null. Immutable samplers are part of a
 layout's identity, so they are folded into the descriptor‑set‑layout cache key.
 
+This is a Vulkan portability constraint for the MoltenVK path. The native Metal
+backend creates its comparison samplers directly and consumes the separately
+generated Metal shader interface metadata.
+
 ### Bindless resources
+
 `VulkanRenderer::InitializeBindless` creates one **global** descriptor set holding a
 descriptor‑indexed combined‑image‑sampler array (capacity from `RendererSettings`,
 clamped by the device's descriptor‑indexing limits) plus the material storage
@@ -509,6 +526,7 @@ shade meshes with different materials.
 > `VK_ERROR_DEVICE_LOST`.
 
 ### GPU‑driven draws
+
 Static, unskinned, indexed meshes are uploaded into **shared geometry pools** — one
 vertex pool per vertex stride plus a single uint32 index pool — so many meshes share
 one bindable buffer pair and differ only by `baseVertex` / `firstIndex`. That is the
@@ -516,6 +534,7 @@ precondition for the whole shading pass of a pipeline group collapsing into a si
 `vkCmdDrawIndexedIndirectCount` fed by `cull.comp`.
 
 ### Object transforms: push constant vs. instance SSBO
+
 `RenderCommon` chooses per draw:
 
 - **1 matrix + pipeline has a model push‑constant** → `vkCmdPushConstants` fast
@@ -573,7 +592,7 @@ From [assets/shadercode/](../../../assets/shadercode/):
 | `tonemap.*` | Deferred specular composite + SSR + HDR → sRGB resolve. |
 | `debug_grid.*`, `solid_color.*`, `plain_red.*` | Editor/debug geometry. |
 
-Pipelines carry **per‑renderer variants** (`Vulkan` vs `OpenGL`) and per‑render‑pass
+Pipelines carry **per‑renderer variants** (`Vulkan`, `OpenGL`, `Metal`) and per‑render‑pass
 variants (the depth pre‑pass, early‑Z shading and multiview point‑shadow passes each
 need their own pipeline object). Every graphics pipeline enables dynamic viewport,
 scissor, primitive topology and depth bias.
@@ -584,10 +603,10 @@ scissor, primitive topology and depth bias.
 
 ### What is genuinely strong
 
-- **One protocol, two backends.** Hoisting the frame sequence into
+- **One protocol, three backends.** Hoisting the frame sequence into
   `Renderer::RenderScene` and expressing it as small primitives (`BeginRender`,
-  `SubmitRenderQueue`, `EndDepthPrePass`, …) means OpenGL and Vulkan render through
-  *identical* logic. This is a well‑judged seam that prevents the two backends from
+  `SubmitRenderQueue`, `EndDepthPrePass`, …) means OpenGL, Vulkan and Metal render
+  through *identical* logic. This is a well‑judged seam that prevents the backends from
   drifting apart, which is a common failure mode in multi‑API engines.
 - **Name‑hashed, reflection‑driven descriptor binding.** Binding engine resources by
   `CRC32(block name)` resolved through SPIR‑V reflection — instead of hardcoded
