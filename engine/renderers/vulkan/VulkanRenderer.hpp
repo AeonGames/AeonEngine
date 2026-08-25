@@ -49,7 +49,7 @@ namespace AeonGames
     {
     public:
         /// @brief Construct from a native window handle.
-        VulkanRenderer ( void* aWindow, const RendererSettings& aSettings = {} );
+        VulkanRenderer ( void* aWindow, const RendererSettings& aSettings );
         ~VulkanRenderer() final;
         /// @brief Registered renderer name ("Vulkan"); selects per-renderer
         ///        pipeline shader variants.

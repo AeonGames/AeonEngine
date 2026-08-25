@@ -22,17 +22,6 @@ limitations under the License.
 #include <algorithm>
 #include "aeongames/StringId.hpp"
 
-/** @brief Macro that declares factory functions for a given type.
-    @param X The type to create factory functions for. */
-#define FactoryDefinition(X,...) \
-    std::unique_ptr<X> Construct##X ( uint32_t aIdentifier,##__VA_ARGS__);\
-    std::unique_ptr<X> Construct##X ( const std::string& aIdentifier,##__VA_ARGS__ );\
-    std::unique_ptr<X> Construct##X ( const StringId& aIdentifier,##__VA_ARGS__ );\
-    bool Register##X##Constructor ( const StringId& aIdentifier, const std::function<std::unique_ptr<X>(__VA_ARGS__) >& aConstructor ); \
-    bool Unregister##X##Constructor ( const StringId& aIdentifier );\
-    void Enumerate##X##Constructors ( const std::function<bool ( const StringId& ) >& aEnumerator ); \
-    void std::vector<std::string> Get##X##ConstructorNames();
-
 /** @brief Macro that implements factory functions for a zero-argument constructor type.
     @param X The type to implement factory functions for. */
 #define FactoryImplementation(X) \

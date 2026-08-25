@@ -53,7 +53,7 @@ may remain in a build tree configured with Ninja, so trust `CMAKE_GENERATOR` in 
 | [engine/core](engine/core) | Engine implementation (Scene, Node, Resource, Octree, Package…) |
 | [engine/components](engine/components) | Components + their factory registration in [Plugin.cpp](engine/components/Plugin.cpp) |
 | [engine/renderers](engine/renderers) | `opengl/`, `vulkan/`, and Apple-only `metal/` backends, each built as a self-contained plugin |
-| [engine/include/Factory.h](engine/include/Factory.h) | `FactoryDefinition` / `FactoryImplementation` macros behind every `Construct*`/`Register*Constructor` |
+| [engine/include/Factory.h](engine/include/Factory.h) | `Factory<T, ...>` registry and implementation macros behind named `Construct*`/`Register*Constructor` APIs |
 | [proto](proto) | `.proto` schemas; every asset format is a protobuf message |
 | [assets/shadercode](assets/shadercode) | GLSL sources (the shipped `game/shaders/*.txt` are generated) |
 | [tools/aeontool](tools/aeontool) | CLI: `convert`, `pack`, `base64`, `pipeline` |

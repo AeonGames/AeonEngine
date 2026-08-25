@@ -35,14 +35,16 @@ namespace AeonGames
 {
     Renderer::~Renderer() = default;
 
+    using RendererFactory = Factory<Renderer, void*, const RendererSettings&>;
+
     std::unique_ptr<Renderer> ConstructRenderer ( uint32_t aIdentifier, void* aWindow, const RendererSettings& aSettings )
     {
-        return Factory<Renderer, void*, RendererSettings>::Construct ( aIdentifier, aWindow, aSettings );
+        return RendererFactory::Construct ( aIdentifier, aWindow, aSettings );
     }
 
     std::unique_ptr<Renderer> ConstructRenderer ( const std::string& aIdentifier, void* aWindow, const RendererSettings& aSettings )
     {
-        return Factory<Renderer, void*, RendererSettings>::Construct ( aIdentifier, aWindow, aSettings );
+        return RendererFactory::Construct ( aIdentifier, aWindow, aSettings );
     }
 
     std::unique_ptr<Renderer> ConstructRenderer ( const StringId& aIdentifier, void* aWindow, const RendererSettings& aSettings )
@@ -50,15 +52,25 @@ namespace AeonGames
         return ConstructRenderer ( aIdentifier.GetId(), aWindow, aSettings );
     }
 
-    bool RegisterRendererConstructorWithSettings ( const StringId& aIdentifier,
-            const std::function<std::unique_ptr<Renderer> ( void*, RendererSettings ) >& aConstructor )
+    bool RegisterRendererConstructor ( const StringId& aIdentifier,
+                                       const std::function<std::unique_ptr<Renderer> ( void*, const RendererSettings& ) >& aConstructor )
     {
-        return Factory<Renderer, void*, RendererSettings>::RegisterConstructor ( aIdentifier, aConstructor );
+        return RendererFactory::RegisterConstructor ( aIdentifier, aConstructor );
     }
 
-    bool UnregisterRendererConstructorWithSettings ( const StringId& aIdentifier )
+    bool UnregisterRendererConstructor ( const StringId& aIdentifier )
     {
-        return Factory<Renderer, void*, RendererSettings>::UnregisterConstructor ( aIdentifier );
+        return RendererFactory::UnregisterConstructor ( aIdentifier );
+    }
+
+    void EnumerateRendererConstructors ( const std::function<bool ( const StringId& ) >& aEnumerator )
+    {
+        RendererFactory::EnumerateConstructors ( aEnumerator );
+    }
+
+    std::vector<std::string> GetRendererConstructorNames()
+    {
+        return RendererFactory::GetConstructorNames();
     }
 
     void Renderer::RenderScene ( void* aWindowId, const Scene& aScene, const GuiOverlay* aGuiOverlay )
@@ -354,16 +366,16 @@ namespace AeonGames
         // Fast path: every type enabled, no filtering needed.
         constexpr uint32_t all_types =
             ( 1u << static_cast<uint32_t> ( LightType::Point ) ) |
-        ( 1u << static_cast<uint32_t> ( LightType::Spot ) ) |
-        ( 1u << static_cast<uint32_t> ( LightType::Directional ) );
+            ( 1u << static_cast<uint32_t> ( LightType::Spot ) ) |
+            ( 1u << static_cast<uint32_t> ( LightType::Directional ) );
         if ( ( mLightTypeMask & all_types ) == all_types )
-    {
-        return aLights;
-    }
-    mFilteredLights.clear();
-for ( const GpuLight& light : aLights )
-    {
-        if ( mLightTypeMask & ( 1u << light.type ) )
+        {
+            return aLights;
+        }
+        mFilteredLights.clear();
+        for ( const GpuLight& light : aLights )
+        {
+            if ( mLightTypeMask & ( 1u << light.type ) )
             {
                 mFilteredLights.push_back ( light );
             }
@@ -480,6 +492,4 @@ for ( const GpuLight& light : aLights )
         }
     }
 
-    /// @brief Factory implementation for Renderer with a window argument.
-    FactoryImplementation1Arg ( Renderer, void* );
 }

@@ -27,23 +27,16 @@ extern "C"
     bool VulkanStartUp()
     {
         glslang::InitializeProcess();
-        const bool legacy = AeonGames::RegisterRendererConstructor ( "Vulkan",
-                            [] ( void* aWindow )
-        {
-            return std::make_unique<AeonGames::VulkanRenderer> ( aWindow );
-        } );
-        const bool configurable = AeonGames::RegisterRendererConstructorWithSettings ( "Vulkan",
-                                  [] ( void* aWindow, AeonGames::RendererSettings aSettings )
+        return AeonGames::RegisterRendererConstructor ( "Vulkan",
+                [] ( void* aWindow, const AeonGames::RendererSettings & aSettings )
         {
             return std::make_unique<AeonGames::VulkanRenderer> ( aWindow, aSettings );
         } );
-        return legacy && configurable;
     }
 
     void VulkanShutdown()
     {
         AeonGames::UnregisterRendererConstructor ( "Vulkan" );
-        AeonGames::UnregisterRendererConstructorWithSettings ( "Vulkan" );
         glslang::FinalizeProcess();
     }
 

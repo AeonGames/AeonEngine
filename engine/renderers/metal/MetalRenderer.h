@@ -25,7 +25,7 @@ namespace AeonGames
     class MetalRenderer final : public Renderer
     {
     public:
-        MetalRenderer ( void* aWindow, const RendererSettings& aSettings = {} );
+        MetalRenderer ( void* aWindow, const RendererSettings& aSettings );
         ~MetalRenderer() final;
         MetalRenderer ( const MetalRenderer& ) = delete;
         MetalRenderer& operator= ( const MetalRenderer& ) = delete;

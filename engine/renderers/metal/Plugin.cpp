@@ -24,23 +24,16 @@ extern "C"
 {
     bool MetalStartUp()
     {
-        const bool legacy = AeonGames::RegisterRendererConstructor ( "Metal",
-            [] ( void* aWindow )
-        {
-            return std::make_unique<AeonGames::MetalRenderer> ( aWindow );
-        } );
-        const bool configurable = AeonGames::RegisterRendererConstructorWithSettings ( "Metal",
-            [] ( void* aWindow, AeonGames::RendererSettings aSettings )
+        return AeonGames::RegisterRendererConstructor ( "Metal",
+                [] ( void* aWindow, const AeonGames::RendererSettings & aSettings )
         {
             return std::make_unique<AeonGames::MetalRenderer> ( aWindow, aSettings );
         } );
-        return legacy && configurable;
     }
 
     void MetalShutdown()
     {
         AeonGames::UnregisterRendererConstructor ( "Metal" );
-        AeonGames::UnregisterRendererConstructorWithSettings ( "Metal" );
     }
 
     PLUGIN PluginModuleInterface PMI =

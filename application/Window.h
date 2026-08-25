@@ -39,7 +39,7 @@ namespace AeonGames
     {
     public:
         Window ( const std::string& aRendererName, int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight,
-                 bool aFullScreen, const RendererSettings& aRendererSettings = {} );
+                 bool aFullScreen, const RendererSettings& aRendererSettings );
         ~Window();
         uint32_t Resize ( uint32_t aWidth, uint32_t aHeight );
         void SetTitle ( const std::string& aTitle );

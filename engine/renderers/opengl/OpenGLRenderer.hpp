@@ -50,7 +50,7 @@ namespace AeonGames
     {
     public:
         /// @brief Construct from a native window handle.
-        OpenGLRenderer ( void* aWindow, const RendererSettings& aSettings = {} );
+        OpenGLRenderer ( void* aWindow, const RendererSettings& aSettings );
         ~OpenGLRenderer();
         /// @brief Registered renderer name ("OpenGL"); selects per-renderer
         ///        pipeline shader variants.

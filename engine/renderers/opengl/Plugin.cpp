@@ -25,23 +25,16 @@ extern "C"
 {
     bool OpenGLStartUp()
     {
-        const bool legacy = AeonGames::RegisterRendererConstructor ( "OpenGL",
-                            [] ( void* aWindow )
-        {
-            return std::make_unique<AeonGames::OpenGLRenderer> ( aWindow );
-        } );
-        const bool configurable = AeonGames::RegisterRendererConstructorWithSettings ( "OpenGL",
-                                  [] ( void* aWindow, AeonGames::RendererSettings aSettings )
+        return AeonGames::RegisterRendererConstructor ( "OpenGL",
+                [] ( void* aWindow, const AeonGames::RendererSettings & aSettings )
         {
             return std::make_unique<AeonGames::OpenGLRenderer> ( aWindow, aSettings );
         } );
-        return legacy && configurable;
     }
 
     void OpenGLShutdown()
     {
         AeonGames::UnregisterRendererConstructor ( "OpenGL" );
-        AeonGames::UnregisterRendererConstructorWithSettings ( "OpenGL" );
     }
 
     PLUGIN PluginModuleInterface PMI =

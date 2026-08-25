@@ -56,39 +56,20 @@ application loop, because compute work must be recorded before the first render 
 ## 2. Plugin anatomy
 
 A backend is a `SHARED` library exporting a single `PluginModuleInterface PMI` (see
-[Plugin.hpp](../../include/aeongames/Plugin.hpp)); `StartUp` registers the constructors and
-`Shutdown` unregisters them:
+[Plugin.hpp](../../include/aeongames/Plugin.hpp)). Follow the concrete
+[Vulkan](vulkan/Plugin.cpp), [OpenGL](opengl/Plugin.cpp), or [Metal](metal/Plugin.cpp) entry point:
+`StartUp` returns the result of registration, and `Shutdown` unregisters the same name.
 
 ```cpp
-extern "C"
-{
-    bool MyStartUp()
-    {
-        const bool legacy = AeonGames::RegisterRendererConstructor ( "MyAPI",
-            [] ( void* aWindow ) { return std::make_unique<MyRenderer> ( aWindow ); } );
-        const bool configurable = AeonGames::RegisterRendererConstructorWithSettings ( "MyAPI",
-            [] ( void* aWindow, AeonGames::RendererSettings aSettings )
-        { return std::make_unique<MyRenderer> ( aWindow, aSettings ); } );
-        return legacy && configurable;
-    }
-
-    void MyShutdown()
-    {
-        AeonGames::UnregisterRendererConstructor ( "MyAPI" );
-        AeonGames::UnregisterRendererConstructorWithSettings ( "MyAPI" );
-    }
-
-    PLUGIN PluginModuleInterface PMI
-    {
-        "MyAPI Renderer", "Implements a MyAPI Renderer", MyStartUp, MyShutdown
-    };
-}
+AeonGames::RegisterRendererConstructor ( "MyAPI", constructor );
+AeonGames::UnregisterRendererConstructor ( "MyAPI" );
 ```
 
 - Registration is keyed by `StringId` (CRC32), and `Renderer::GetName()` **must return the same
   string** — it is what selects per-renderer shader variants at pipeline load.
-- Register **both** constructors: the settings-less overload is the legacy path, the engine prefers
-  the one taking `RendererSettings`.
+- Register one settings-aware constructor with the callback signature
+  `std::unique_ptr<Renderer> ( void*, const RendererSettings& )`. Every `ConstructRenderer` call
+  forwards its caller-supplied settings to that callback.
 - CMake: `add_library(<Target> SHARED …)`, then
   `set_property(GLOBAL APPEND PROPERTY PLUGINS <Target>)`, plus `PREFIX ""` under MinGW/MSYS so the
   DLL name matches the config entry. Gate the `add_subdirectory` behind a `BUILD_<API>_RENDERER`
@@ -215,11 +196,29 @@ Compute stages are **ordered**; index 0 is dispatched first (`lighting.0.comp` b
 
 ## 6. Runtime settings
 
-`ConstructRenderer` (and the `Window` constructor) pass a `RendererSettings` built by
-`GetRendererSettings(name)` from the `Renderer` block of the configuration file
-([configuration.proto](../../proto/configuration.proto)). The backend-agnostic fields — bindless
-capacities, uniform/storage pool sizes, shadow map resolutions, prefiltered environment size — are
-honoured by every backend, and an omitted field keeps the compiled-in default.
+`ConstructRenderer` requires a platform-native window handle and explicit `RendererSettings`. The
+registered plugin must already be loaded; an unknown renderer name returns `nullptr`. To use the
+compiled defaults, value-initialize the settings:
+
+```cpp
+RendererSettings settings{};
+std::unique_ptr<Renderer> renderer = ConstructRenderer ( renderer_name, native_window, settings );
+```
+
+To apply the `Renderer` block from the configuration file
+([configuration.proto](../../proto/configuration.proto)), build the settings explicitly and pass
+them into the same factory:
+
+```cpp
+RendererSettings settings = GetRendererSettings ( renderer_name );
+std::unique_ptr<Renderer> renderer = ConstructRenderer ( renderer_name, native_window, settings );
+```
+
+The application follows the latter path: it passes `GetRendererSettings(name)` to the `Window`
+constructor, which forwards the settings to `ConstructRenderer`. The backend-agnostic fields —
+bindless capacities, uniform/storage pool sizes, shadow map resolutions, prefiltered environment
+size — are honoured by every backend, and a field omitted from the configuration keeps its
+compiled-in default.
 
 Knobs only one backend needs go in the per-plugin property bag rather than the shared struct:
 
@@ -229,7 +228,7 @@ size_t capacity = GetSettings().GetPluginProperty ( "UniformPoolInitialCapacity"
 
 The configuration addresses those generically by plugin name plus property name, so the engine never
 hardcodes a backend-specific key. Take the settings in the constructor
-(`MyRenderer ( void* aWindow, const RendererSettings& aSettings = {} )`) and expose them through
+(`MyRenderer ( void* aWindow, const RendererSettings& aSettings )`) and expose them through
 `GetSettings()`.
 
 ## 7. Native Metal architecture
