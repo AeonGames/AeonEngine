@@ -76,10 +76,9 @@ void main()
 {
       // Depth-only. The per-fragment cluster-active scatter under this pass's
       // full overdraw was ~95% of the pre-pass cost, so it is no longer done
-      // here: OpenGL marks clusters in a compute pass over the finished depth
-      // buffer (cluster_mark_comp), and Vulkan light-culls every cluster instead
-      // (ClusterParams.screen.w = 0), which is correct but skips the empty-cluster
-      // optimisation until the compute mark is ported.
+      // here. Vulkan and OpenGL currently light-cull every cluster
+      // (ClusterParams.screen.w = 0), preserving illumination while the
+      // depth-derived compute mark remains an experimental path.
       FragColor = vec4 ( 0.0 );
       GNormalRough = vec4 ( 0.0 );
       GSpecWeight = vec4 ( 0.0 );

@@ -20,10 +20,10 @@ specular composite**:
 - **Compute light clustering** — the view frustum is diced into a 3D grid of
   clusters; a compute pass culls up to 4096 lights into per‑cluster lists so the
   fragment shader only shades the lights that touch its cluster.
-- **A depth pre‑pass that marks active clusters** — only clusters that actually
-  contain visible geometry are considered by light culling. Its depth is *kept*:
-  the shading pass loads it for early‑Z and a compute reduce turns it into a Hi‑Z
-  pyramid.
+- **A retained depth pre‑pass** — the shading pass loads its depth for early‑Z,
+  and a compute reduce turns it into a Hi‑Z pyramid. Active-cluster flags remain
+  in the buffer ABI, but light culling currently processes every cluster for
+  correctness across Vulkan and OpenGL.
 - **GPU‑driven culling for static geometry** — static indexed meshes live in
   shared vertex/index pools; `cull.comp` frustum‑ and Hi‑Z‑occlusion‑culls their
   instances into a compacted command list drawn with a single
@@ -180,14 +180,13 @@ flowchart TD
     style B fill:#fd6,stroke:#960,color:#000
 ```
 
-> **What the "depth pre‑pass" is for.** It is primarily a *cluster‑marking* pass —
-> its fragment shader sets the per‑cluster `ClusterActive` flag so light culling can
-> skip clusters with no visible geometry. Its depth is no longer thrown away,
-> though: the attachment `STORE`s, the shading pass is a second, render‑pass‑
+> **What the "depth pre‑pass" is for.** Its attachment `STORE`s, and the shading
+> pass is a second, render‑pass‑
 > compatible pass whose depth attachment `LOAD`s it (so shading gets **early‑Z**
 > rejection), and a compute reduce turns it into the **Hi‑Z pyramid** the shading
-> cull tests occlusion against. Colour still clears for shading — the pre‑pass only
-> wrote throwaway sentinels.
+> cull tests occlusion against. Colour still clears for shading. The former
+> active-cluster mark is disabled because the depth-derived OpenGL path
+> under-counted visible Sponza fragments and dropped their point/spot lighting.
 
 ---
 
@@ -251,11 +250,11 @@ bound as the **vertex input** in place of the rest pose during the geometry pass
 
 `VulkanWindow::BeginRender(lighting)`:
 
-- Enables active‑cluster culling for the frame and refreshes `ClusterParams`.
-- Lazily loads the renderer‑owned `shaders/cluster_mark` pipeline.
+- Refreshes `ClusterParams` with active-cluster skipping disabled.
+- Lazily loads the renderer‑owned depth pre-pass `shaders/cluster_mark` pipeline.
 - `DispatchClusterBuild` (compute **stage 0**): allocates the five per‑frame
   clustering SSBOs and builds per‑cluster view‑space **AABBs**, zeroes the global
-  light‑index **counter**, and clears the per‑cluster **active flags**.
+  light‑index **counter**, and clears the reserved per‑cluster **active flags**.
 - `Barrier`, then `BeginRenderPass` opens the HDR pass for the upcoming depth
   pre‑pass.
 
@@ -306,12 +305,11 @@ The renderer‑owned `shadow_depth` (and multiview `point_shadow_depth`) pipelin
 list of `RenderItem`s, sorted so that runs of identical geometry (same mesh +
 pipeline + material) are adjacent and can be merged into instanced draws.
 
-### Step 6 — Depth pre‑pass (cluster marking)
+### Step 6 — Depth pre‑pass
 
 `SubmitRenderQueue(DepthPrePass)` replays the camera queue with the `cluster_mark`
-pipeline substituted. Its fragment shader computes the cluster for each covered
-pixel and sets that cluster's `ClusterActive` flag. Only `Matrices`,
-`ClusterParams`, `ClusterActive` (and the per‑object matrices) are bound.
+pipeline substituted. It writes depth only; the `ClusterActive` storage remains
+reserved in the shared pipeline ABI but is not used to skip light-cull work.
 
 Because the queue is sorted by `(pipeline, material, mesh)`, contiguous runs of
 **pooled** items — unskinned, indexed meshes living in the shared geometry pools —
@@ -328,13 +326,12 @@ The pre‑pass depth attachment `STORE`s, which is what makes Steps 7 and 8 poss
 `VulkanWindow::EndDepthPrePass`:
 
 - ends the depth pre‑pass render pass,
-- `Barrier` makes the fragment‑written active flags visible to compute,
 - `BuildHiZPyramid` transitions the stored scene depth to shader‑read and
   max‑reduces it into the per‑frame Hi‑Z mip chain (an `R32F`,
   `SAMPLED | STORAGE` pyramid at half depth resolution, one `hiz_build.comp`
   dispatch per mip),
 - `DispatchLightCull` (compute **stages 1..N**) culls the frame's lights against
-  the cluster AABBs — **skipping inactive clusters** — filling `LightGrid` (an
+  every cluster AABB, filling `LightGrid` (an
   `(offset, count)` per cluster) and the flat `LightIndexList`, with a barrier
   between stages and after the last one.
 
@@ -398,12 +395,12 @@ double counting; only the diffuse SH irradiance is added here.
 ```mermaid
 flowchart TB
     GRID["Grid: 16 x 9 x 24 = 3456 clusters (logarithmic Z)"]
-    CP["ClusterParams UBO<br/>tile dims, depth-slice constants, active-cull flag"]
+    CP["ClusterParams UBO<br/>tile dims, depth-slice constants, active-cull disabled"]
 
     subgraph stages["Compute + mark stages"]
         CB["Stage 0: cluster build<br/>ClusterAABBs · reset LightIndexCounter · clear ClusterActive"]
-        MARK["Depth pre-pass (graphics)<br/>cluster_mark.frag sets ClusterActive[cluster]"]
-        LC["Stages 1..N: light cull<br/>lights vs AABBs, skip inactive<br/>writes LightGrid (offset,count) + LightIndexList"]
+        MARK["Depth pre-pass (graphics)<br/>depth for early-Z and Hi-Z"]
+        LC["Stages 1..N: light cull<br/>lights vs every AABB<br/>writes LightGrid (offset,count) + LightIndexList"]
     end
 
     SHADE["clustered_phong.frag<br/>cluster from gl_FragCoord + depth<br/>read LightGrid, walk LightIndexList slice"]
@@ -422,7 +419,7 @@ flowchart TB
 | `LightGrid` | Per‑cluster `(offset, count)` into `LightIndexList`. |
 | `LightIndexList` | Flat light indices; capacity `CLUSTER_COUNT × 32`. |
 | `LightIndexCounter` | Global atomic allocator for `LightIndexList`. |
-| `ClusterActive` | Per‑cluster visible flag (mark pass writes, cull reads). |
+| `ClusterActive` | Reserved per-cluster flag; cleared by stage 0 but skipping is currently disabled. |
 
 Key constants (from [include/aeongames/GpuClusterParams.hpp](../../../include/aeongames/GpuClusterParams.hpp)
 and [include/aeongames/GpuLight.hpp](../../../include/aeongames/GpuLight.hpp)):
@@ -582,7 +579,8 @@ From [assets/shadercode/](../../../assets/shadercode/):
 | Shaders | Purpose |
 | --- | --- |
 | `lighting.0.comp`, `lighting.1.comp`, `cluster_build.comp`, `light_cull.comp` | Clustered lighting compute. |
-| `cluster_mark.vert/frag` | Depth pre‑pass cluster marking. (`cluster_mark_comp.comp` is an OpenGL‑only compute variant.) |
+| `cluster_mark.vert/frag` | Depth-only pre‑pass for early-Z and Hi-Z input. |
+| `cluster_mark_comp.comp` | Experimental OpenGL depth-derived active-cluster mark; generated but not dispatched. |
 | `hiz_build.comp` | Max‑reduce the pre‑pass depth into the Hi‑Z pyramid. |
 | `cull.comp` | GPU frustum + Hi‑Z occlusion cull → indirect commands. |
 | `clustered_phong.frag`, `static_mesh.vert`, `skinned_mesh.vert`, `simple_phong.*` | Forward shading. |
@@ -613,11 +611,9 @@ scissor, primitive topology and depth bias.
   set/binding indices — is a notably robust design. Shaders can reorder or omit sets
   without touching C++, and `AssertDescriptorSetsHandled` turns the nastiest Vulkan
   failure (an unbound set → device lost) into a loud, local assert.
-- **Modern clustered Forward+ with active‑cluster culling.** Using the depth
-  pre‑pass to *mark* occupied clusters so light culling can skip empty ones is a
-  real, thoughtful optimization on top of the textbook clustered approach — and the
-  same pass now pays for itself twice more, as early‑Z for shading and as the source
-  of the Hi‑Z pyramid.
+- **A depth pre-pass that pays twice.** Its retained depth provides early-Z for
+  shading and the source for the Hi-Z pyramid. Active-cluster skipping remains a
+  future optimization once the mark can be made conservative across backends.
 - **GPU‑driven static geometry.** Shared vertex/index pools + bindless materials +
   `cull.comp` + `vkCmdDrawIndexedIndirectCount` reduce a whole pipeline group's
   shading work to one draw call, with frustum *and* Hi‑Z occlusion rejection done on
@@ -687,8 +683,8 @@ scissor, primitive topology and depth bias.
 
 This is a **cohesive, modern, and unusually well‑commented** clustered Forward+
 renderer. Its standout ideas — a single cross‑backend frame protocol, reflection‑
-and‑name‑driven descriptor binding with an anti‑footgun assert, active‑cluster
-culling whose depth is then reused for early‑Z and Hi‑Z, GPU‑driven indirect
+and‑name‑driven descriptor binding with an anti‑footgun assert, retained depth
+reused for early‑Z and Hi‑Z, GPU‑driven indirect
 shading over bindless materials, and cached multiview point shadows — are the kind
 of decisions you'd hope to see in a much larger codebase. The throughput items that
 used to head this list (multiple frames in flight, early‑Z reuse of the pre‑pass

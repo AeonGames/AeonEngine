@@ -218,8 +218,8 @@ namespace AeonGames
         /// @brief Get the current frame's per-cluster light grid (offset/count)
         ///        SSBO. For test/debug introspection of the clustering result.
         const BufferAccessor & GetFrameLightGrid() const;
-        /// @brief Get the current frame's per-cluster active-flag SSBO produced
-        ///        by the depth pre-pass mark stage. For test/debug introspection.
+        /// @brief Get the current frame's reserved per-cluster active-flag SSBO.
+        ///        Flags remain zero while active-cluster skipping is disabled.
         const BufferAccessor & GetFrameClusterActive() const;
         /// @brief Resize the rendering viewport.
         void ResizeViewport ( int32_t aX, int32_t aY, uint32_t aWidth, uint32_t aHeight );
@@ -233,12 +233,8 @@ namespace AeonGames
         ///        per-frame clustering SSBOs. Runs before the depth pre-pass.
         void DispatchClusterBuild ( const Pipeline& aComputePipeline );
         /// @brief Dispatch the remaining compute stages (light culling) after
-        ///        the depth pre-pass has flagged the active clusters.
+        ///        the depth pre-pass. Every cluster is currently processed.
         void DispatchLightCull ( const Pipeline& aComputePipeline );
-        /// @brief Mark active clusters from the depth pre-pass depth buffer in a
-        ///        compute pass (OpenGL): the per-pixel replacement for the
-        ///        per-fragment cluster_mark scatter, run before light culling.
-        void DispatchClusterMark();
         /// @brief (Re)create the Hi-Z pyramid texture + per-mip views for the
         ///        given depth resolution (level 0 is half of it). Destroys any
         ///        previous pyramid first; a zero size just tears it down.
@@ -282,8 +278,7 @@ namespace AeonGames
         ///        lights, clustering, globals, shadow params + textures). Shared
         ///        by Render and RenderInstanced so the set has one definition.
         void BindShadingPassState() const;
-        /// @brief Bind the engine-owned state for a depth pre-pass draw:
-        ///        matrices, cluster params and the ClusterActive SSBO.
+        /// @brief Bind the engine-owned state for a depth pre-pass draw.
         void BindDepthPrePassState() const;
         /// @brief Bind the ShadowParams state for a shadow-depth draw (the active
         ///        point/spot caster's scratch UBO, or the directional buffer).
@@ -331,15 +326,10 @@ namespace AeonGames
         BufferAccessor mFrameClusterAABBs{};
         BufferAccessor mFrameLightIndexCounter{};
         BufferAccessor mFrameClusterActive{};
-        // Renderer-owned depth pre-pass marking pipeline (Phase R2), loaded
-        // lazily the first frame clustering runs.
+        // Renderer-owned depth pre-pass pipeline, loaded lazily the first frame
+        // clustered lighting runs.
         Pipeline mClusterMarkPipeline{};
         bool mClusterMarkLoaded{false};
-        // Renderer-owned compute that marks active clusters from the finished
-        // depth buffer (OpenGL only), replacing the per-fragment cluster_mark
-        // scatter that dominated the pre-pass. Loaded lazily on first use.
-        Pipeline mClusterMarkComputePipeline{};
-        bool mClusterMarkComputeLoaded{false};
         // Renderer-owned fullscreen tone-map pipeline (loaded lazily) and its
         // empty VAO, used to resolve the off-screen linear HDR colour target to
         // the swapchain (exposure + ACES tone map + sRGB encode).
@@ -410,9 +400,6 @@ namespace AeonGames
         // to keep the CPU less than kFramesInFlight frames ahead of the GPU.
         std::array<GLsync, kFramesInFlight> mFrameFences{};
         size_t mFrameIndex{0};
-        // Drives ClusterParams.screen.w; enables active-cluster culling once
-        // the mark stage has run this frame.
-        bool mActiveCullEnabled{false};
         uint32_t mViewportWidth{0};
         uint32_t mViewportHeight{0};
         /// @brief Set by RequestCapture; EndRender latches the back buffer when true.

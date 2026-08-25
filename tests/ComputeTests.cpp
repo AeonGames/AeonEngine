@@ -449,22 +449,19 @@ namespace AeonGames
         DestroyHiddenRenderWindow ( hwnd );
     }
 
-#ifdef AEON_TEST_HAVE_OPENGL
-    /** @brief End-to-end depth-pre-pass active-cluster culling test.
+#if defined(AEON_TEST_HAVE_OPENGL) || defined(AEON_TEST_HAVE_VULKAN_WINDOW)
+    /** @brief End-to-end depth-pre-pass all-cluster lighting test.
      *
-     *  Drives the full mark/cull frame lifecycle the application render loop
-     *  uses: BeginRender(lighting) clears the per-cluster active flags and
-     *  builds the cluster AABBs, the depth pre-pass renders a real mesh through
-     *  the cluster_mark pipeline (each covered fragment flags its cluster
-     *  active), EndDepthPrePass(lighting) runs light-cull with active-cluster
-     *  gating (screen.w == 1), and EndRender presents.
+     *  Drives the full depth/cull frame lifecycle the application render loop
+     *  uses: BeginRender(lighting) clears the reserved per-cluster active flags
+     *  and builds the cluster AABBs, the depth pre-pass renders a real mesh,
+     *  EndDepthPrePass(lighting) light-culls every cluster (screen.w == 0), and
+     *  EndRender presents.
      *
-     *  With gating enabled the light grid may only assign lights to clusters the
-     *  mark stage flagged active, so the asserted invariant is: every cluster
-     *  holding one or more lights is active. The scene is also checked to be
-     *  non-degenerate (some clusters active, some inactive, some lit) so the
-     *  invariant cannot pass vacuously. */
-    static void RunActiveClusterCullTest ( const char* aRendererName )
+     *  The correctness fallback keeps the active flags zero while still
+     *  populating the light grid. This catches accidental re-enabling of the
+     *  under-marking path that dropped Sponza illumination on OpenGL. */
+    static void RunAllClusterCullTest ( const char* aRendererName )
     {
         void* hwnd = CreateHiddenRenderWindow();
         if ( hwnd == nullptr )
@@ -486,10 +483,7 @@ namespace AeonGames
         renderer->SetProjectionMatrix ( hwnd, projection );
         renderer->SetViewMatrix ( hwnd, Matrix4x4{} );
 
-        // A single broad point light overlapping a wide swath of clusters. The
-        // mark stage only flags the clusters the mesh actually covers, so the
-        // gate must cull this light from every unmarked cluster it would
-        // otherwise reach.
+        // A single broad point light overlapping a wide swath of clusters.
         GpuLight light{};
         light.position_radius = Vector4{ 0.0f, 10.0f, 0.0f, 30.0f };
         light.color_intensity = Vector4{ 1.0f, 1.0f, 1.0f, 1.0f };
@@ -499,7 +493,7 @@ namespace AeonGames
 
         // The combined lighting pipeline carries both clustering compute stages
         // and drives the BeginRender (cluster-build) / EndDepthPrePass
-        // (light-cull) mark+cull lifecycle.
+        // (light-cull) depth/cull lifecycle.
         Pipeline lighting;
         lighting.LoadFromId ( "shaders/lighting.txt"_crc32 );
         renderer->LoadPipeline ( lighting );
@@ -526,9 +520,9 @@ namespace AeonGames
             0.0f, 10.0f, 0.0f, 1.0f
         };
 
-        // One full gated frame: mark stage (BeginRender + Render) then gated
-        // light-cull (EndDepthPrePass). The mark + cull compute is what this test
-        // verifies; open the shading pass before presenting so EndRender has an
+        // One full frame: depth pre-pass (BeginRender + Render), then all-cluster
+        // light-cull (EndDepthPrePass). Open the shading pass before presenting
+        // so EndRender has an
         // active render pass to close (on Vulkan EndDepthPrePass ends the depth
         // pre-pass pass and leaves the shading pass to the caller, unlike the GL
         // path which reopens it).
@@ -575,31 +569,18 @@ namespace AeonGames
         }
 
         uint32_t lit_clusters = 0;
-        uint32_t active_clusters = 0;
-        uint32_t inactive_clusters = 0;
-        uint32_t leaked_clusters = 0;
         for ( uint32_t i = 0; i < CLUSTER_COUNT; ++i )
         {
-            const bool is_active = active[i] != 0u;
             const bool is_lit = grid[i].count > 0;
-            active_clusters += is_active ? 1u : 0u;
-            inactive_clusters += is_active ? 0u : 1u;
             lit_clusters += is_lit ? 1u : 0u;
-            // Gate invariant: a light may only land in an active cluster.
-            if ( is_lit && !is_active )
-            {
-                ++leaked_clusters;
-            }
         }
 
-        EXPECT_EQ ( leaked_clusters, 0u )
-                << "a light was assigned to a cluster the mark stage left inactive";
-        EXPECT_GT ( active_clusters, 0u )
-                << "the mesh marked no clusters active in the depth pre-pass";
-        EXPECT_GT ( inactive_clusters, 0u )
-                << "every cluster was marked active; the gate had nothing to cull";
         EXPECT_GT ( lit_clusters, 0u )
-                << "the light reached no marked cluster; setup is degenerate";
+                << "all-cluster light culling populated no cluster";
+        EXPECT_TRUE ( std::all_of ( active.begin(), active.end(), [] ( uint32_t aValue )
+        {
+            return aValue == 0u;
+        } ) ) << "active-cluster skipping was unexpectedly re-enabled";
 
         renderer.reset();
         DestroyHiddenRenderWindow ( hwnd );
@@ -918,23 +899,16 @@ namespace AeonGames
 #endif
 
 #ifdef AEON_TEST_HAVE_OPENGL
-    TEST ( ComputeTest, OpenGLActiveClusterCull )
+    TEST ( ComputeTest, OpenGLAllClusterCull )
     {
-        RunActiveClusterCullTest ( "OpenGL" );
+        RunAllClusterCullTest ( "OpenGL" );
     }
 #endif
 
 #ifdef AEON_TEST_HAVE_VULKAN_WINDOW
-    TEST ( ComputeTest, VulkanActiveClusterCull )
+    TEST ( ComputeTest, VulkanAllClusterCull )
     {
-        // The Vulkan backend no longer marks active clusters: the per-fragment
-        // cluster_mark scatter was the depth pre-pass bottleneck, so Vulkan now
-        // light-culls every cluster (ClusterParams.screen.w = 0) for a cheap
-        // depth-only pre-pass. Active-cluster culling therefore has nothing to
-        // verify here until the compute mark (cluster_mark_comp, OpenGL-only for
-        // now) is ported to Vulkan. The OpenGLActiveClusterCull test still covers
-        // the marking path.
-        GTEST_SKIP() << "Vulkan light-culls all clusters (no active-cluster marking).";
+        RunAllClusterCullTest ( "Vulkan" );
     }
 #endif
 

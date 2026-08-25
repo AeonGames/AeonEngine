@@ -1,6 +1,9 @@
 #version 450
 
-// Compute replacement for the per-fragment cluster_mark stage. Instead of every
+// Experimental compute replacement for the per-fragment cluster_mark stage.
+// It is generated for validation but is not dispatched by the renderers because
+// its depth-derived marks currently under-count visible Sponza fragments.
+// Instead of every
 // rasterised fragment scattering a write into cluster_active (which, under the
 // depth pre-pass's full overdraw, is by far the most expensive thing in the
 // frame), this runs once per screen pixel over the finished depth buffer: it

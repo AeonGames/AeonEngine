@@ -57,10 +57,9 @@ namespace AeonGames
         return enabled;
     }
     // Mask colour writes during the depth pre-pass (default on; AEON_PREPASS_MASK=0
-    // disables it for A/B). The mark pass writes only depth + the cluster-active
-    // SSBO -- its three G-buffer colour outputs are throwaway sentinels the shading
-    // pass re-clears -- so masking colour skips that ROP/bandwidth under the pass's
-    // full overdraw.
+    // disables it for A/B). The pass writes only depth; its three G-buffer colour
+    // outputs are throwaway sentinels the shading pass re-clears, so masking colour
+    // skips that ROP/bandwidth under the pass's full overdraw.
     static bool PrePassMaskColor()
     {
         static const bool mask = []
@@ -70,17 +69,18 @@ namespace AeonGames
         } ();
         return mask;
     }
-    // Force the light-cull stage to process every cluster instead of only the
-    // ones the mark pass flagged (AEON_CLUSTER_MARK_ALL=1). Ground truth for
-    // validating the compute marking, and a safe fallback that never under-lights.
-    static bool ClusterMarkAll()
+    // Atomic cull compaction assigns draw slots in workgroup arrival order.
+    // That order is intentionally unspecified and makes coincident Sponza
+    // surfaces alternate winners under LEQUAL. Keep stable input-order slots by
+    // default; compaction remains available for performance experiments.
+    static bool CompactDrawsEnabled()
     {
-        static const bool all = []
+        static const bool enabled = []
         {
-            const char* value = std::getenv ( "AEON_CLUSTER_MARK_ALL" );
+            const char* value = std::getenv ( "AEON_GL_COMPACT_DRAWS" );
             return value != nullptr && value[0] == '1';
         } ();
-        return all;
+        return enabled;
     }
     // Texture unit the directional shadow map is bound to during shading. Must
     // match `layout(binding = N) uniform sampler2DShadow ShadowMap;` in the GL
@@ -427,8 +427,8 @@ namespace AeonGames
         // A single object: hardware-instanced aInstanceCount times (e.g. the
         // editor grid draws one line matrix repeated across gl_InstanceID).
         RenderCommon ( { &aModelMatrix, 1 }, aMesh, aPipeline, aMaterial, aTopology,
-                     aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
-                     aSkinnedVertices, aRenderPass );
+                       aVertexStart, aVertexCount, aInstanceCount, aFirstInstance,
+                       aSkinnedVertices, aRenderPass );
     }
 
     void OpenGLWindow::RenderCommon ( std::span<const Matrix4x4> aModelMatrices,
@@ -444,21 +444,21 @@ namespace AeonGames
                                       RenderPass aRenderPass ) const
     {
         if ( aModelMatrices.empty() )
-    {
-        return;
-    }
-    // Resolve the optional pre-skinned vertex buffer produced by the compute
-    // skinning pre-pass. When present it is bound as the vertex array source
-    // in place of the mesh's rest-pose vertices, using its compact 56-byte
-    // stride (weight data dropped) instead of the mesh's own 64-byte stride.
-    // Batched instancing is never skinned, so those callers pass null here.
-    GLuint skinned_vertex_buffer_id = 0;
-    size_t skinned_vertex_offset = 0;
-    size_t skinned_vertex_stride = 0;
-    if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
-    {
-        skinned_vertex_buffer_id =
-            reinterpret_cast<const OpenGLBuffer&> ( aSkinnedVertices->GetMemoryPoolBuffer()->GetBuffer() ).GetBufferId();
+        {
+            return;
+        }
+        // Resolve the optional pre-skinned vertex buffer produced by the compute
+        // skinning pre-pass. When present it is bound as the vertex array source
+        // in place of the mesh's rest-pose vertices, using its compact 56-byte
+        // stride (weight data dropped) instead of the mesh's own 64-byte stride.
+        // Batched instancing is never skinned, so those callers pass null here.
+        GLuint skinned_vertex_buffer_id = 0;
+        size_t skinned_vertex_offset = 0;
+        size_t skinned_vertex_stride = 0;
+        if ( aSkinnedVertices != nullptr && aSkinnedVertices->GetMemoryPoolBuffer() != nullptr )
+        {
+            skinned_vertex_buffer_id =
+                reinterpret_cast<const OpenGLBuffer&> ( aSkinnedVertices->GetMemoryPoolBuffer()->GetBuffer() ).GetBufferId();
             skinned_vertex_offset = aSkinnedVertices->GetOffset();
             skinned_vertex_stride = Mesh::kSkinnedVertexStride;
         }
@@ -467,9 +467,9 @@ namespace AeonGames
         // that ignore the item's own pipeline and material; the shading pass uses
         // the item's pipeline.
         switch ( aRenderPass )
-    {
-    case RenderPass::ShadowPass:
-        mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
+        {
+        case RenderPass::ShadowPass:
+            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             BindShadowPassState();
             break;
         case RenderPass::DepthPrePass:
@@ -489,8 +489,8 @@ namespace AeonGames
         // Material state applies only to the shading pass; the substituted
         // shadow/depth pipelines ignore it.
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass && aMaterial != nullptr )
-    {
-        mOpenGLRenderer.SetMaterial ( *aMaterial );
+        {
+            mOpenGLRenderer.SetMaterial ( *aMaterial );
             // Deliver the material's bindless record index per-instance (one copy
             // per model matrix) so the shading shader selects it by gl_InstanceID,
             // parallel to BindObjectMatrices.
@@ -508,8 +508,8 @@ namespace AeonGames
         const OpenGLMesh* gl_mesh = mOpenGLRenderer.GetOpenGLMesh ( aMesh );
         const bool pooled = ( gl_mesh != nullptr && gl_mesh->IsPooled() && skinned_vertex_buffer_id == 0 );
         if ( aMesh.GetIndexCount() )
-    {
-        if ( pooled )
+        {
+            if ( pooled )
             {
                 glDrawElementsInstancedBaseVertexBaseInstance (
                     TopologyMap[aTopology],
@@ -559,15 +559,15 @@ namespace AeonGames
                                           RenderPass aRenderPass ) const
     {
         if ( aMeshes.empty() )
-    {
-        return;
-    }
-    // Same pass-pipeline selection and engine state as RenderCommon: shadow /
-    // depth-pre passes substitute the renderer-owned depth-only pipelines.
-    switch ( aRenderPass )
-    {
-    case RenderPass::ShadowPass:
-        mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
+        {
+            return;
+        }
+        // Same pass-pipeline selection and engine state as RenderCommon: shadow /
+        // depth-pre passes substitute the renderer-owned depth-only pipelines.
+        switch ( aRenderPass )
+        {
+        case RenderPass::ShadowPass:
+            mOpenGLRenderer.BindPipeline ( mInPointShadowPass ? mPointShadowDepthPipeline : mShadowDepthPipeline );
             BindShadowPassState();
             break;
         case RenderPass::DepthPrePass:
@@ -586,8 +586,8 @@ namespace AeonGames
         // Shading pass: upload the per-instance bindless material indices the
         // fragment shader reads through the flat varying (parallel to the matrices).
         if ( aRenderPass != RenderPass::ShadowPass && aRenderPass != RenderPass::DepthPrePass )
-    {
-        mOpenGLRenderer.BindMaterialStorageBuffer();
+        {
+            mOpenGLRenderer.BindMaterialStorageBuffer();
             mInstanceMaterials.clear();
             mInstanceMaterials.reserve ( aMaterials.size() );
             for ( const Material * material : aMaterials )
@@ -610,8 +610,8 @@ namespace AeonGames
         uint32_t instance_base = 0;
         size_t i = 0;
         while ( i < aMeshes.size() )
-    {
-        const Mesh* mesh = aMeshes[i];
+        {
+            const Mesh* mesh = aMeshes[i];
             uint32_t run = 1;
             while ( i + run < aMeshes.size() && aMeshes[i + run] == mesh )
             {
@@ -719,7 +719,7 @@ namespace AeonGames
                 reinterpret_cast<const OpenGLBuffer&> ( batch.mCommands.GetMemoryPoolBuffer()->GetBuffer() );
             glBindBuffer ( GL_DRAW_INDIRECT_BUFFER, commands_buffer.GetBufferId() );
             OPENGL_CHECK_ERROR_NO_THROW;
-            if ( mOpenGLRenderer.HasIndirectParameters() )
+            if ( CompactDrawsEnabled() && mOpenGLRenderer.HasIndirectParameters() )
             {
                 const OpenGLBuffer& count_buffer =
                     reinterpret_cast<const OpenGLBuffer&> ( batch.mCount.GetMemoryPoolBuffer()->GetBuffer() );
@@ -759,8 +759,8 @@ namespace AeonGames
         // pipeline in BeginRender. Bound by name-CRC; BindStorageBuffer silently
         // skips pipelines that don't declare these blocks.
         if ( mFrameLightGrid.GetMemoryPoolBuffer() != nullptr )
-    {
-        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
+        {
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_GRID, mFrameLightGrid );
             mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::LIGHT_INDEX_LIST, mFrameLightIndexList );
         }
         // Directional / spot / point shadow params + depth textures. Pipelines
@@ -782,17 +782,17 @@ namespace AeonGames
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
         if ( mFrameClusterActive.GetMemoryPoolBuffer() != nullptr )
-    {
-        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
+        {
+            mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
         }
-        // OpenGLRenderer::BindPipeline applies the mark pipeline's colour-write
+        // OpenGLRenderer::BindPipeline applies the depth pipeline's colour-write
         // mask on every bind (all channels, since the pipeline declares no blend
         // state), which would undo the depth pre-pass colour mask set in
         // BeginRender. Re-assert it here -- after the pipeline bind -- so the
-        // mark pass keeps skipping its throwaway G-buffer colour writes.
+        // pre-pass keeps skipping its throwaway G-buffer colour writes.
         if ( PrePassMaskColor() )
-    {
-        glColorMask ( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
+        {
+            glColorMask ( GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE );
         }
     }
 
@@ -802,8 +802,8 @@ namespace AeonGames
         // through a scratch UBO bound at the same ShadowParams slot the depth
         // vertex shader reads; the directional pass uses the real buffer.
         mOpenGLRenderer.SetShadowParams ( mInPointShadowPass ? mPointShadowDepthScratch
-        : mInSpotShadowPass ? mSpotShadowDepthScratch
-        : mShadowParams );
+                                          : mInSpotShadowPass ? mSpotShadowDepthScratch
+                                          : mShadowParams );
     }
 
     void OpenGLWindow::BindObjectMatrices ( std::span<const Matrix4x4> aMatrices ) const
@@ -845,11 +845,10 @@ namespace AeonGames
         BeginFrame();
         if ( aComputePipeline != nullptr )
         {
-            // Enable active-cluster culling for this frame and refresh the
-            // ClusterParams UBO so the light-cull stage sees screen.w = 1.
-            mActiveCullEnabled = true;
+            // Refresh the ClusterParams UBO before the clustered-lighting
+            // compute stages allocate and populate this frame's buffers.
             UpdateClusterParams();
-            // Lazily load the renderer-owned marking pipeline that substitutes
+            // Lazily load the renderer-owned depth pipeline that substitutes
             // the scene's draw pipelines during the depth pre-pass.
             if ( !mClusterMarkLoaded )
             {
@@ -857,14 +856,14 @@ namespace AeonGames
                 mClusterMarkLoaded = true;
             }
             // Stage 0: build the cluster AABBs, reset the index allocator and
-            // clear the per-cluster active flags before the mark pass runs.
+            // clear the reserved per-cluster active flags.
             DispatchClusterBuild ( *aComputePipeline );
             Barrier();
             // Begin the depth pre-pass; the application's first geometry
-            // traversal records into it with the marking pipeline substituted.
+            // traversal records into it with the depth pipeline substituted.
             BeginRenderPass();
-            // The mark pass writes only depth + the cluster-active SSBO; mask its
-            // throwaway colour outputs so the full-overdraw pass skips the
+            // The pre-pass writes only depth; mask its throwaway colour outputs
+            // so the full-overdraw pass skips the
             // three-target G-buffer ROP writes. Restored in EndDepthPrePass.
             if ( PrePassMaskColor() )
             {
@@ -873,7 +872,6 @@ namespace AeonGames
         }
         else
         {
-            mActiveCullEnabled = false;
             UpdateClusterParams();
             // No clustering this frame: still hand the clustered fragment
             // shader valid, empty light buffers so it reads zero lights per
@@ -897,9 +895,6 @@ namespace AeonGames
         {
             glColorMask ( GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE );
         }
-        // The mark pass wrote the per-cluster active flags from the fragment
-        // shader; make those writes visible to the light-cull compute stage.
-        Barrier();
         // Reduce the depth pre-pass depth into the Hi-Z pyramid before the colour
         // pass clears depth, so the shading cull can test occlusion against it.
         // Skipped entirely when occlusion culling is disabled: the pyramid would
@@ -910,11 +905,9 @@ namespace AeonGames
         }
         if ( aComputePipeline != nullptr )
         {
-            // Mark the active clusters from the finished depth buffer (compute,
-            // one invocation per pixel) before the light cull reads them. This
-            // replaces the per-fragment cluster_mark scatter, which under the
-            // pre-pass's full overdraw was ~95% of the pre-pass cost.
-            DispatchClusterMark();
+            // OpenGL currently processes every cluster for correctness; the
+            // depth-derived active-cluster mark under-counts visible Sponza
+            // fragments and is intentionally not dispatched here.
             DispatchLightCull ( *aComputePipeline );
         }
         // Begin the main color pass; the application's second geometry
@@ -1402,26 +1395,6 @@ namespace AeonGames
         Dispatch ( aComputePipeline, group_count, 1, 1, bindings, 0 );
     }
 
-    void OpenGLWindow::DispatchClusterMark()
-    {
-        if ( !mClusterMarkComputeLoaded )
-        {
-            mClusterMarkComputePipeline.LoadFromFile ( "shaders/cluster_mark_comp" );
-            mClusterMarkComputeLoaded = true;
-        }
-        // Make the depth pre-pass's depth writes visible to the compute's fetch.
-        glMemoryBarrier ( GL_TEXTURE_FETCH_BARRIER_BIT | GL_FRAMEBUFFER_BARRIER_BIT );
-        mOpenGLRenderer.BindComputePipeline ( mClusterMarkComputePipeline, 0 );
-        mOpenGLRenderer.SetClusterParams ( mClusterParams );
-        mOpenGLRenderer.BindStorageBuffer ( Mesh::BindingLocations::CLUSTER_ACTIVE, mFrameClusterActive );
-        // uDepth at texture unit 0 (the finished scene depth).
-        glBindTextureUnit ( 0, mFrameBuffer.GetDepthBuffer() );
-        glDispatchCompute ( ( mViewportWidth + 7u ) / 8u, ( mViewportHeight + 7u ) / 8u, 1u );
-        // The marked flags feed the light-cull stage's empty-cluster skip.
-        glMemoryBarrier ( GL_SHADER_STORAGE_BARRIER_BIT );
-        OPENGL_CHECK_ERROR_NO_THROW;
-    }
-
     void OpenGLWindow::DispatchLightCull ( const Pipeline& aComputePipeline )
     {
         constexpr uint32_t group_count = ( CLUSTER_COUNT + 63u ) / 64u;
@@ -1435,8 +1408,8 @@ namespace AeonGames
             { Mesh::BindingLocations::CLUSTER_ACTIVE, &mFrameClusterActive },
         };
 
-        // Stages 1..N: cull lights against the AABBs, skipping the clusters the
-        // depth pre-pass left inactive. A barrier between stages keeps each
+        // Stages 1..N: cull lights against every cluster AABB. A barrier between
+        // stages keeps each
         // stage's writes visible to the next and, after the last stage, to the
         // fragment shader of the main color pass.
         const uint32_t stage_count = aComputePipeline.GetComputeStageCount ( mOpenGLRenderer.GetName() );
@@ -1609,9 +1582,9 @@ namespace AeonGames
         mOpenGLRenderer.SetMatrices ( mMatrices );
         mOpenGLRenderer.SetLights ( mLights );
         mOpenGLRenderer.SetClusterParams ( mClusterParams );
-for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
-    {
-        if ( storage_buffer.mBuffer != nullptr )
+        for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
+        {
+            if ( storage_buffer.mBuffer != nullptr )
             {
                 mOpenGLRenderer.BindStorageBuffer ( storage_buffer.mBinding, *storage_buffer.mBuffer );
             }
@@ -1934,17 +1907,19 @@ for ( const StorageBufferBinding& storage_buffer : aStorageBuffers )
             return value != nullptr && value[0] != '\0' && value[0] != '0';
         } ();
         params.screen[2] = heatmap ? 1.0f : 0.0f;
-        // screen.w gates active-cluster culling in the light-cull stage: it is
-        // only set once the depth pre-pass mark stage has run this frame. The
-        // mark-all override forces every cluster to be processed (ground truth).
-        params.screen[3] = ( mActiveCullEnabled && !ClusterMarkAll() ) ? 1.0f : 0.0f;
+        // The depth-texture compute mark currently under-marks Sponza on
+        // OpenGL, dropping point/spot illumination from visible fragments.
+        // Process every cluster for correctness, matching Vulkan's current
+        // fallback, until the mark has a reliable cross-driver path.
+        params.screen[3] = 0.0f;
         // Hi-Z occlusion culling toggle for the GPU cull compute (data-driven;
         // AEON_HIZ_OCCLUSION=0 disables it for A/B comparison, default on).
         params.occlusion[0] = HiZOcclusionEnabled() ? 1.0f : 0.0f;
-        // Compaction. glMultiDrawElementsIndirectCount reads a GPU-written count,
-        // which cull.comp only maintains when this is set; without it the count
-        // stays zero and every pooled static draw is silently dropped.
-        params.occlusion[1] = mOpenGLRenderer.HasIndirectParameters() ? 1.0f : 0.0f;
+        // Compaction is opt-in because atomic slot assignment changes draw order
+        // frame-to-frame. The draw path must make the same choice: compact lists
+        // use the GPU count; deterministic lists submit all slots with culled
+        // commands carrying instance_count == 0.
+        params.occlusion[1] = ( CompactDrawsEnabled() && mOpenGLRenderer.HasIndirectParameters() ) ? 1.0f : 0.0f;
         mClusterParams.WriteMemory ( 0, sizeof ( GpuClusterParams ), &params );
     }
 

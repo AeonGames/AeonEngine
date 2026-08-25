@@ -42,8 +42,8 @@ One `RenderScene` frame:
 3. for each spot, point and directional caster: `Scene::BuildRenderQueue(lightFrustum)` →
    `Begin*ShadowPass` → `SubmitRenderQueue(ShadowPass)` → `End*ShadowPass`;
 4. `Scene::BuildRenderQueue(GetFrustum(window))` for the camera;
-5. `SubmitRenderQueue(DepthPrePass)` → `EndDepthPrePass` — mark active clusters, barrier, light-cull
-   compute, reopen the color pass;
+5. `SubmitRenderQueue(DepthPrePass)` → `EndDepthPrePass` — retain depth for early-Z/Hi-Z,
+  light-cull every cluster, then reopen the color pass;
 6. `SubmitRenderQueue(Shading)`;
 7. `SubmitDebugGeometry` when debug rendering is enabled;
 8. `RenderOverlay` when a GUI overlay was passed;
@@ -143,6 +143,9 @@ Semantics worth knowing before implementing:
 - Components never call the renderer. They append `RenderItem`s during the read-only collect sweep;
   `SubmitRenderQueue` walks `Scene::ForEachRenderBatch` and issues one draw per batch (instanced when
   the batch holds more than one item).
+- OpenGL GPU culling writes commands to stable input-order slots by default. Atomic compaction makes
+  coincident Sponza surfaces change draw order under `LEQUAL`, producing visible flicker; enable it
+  only for profiling with `AEON_GL_COMPACT_DRAWS=1`.
 
 ## 4. Binding model: names, not slots
 
