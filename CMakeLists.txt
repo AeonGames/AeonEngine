@@ -250,12 +250,12 @@ if(BUILD_METAL_RENDERER)
                   OUTPUT_VARIABLE METAL_SDK_ROOT
                   OUTPUT_STRIP_TRAILING_WHITESPACE
                   COMMAND_ERROR_IS_FATAL ANY)
-  file(GLOB METAL_COMPILER_CANDIDATES
-       "/var/run/com.apple.security.cryptexd/mnt/com.apple.MobileAsset.MetalToolchain-*/Metal.xctoolchain/usr/bin/metal")
-  list(SORT METAL_COMPILER_CANDIDATES COMPARE NATURAL ORDER DESCENDING)
-  if(METAL_COMPILER_CANDIDATES)
-    list(GET METAL_COMPILER_CANDIDATES 0 METAL_COMPILER_EXECUTABLE)
-  else()
+  execute_process(COMMAND ${XCRUN_EXECUTABLE} --sdk macosx --find metal
+                  OUTPUT_VARIABLE METAL_COMPILER_EXECUTABLE
+                  OUTPUT_STRIP_TRAILING_WHITESPACE
+                  RESULT_VARIABLE METAL_COMPILER_RESULT
+                  ERROR_QUIET)
+  if(NOT METAL_COMPILER_RESULT EQUAL 0 OR NOT EXISTS "${METAL_COMPILER_EXECUTABLE}")
     message(FATAL_ERROR
             "The downloaded Metal compiler is unavailable. Run: xcodebuild -downloadComponent MetalToolchain")
   endif()

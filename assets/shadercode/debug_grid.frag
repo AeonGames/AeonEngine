@@ -78,7 +78,7 @@ void main()
       float major_dist = GridLineDistancePixels ( world.xy / ( CellSize * MajorInterval ) );
       float minor_dist = GridLineDistancePixels ( world.xy / CellSize );
 
-      vec3 color;
+      vec3 color = GridColor.rgb;
       if ( x_axis_dist <= axis_half_width )
       {
           color = AxisXColor.rgb;
