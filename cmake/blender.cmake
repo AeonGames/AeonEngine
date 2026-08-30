@@ -142,11 +142,22 @@ endif()
 
 if(BLENDER_EXECUTABLE AND BLENDER_Python3_EXECUTABLE)
   set(BLENDER_VENV "${CMAKE_BINARY_DIR}/blender-venv")
+  if(WIN32)
+    set(BLENDER_VENV_SITE_PACKAGES "${BLENDER_VENV}/Lib/site-packages")
+  else()
+    execute_process(
+      COMMAND "${BLENDER_Python3_EXECUTABLE}" -c
+              "import sys; print(f'python{sys.version_info.major}.{sys.version_info.minor}')"
+      OUTPUT_VARIABLE blender_python_directory
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+      COMMAND_ERROR_IS_FATAL ANY)
+    set(BLENDER_VENV_SITE_PACKAGES
+        "${BLENDER_VENV}/lib/${blender_python_directory}/site-packages")
+  endif()
 
-  # The exporters import the generated protobuf modules, which in turn need the
-  # protobuf runtime Blender does not bundle. Rather than modifying the Blender
-  # installation, build a virtual environment out of its own interpreter (so the
-  # ABI matches) and let export_asset.py put that site-packages on sys.path.
+  # The exporters need the protobuf runtime and Blender's extension manager
+  # needs cattrs. Rather than modifying the Blender installation, build a virtual
+  # environment out of its own interpreter so the ABI matches.
   # The script is a no-op once the environment matches the generated code.
   add_custom_target(
     blender-python-venv
@@ -243,7 +254,9 @@ function(add_blender_asset name)
             "${CMAKE_SOURCE_DIR}/${ASSET_DESTINATION}/textures"
     COMMAND ${CMAKE_COMMAND} -E env
             "BLENDER_USER_SCRIPTS=${CMAKE_SOURCE_DIR}/tools/blender"
+          "PYTHONPATH=${BLENDER_VENV_SITE_PACKAGES}"
             "${BLENDER_EXECUTABLE}" --background --factory-startup -noaudio
+          --python-use-system-env
             "${CMAKE_SOURCE_DIR}/${ASSET_BLEND}"
             --python "${CMAKE_SOURCE_DIR}/tools/blender/export_asset.py"
             --

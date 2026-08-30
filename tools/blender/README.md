@@ -38,15 +38,17 @@ CMake chooses the newest installed Blender. Pass
 bundled Python cannot be found, configuration succeeds and omits the asset
 targets.
 
-## Protobuf environment
+## Blender Python environment
 
 The exporters use generated Python protobuf modules, but Blender does not ship
-the matching protobuf runtime. The `blender-python-venv` target creates
-`<build>/blender-venv` with Blender's own interpreter and installs the exact
-runtime required by the generated `*_pb2.py` files. Every cook target depends on
-both this environment and `generate-python-protobuf-source`.
+the matching protobuf runtime. Blender's extension manager also needs `cattrs`.
+The `blender-python-venv` target creates `<build>/blender-venv` with Blender's
+own interpreter and installs both dependencies. Every cook target depends on
+this environment and `generate-python-protobuf-source`.
 
-For interactive Blender sessions, expose the venv's site-packages before launch:
+Cook targets expose the venv during Blender startup automatically. For
+interactive Blender sessions, expose its site-packages and allow Blender to use
+the environment before launch:
 
 ```bash
 # Windows layout
@@ -54,6 +56,8 @@ export PYTHONPATH="<build>/blender-venv/Lib/site-packages"
 
 # macOS/Linux layout
 export PYTHONPATH="<build>/blender-venv/lib/pythonX.Y/site-packages"
+
+blender --python-use-system-env
 ```
 
 ## Interactive addons

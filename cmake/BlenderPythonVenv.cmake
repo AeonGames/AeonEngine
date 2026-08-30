@@ -19,7 +19,8 @@
 #
 # The protobuf runtime has to match the generated code, and protoc stamps the
 # version it generated for into every module, so that stamp is the single
-# source of truth instead of a pin that silently drifts.
+# source of truth instead of a pin that silently drifts. Blender's extension
+# manager also imports cattrs during startup.
 
 set(gencode "${AEON_SOURCE_DIR}/tools/blender/modules/mesh_pb2.py")
 if(NOT EXISTS "${gencode}")
@@ -31,12 +32,13 @@ if(NOT version_line MATCHES "([0-9]+\\.[0-9]+\\.[0-9]+)")
   message(FATAL_ERROR "Could not read the protobuf runtime version out of ${gencode}.")
 endif()
 set(required_version "${CMAKE_MATCH_1}")
+set(requirements "protobuf==${required_version}\ncattrs")
 
-set(marker "${BLENDER_VENV}/aeon-protobuf-version.txt")
+set(marker "${BLENDER_VENV}/aeon-python-requirements.txt")
 if(EXISTS "${marker}")
-  file(READ "${marker}" installed_version)
-  string(STRIP "${installed_version}" installed_version)
-  if(installed_version STREQUAL required_version)
+  file(READ "${marker}" installed_requirements)
+  string(STRIP "${installed_requirements}" installed_requirements)
+  if(installed_requirements STREQUAL requirements)
     return()
   endif()
 endif()
@@ -47,11 +49,11 @@ else()
   set(venv_python "${BLENDER_VENV}/bin/python")
 endif()
 
-message(STATUS "Provisioning ${BLENDER_VENV} with protobuf ${required_version}")
+message(STATUS "Provisioning ${BLENDER_VENV} with protobuf ${required_version} and cattrs")
 file(REMOVE_RECURSE "${BLENDER_VENV}")
 execute_process(COMMAND "${BLENDER_Python3_EXECUTABLE}" -m venv "${BLENDER_VENV}"
                 COMMAND_ERROR_IS_FATAL ANY)
 execute_process(COMMAND "${venv_python}" -m pip install --disable-pip-version-check
-                        "protobuf==${required_version}"
+      "protobuf==${required_version}" cattrs
                 COMMAND_ERROR_IS_FATAL ANY)
-file(WRITE "${marker}" "${required_version}\n")
+file(WRITE "${marker}" "${requirements}\n")
