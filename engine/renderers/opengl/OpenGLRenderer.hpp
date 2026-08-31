@@ -373,7 +373,12 @@ namespace AeonGames
         std::unordered_map<size_t, OpenGLPipeline> mPipelineStore{}; ///< Loaded pipeline cache.
         std::unordered_map<size_t, OpenGLMaterial> mMaterialStore{}; ///< Loaded material cache.
         std::unordered_map<size_t, OpenGLMesh> mMeshStore{}; ///< Loaded mesh cache.
-        std::unordered_map<size_t, OpenGLTexture> mTextureStore{}; ///< Loaded texture cache.
+        struct TextureCacheEntry
+        {
+            OpenGLTexture mTexture;
+            uint32_t mReferences{};
+        };
+        std::unordered_map<size_t, TextureCacheEntry> mTextureStore{}; ///< Loaded texture cache.
         std::unordered_map<void*, OpenGLWindow> mWindowStore{}; ///< Attached window map.
         /// Reused scratch for gathering a batch's transforms for instanced draws.
         std::vector<Matrix4x4> mInstanceTransforms{};

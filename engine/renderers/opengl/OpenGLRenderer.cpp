@@ -1254,15 +1254,20 @@ void main()
         auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         if ( it != mTextureStore.end() )
         {
+            ++it->second.mReferences;
             return;
         }
-        mTextureStore.emplace ( aTexture.GetConsecutiveId(), OpenGLTexture{*this, aTexture} );
+        mTextureStore.emplace ( aTexture.GetConsecutiveId(), TextureCacheEntry{OpenGLTexture{*this, aTexture}, 1} );
     }
 
     void OpenGLRenderer::UnloadTexture ( const Texture& aTexture )
     {
         auto it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         if ( it == mTextureStore.end() )
+        {
+            return;
+        }
+        if ( --it->second.mReferences != 0 )
         {
             return;
         }
@@ -1277,7 +1282,7 @@ void main()
             LoadTexture ( aTexture );
             it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         }
-        return it->second.GetTextureId();
+        return it->second.mTexture.GetTextureId();
     }
 
     GLuint64 OpenGLRenderer::GetTextureHandle ( const Texture& aTexture )
@@ -1288,11 +1293,12 @@ void main()
             LoadTexture ( aTexture );
             it = mTextureStore.find ( aTexture.GetConsecutiveId() );
         }
-        return it->second.GetHandle();
+        return it->second.mTexture.GetHandle();
     }
 
     GLuint64 OpenGLRenderer::AcquireBindlessSamplerHandle ( const Texture& aTexture, const Material::SamplerState& aState )
     {
+        LoadTexture ( aTexture );
         const BindlessSamplerKey key{aTexture.GetConsecutiveId(), aState};
         auto it = mBindlessSamplerCache.find ( key );
         if ( it != mBindlessSamplerCache.end() )
@@ -1338,6 +1344,7 @@ void main()
         }
         if ( --it->second.references != 0 )
         {
+            UnloadTexture ( aTexture );
             return;
         }
         if ( glIsTextureHandleResidentARB ( it->second.handle ) )
@@ -1346,6 +1353,7 @@ void main()
         }
         glDeleteSamplers ( 1, &it->second.sampler );
         mBindlessSamplerCache.erase ( it );
+        UnloadTexture ( aTexture );
     }
 
     bool OpenGLRenderer::HasBindlessTexture() const
