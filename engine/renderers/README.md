@@ -127,6 +127,10 @@ Semantics worth knowing before implementing:
 - OpenGL GPU culling writes commands to stable input-order slots by default. Atomic compaction makes
   coincident Sponza surfaces change draw order under `LEQUAL`, producing visible flicker; enable it
   only for profiling with `AEON_GL_COMPACT_DRAWS=1`.
+- NVIDIA OpenGL defaults Hi-Z occlusion off because its current footprint query can falsely reject
+  visible material-split draws at foreground depth discontinuities. Other OpenGL vendors default it
+  on; `AEON_HIZ_OCCLUSION=0/1` overrides either policy. GPU frustum culling remains enabled, and
+  Vulkan and Metal keep Hi-Z enabled by default.
 
 ## 4. Binding model: names, not slots
 

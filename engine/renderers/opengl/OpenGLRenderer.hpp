@@ -127,6 +127,9 @@ namespace AeonGames
         ///        batches draw through glMultiDrawElementsIndirectCount. The cull
         ///        compute must compact its output to match; see GpuClusterParams.
         bool HasIndirectParameters() const;
+        /// @brief True when the current driver has reliable OpenGL Hi-Z
+        ///        occlusion behavior for the engine's footprint query.
+        bool HasReliableHiZOcclusion() const;
         const RendererSettings& GetSettings() const;
         /// @brief Write a material record into the global bindless material SSBO
         ///        and return its index (selected per draw by the MaterialIndex
@@ -267,6 +270,7 @@ namespace AeonGames
         bool mHasBindlessTexture{false};
         bool mHasIndirectParameters{false};
         bool mHasComputeShader{false};
+        bool mHasReliableHiZOcclusion{true};
         ///@}
         /// @name Global bindless material storage
         /// Renderer-owned SSBO of GpuMaterial records, bound once per bindless
