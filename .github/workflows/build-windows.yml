@@ -60,7 +60,7 @@ jobs:
     - name: ⚙️ Configure CMake (Windows Visual Studio)
       shell: pwsh
       run: |
-        cmake -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DUSE_AEONGUI=ON -B ${{github.workspace}}/build
+        cmake -DCMAKE_TOOLCHAIN_FILE="C:\vcpkg\scripts\buildsystems\vcpkg.cmake" -DUSE_AEONGUI=ON -DVCPKG_INSTALL_OPTIONS=--clean-after-build -B ${{github.workspace}}/build
       if: matrix.compiler == 'msvc'
 
     - name: 🔨 Build
