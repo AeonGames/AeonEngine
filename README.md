@@ -147,7 +147,6 @@ pacboy -S --needed --noconfirm \
     toolchain:p \
     cmake:p \
     make:p \
-    tools-git:p \
     vulkan:p \
     vulkan-devel:p \
     qt6:p \

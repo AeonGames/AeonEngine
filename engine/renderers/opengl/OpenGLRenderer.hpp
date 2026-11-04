@@ -16,6 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_OPENGLRENDERER_HPP
 #define AEONGAMES_OPENGLRENDERER_HPP
 
+#include <atomic>
 #include <cstdint>
 #include <unordered_map>
 #include <vector>
