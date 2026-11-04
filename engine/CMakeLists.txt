@@ -187,6 +187,7 @@ if(IWYU_PROGRAM)
 endif()
 
 add_subdirectory(components)
+add_subdirectory(genres/turn-based-tactics)
 if(BUILD_OPENGL_RENDERER)
   add_subdirectory(renderers/opengl)
 endif()
