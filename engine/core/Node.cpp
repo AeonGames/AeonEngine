@@ -253,7 +253,7 @@ namespace AeonGames
             const StringId* PropertyIds = i->GetPropertyInfoArray();
             for ( size_t j = 0; j < i->GetPropertyCount(); ++j )
             {
-                ComponentPropertyMsg* component_property_buffer = component_buffer->add_property();
+                PropertyMsg* component_property_buffer = component_buffer->add_property();
                 ( *component_property_buffer->mutable_name() ) = PropertyIds[j].GetString();
 
                 std::visit (

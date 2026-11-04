@@ -30,7 +30,7 @@ namespace AeonGames
     class Vector3Msg;
     class QuaternionMsg;
     class TransformMsg;
-    class ComponentPropertyMsg;
+    class PropertyMsg;
     class PipelineMsg;
     /** @brief Retrieve the identifier from a ReferenceMsg.
      *  @param reference_buffer The ReferenceMsg to extract the id from.
@@ -67,20 +67,20 @@ namespace AeonGames
      *  @return The corresponding Transform value.
      */
     Transform GetTransform ( const TransformMsg& aTransform );
-    /** @brief Convert a ComponentPropertyMsg protobuf message to a Property.
-     *  @param aComponentPropertyMsg The protobuf message to convert.
+    /** @brief Convert a PropertyMsg protobuf message to a Property.
+     *  @param aPropertyMsg The protobuf message to convert.
      *  @return The corresponding Property value.
      */
-    Property GetProperty ( const ComponentPropertyMsg& aComponentPropertyMsg );
+    Property GetProperty ( const PropertyMsg& aPropertyMsg );
     /** @brief Calculate the uniform buffer size required by a pipeline.
      *  @param aPipelineMsg The pipeline message to query.
      *  @return Size in bytes of the uniform buffer.
      */
     size_t GetUniformBufferSize ( const PipelineMsg& aPipelineMsg );
-    /** @brief Convert a PropertyMsg to a Material uniform key-value pair.
-     *  @param aProperty The property message to convert.
+    /** @brief Convert a UniformVariableMsg to a Material uniform key-value pair.
+     *  @param aUniformVariable The uniform variable message to convert.
      *  @return A key-value pair suitable for Material uniform data.
      */
-    DLL Material::UniformKeyValue PropertyToKeyValue ( const PropertyMsg& aProperty );
+    DLL Material::UniformKeyValue UniformVariableToKeyValue ( const UniformVariableMsg& aUniformVariable );
 }
 #endif

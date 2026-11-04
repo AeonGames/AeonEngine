@@ -18,26 +18,11 @@ package AeonGames;
 import "transform.proto";
 import "reference.proto";
 import "vector4.proto";
-
-message ComponentPropertyMsg{
-    string name = 1;
-    oneof value {
-    sint32    int = 2;
-    sint32    long = 3;
-    sint64    long_long = 4;
-    uint32    unsigned = 5;
-    uint32    unsigned_long = 6;
-    uint64    unsigned_long_long = 7;
-    float     float = 8;
-    double    double = 9;
-    string    string = 10;
-    string    path = 11;
-    }
-}
+import "property.proto";
 
 message ComponentMsg {
     string name = 1;
-    repeated ComponentPropertyMsg property = 2;
+    repeated PropertyMsg property = 2;
 }
 
 message NodeMsg {

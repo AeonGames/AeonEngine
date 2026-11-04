@@ -55,37 +55,37 @@ namespace AeonGames
         {
             switch ( i.value_case() )
             {
-            case PropertyMsg::ValueCase::kScalarFloat:
+            case UniformVariableMsg::ValueCase::kScalarFloat:
                 size += ( size % sizeof ( float ) ) ? sizeof ( float ) - ( size % sizeof ( float ) ) : 0; // Align to float
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float );
                 break;
-            case PropertyMsg::ValueCase::kScalarUint:
+            case UniformVariableMsg::ValueCase::kScalarUint:
                 size += ( size % sizeof ( uint32_t ) ) ? sizeof ( uint32_t ) - ( size % sizeof ( uint32_t ) ) : 0; // Align to uint
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( uint32_t );
                 break;
-            case PropertyMsg::ValueCase::kScalarInt:
+            case UniformVariableMsg::ValueCase::kScalarInt:
                 size += ( size % sizeof ( int32_t ) ) ? sizeof ( int32_t ) - ( size % sizeof ( int32_t ) ) : 0; // Align to int
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( int32_t );
                 break;
-            case PropertyMsg::ValueCase::kVector2:
+            case UniformVariableMsg::ValueCase::kVector2:
                 size += ( size % ( sizeof ( float ) * 2 ) ) ? ( sizeof ( float ) * 2 ) - ( size % ( sizeof ( float ) * 2 ) ) : 0; // Align to 2 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 2;
                 break;
-            case PropertyMsg::ValueCase::kVector3:
+            case UniformVariableMsg::ValueCase::kVector3:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 3;
                 break;
-            case PropertyMsg::ValueCase::kVector4:
+            case UniformVariableMsg::ValueCase::kVector4:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 4;
                 break;
-            case PropertyMsg::ValueCase::kMatrix4X4:
+            case UniformVariableMsg::ValueCase::kMatrix4X4:
                 size += ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // Align to 4 floats
                 mVariables.emplace_back ( i.name(),  size );
                 size += sizeof ( float ) * 16;
@@ -219,7 +219,7 @@ namespace AeonGames
             mUniformBuffer.resize ( size );
             for ( auto& i : aMaterialMsg.property() )
             {
-                Set ( PropertyToKeyValue ( i ) );
+                Set ( UniformVariableToKeyValue ( i ) );
             }
         }
         LoadSamplers ( aMaterialMsg );

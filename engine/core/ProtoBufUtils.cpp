@@ -97,31 +97,31 @@ namespace AeonGames
         };
     }
 
-    Property GetProperty ( const ComponentPropertyMsg& aComponentPropertyMsg )
+    Property GetProperty ( const PropertyMsg& aPropertyMsg )
     {
-        switch ( aComponentPropertyMsg.value_case() )
+        switch ( aPropertyMsg.value_case() )
         {
-        case ComponentPropertyMsg::kInt:
-            return static_cast<int> ( aComponentPropertyMsg.int_() );
-        case ComponentPropertyMsg::kLong:
-            return static_cast<long> ( aComponentPropertyMsg.long_() );
-        case ComponentPropertyMsg::kLongLong:
-            return static_cast<long long> ( aComponentPropertyMsg.long_long() );
-        case ComponentPropertyMsg::kUnsigned:
-            return static_cast<unsigned> ( aComponentPropertyMsg.int_() );
-        case ComponentPropertyMsg::kUnsignedLong:
-            return static_cast<unsigned long> ( aComponentPropertyMsg.unsigned_long() );
-        case ComponentPropertyMsg::kUnsignedLongLong:
-            return static_cast<unsigned long long> ( aComponentPropertyMsg.unsigned_long_long() );
-        case ComponentPropertyMsg::kFloat:
-            return static_cast<float> ( aComponentPropertyMsg.float_() );
-        case ComponentPropertyMsg::kDouble:
-            return static_cast<double> ( aComponentPropertyMsg.double_() );
-        case ComponentPropertyMsg::kString:
-            return aComponentPropertyMsg.string();
-        case ComponentPropertyMsg::kPath:
-            return std::filesystem::path ( aComponentPropertyMsg.path() );
-        case ComponentPropertyMsg::VALUE_NOT_SET:
+        case PropertyMsg::kInt:
+            return static_cast<int> ( aPropertyMsg.int_() );
+        case PropertyMsg::kLong:
+            return static_cast<long> ( aPropertyMsg.long_() );
+        case PropertyMsg::kLongLong:
+            return static_cast<long long> ( aPropertyMsg.long_long() );
+        case PropertyMsg::kUnsigned:
+            return static_cast<unsigned> ( aPropertyMsg.int_() );
+        case PropertyMsg::kUnsignedLong:
+            return static_cast<unsigned long> ( aPropertyMsg.unsigned_long() );
+        case PropertyMsg::kUnsignedLongLong:
+            return static_cast<unsigned long long> ( aPropertyMsg.unsigned_long_long() );
+        case PropertyMsg::kFloat:
+            return static_cast<float> ( aPropertyMsg.float_() );
+        case PropertyMsg::kDouble:
+            return static_cast<double> ( aPropertyMsg.double_() );
+        case PropertyMsg::kString:
+            return aPropertyMsg.string();
+        case PropertyMsg::kPath:
+            return std::filesystem::path ( aPropertyMsg.path() );
+        case PropertyMsg::VALUE_NOT_SET:
             /// @todo Add component and property names to the exception message.
             throw std::runtime_error ( "Component property value not set." );
             break;
@@ -167,41 +167,41 @@ namespace AeonGames
         return size + ( size % ( sizeof ( float ) * 4 ) ) ? ( sizeof ( float ) * 4 ) - ( size % ( sizeof ( float ) * 4 ) ) : 0; // align the final value to 4 float
     }
 #endif
-    Material::UniformKeyValue PropertyToKeyValue ( const PropertyMsg& aProperty )
+    Material::UniformKeyValue UniformVariableToKeyValue ( const UniformVariableMsg& aUniformVariable )
     {
-        switch ( aProperty.value_case() )
+        switch ( aUniformVariable.value_case() )
         {
-        case PropertyMsg::ValueCase::kScalarFloat:
-            return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_float() };
-        case PropertyMsg::ValueCase::kScalarUint:
-            return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_uint() };
-        case PropertyMsg::ValueCase::kScalarInt:
-            return Material::UniformKeyValue{aProperty.name(), aProperty.scalar_int() };
-        case PropertyMsg::ValueCase::kVector2:
-            return Material::UniformKeyValue{aProperty.name(), Vector2{aProperty.vector2().x(), aProperty.vector2().y() }};
-        case PropertyMsg::ValueCase::kVector3:
-            return Material::UniformKeyValue{aProperty.name(), Vector3{aProperty.vector3().x(), aProperty.vector3().y(), aProperty.vector3().z() }};
-        case PropertyMsg::ValueCase::kVector4:
-            return Material::UniformKeyValue{aProperty.name(), Vector4{aProperty.vector4().x(), aProperty.vector4().y(), aProperty.vector4().z(), aProperty.vector4().w() }};
-        case PropertyMsg::ValueCase::kMatrix4X4:
-            return Material::UniformKeyValue{aProperty.name(), Matrix4x4
+        case UniformVariableMsg::ValueCase::kScalarFloat:
+            return Material::UniformKeyValue{aUniformVariable.name(), aUniformVariable.scalar_float() };
+        case UniformVariableMsg::ValueCase::kScalarUint:
+            return Material::UniformKeyValue{aUniformVariable.name(), aUniformVariable.scalar_uint() };
+        case UniformVariableMsg::ValueCase::kScalarInt:
+            return Material::UniformKeyValue{aUniformVariable.name(), aUniformVariable.scalar_int() };
+        case UniformVariableMsg::ValueCase::kVector2:
+            return Material::UniformKeyValue{aUniformVariable.name(), Vector2{aUniformVariable.vector2().x(), aUniformVariable.vector2().y() }};
+        case UniformVariableMsg::ValueCase::kVector3:
+            return Material::UniformKeyValue{aUniformVariable.name(), Vector3{aUniformVariable.vector3().x(), aUniformVariable.vector3().y(), aUniformVariable.vector3().z() }};
+        case UniformVariableMsg::ValueCase::kVector4:
+            return Material::UniformKeyValue{aUniformVariable.name(), Vector4{aUniformVariable.vector4().x(), aUniformVariable.vector4().y(), aUniformVariable.vector4().z(), aUniformVariable.vector4().w() }};
+        case UniformVariableMsg::ValueCase::kMatrix4X4:
+            return Material::UniformKeyValue{aUniformVariable.name(), Matrix4x4
                 {
-                    aProperty.matrix4x4().m0(),
-                             aProperty.matrix4x4().m1(),
-                             aProperty.matrix4x4().m2(),
-                             aProperty.matrix4x4().m3(),
-                             aProperty.matrix4x4().m4(),
-                             aProperty.matrix4x4().m5(),
-                             aProperty.matrix4x4().m6(),
-                             aProperty.matrix4x4().m7(),
-                             aProperty.matrix4x4().m8(),
-                             aProperty.matrix4x4().m9(),
-                             aProperty.matrix4x4().m10(),
-                             aProperty.matrix4x4().m11(),
-                             aProperty.matrix4x4().m12(),
-                             aProperty.matrix4x4().m13(),
-                             aProperty.matrix4x4().m14(),
-                             aProperty.matrix4x4().m15()
+                    aUniformVariable.matrix4x4().m0(),
+                                    aUniformVariable.matrix4x4().m1(),
+                                    aUniformVariable.matrix4x4().m2(),
+                                    aUniformVariable.matrix4x4().m3(),
+                                    aUniformVariable.matrix4x4().m4(),
+                                    aUniformVariable.matrix4x4().m5(),
+                                    aUniformVariable.matrix4x4().m6(),
+                                    aUniformVariable.matrix4x4().m7(),
+                                    aUniformVariable.matrix4x4().m8(),
+                                    aUniformVariable.matrix4x4().m9(),
+                                    aUniformVariable.matrix4x4().m10(),
+                                    aUniformVariable.matrix4x4().m11(),
+                                    aUniformVariable.matrix4x4().m12(),
+                                    aUniformVariable.matrix4x4().m13(),
+                                    aUniformVariable.matrix4x4().m14(),
+                                    aUniformVariable.matrix4x4().m15()
                 }};
         default:
             break;

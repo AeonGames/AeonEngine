@@ -732,19 +732,19 @@ namespace AeonGames
 
         MaterialMsg material{};
         {
-            PropertyMsg* base_color = material.add_property();
+            UniformVariableMsg* base_color = material.add_property();
             base_color->set_name ( "BaseColorFactor" );
             base_color->mutable_vector4()->set_x ( 1.0f );
             base_color->mutable_vector4()->set_y ( 1.0f );
             base_color->mutable_vector4()->set_z ( 1.0f );
             base_color->mutable_vector4()->set_w ( 1.0f );
-            PropertyMsg* metallic = material.add_property();
+            UniformVariableMsg* metallic = material.add_property();
             metallic->set_name ( "MetallicFactor" );
             metallic->set_scalar_float ( kMetallicFactor );
-            PropertyMsg* roughness = material.add_property();
+            UniformVariableMsg* roughness = material.add_property();
             roughness->set_name ( "RoughnessFactor" );
             roughness->set_scalar_float ( kRoughnessFactor );
-            PropertyMsg* emissive = material.add_property();
+            UniformVariableMsg* emissive = material.add_property();
             emissive->set_name ( "EmissiveFactor" );
             emissive->mutable_vector3()->set_x ( 0.0f );
             emissive->mutable_vector3()->set_y ( 0.0f );

@@ -32,7 +32,7 @@ namespace AeonGames
 {
     class Image;
     class MaterialMsg;
-    class PropertyMsg;
+    class UniformVariableMsg;
     /** @brief Represents a surface material with uniform properties and texture samplers. */
     class Material final : public Resource
     {

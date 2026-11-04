@@ -21,6 +21,7 @@ limitations under the License.
 #include <mutex>
 #include <unordered_map>
 #include <stdexcept>
+#include <limits>
 #include "aeongames/ProtoBufClasses.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
@@ -211,11 +212,29 @@ namespace AeonGames
                 const uint32_t key = crc32i ( property.name().c_str(), property.name().size() );
                 switch ( property.value_case() )
                 {
-                case PropertyMsg::kScalarUint:
-                    settings.mPluginProperties[key] = property.scalar_uint();
+                case PropertyMsg::kInt:
+                    settings.mPluginProperties[key] = property.int_();
                     break;
-                case PropertyMsg::kScalarInt:
-                    settings.mPluginProperties[key] = property.scalar_int();
+                case PropertyMsg::kLong:
+                    settings.mPluginProperties[key] = property.long_();
+                    break;
+                case PropertyMsg::kLongLong:
+                    settings.mPluginProperties[key] = property.long_long();
+                    break;
+                case PropertyMsg::kUnsigned:
+                    settings.mPluginProperties[key] = property.unsigned_();
+                    break;
+                case PropertyMsg::kUnsignedLong:
+                    settings.mPluginProperties[key] = property.unsigned_long();
+                    break;
+                case PropertyMsg::kUnsignedLongLong:
+                    if ( property.unsigned_long_long() > static_cast<uint64_t> ( std::numeric_limits<int64_t>::max() ) )
+                    {
+                        std::cout << LogLevel::Warning << "Ignoring out-of-range unsigned renderer setting \"" << property.name()
+                                  << "\" for plugin \"" << aRendererName << "\"." << std::endl;
+                        break;
+                    }
+                    settings.mPluginProperties[key] = static_cast<int64_t> ( property.unsigned_long_long() );
                     break;
                 default:
                     std::cout << LogLevel::Warning << "Ignoring non-integer renderer setting \"" << property.name()

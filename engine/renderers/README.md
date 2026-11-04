@@ -235,6 +235,14 @@ hardcodes a backend-specific key. Take the settings in the constructor
 (`MyRenderer ( void* aWindow, const RendererSettings& aSettings )`) and expose them through
 `GetSettings()`.
 
+`PluginSettings.Property` uses the generic `PropertyMsg`: integer values may use
+`int`, `long`, `long_long`, `unsigned`, `unsigned_long`, or `unsigned_long_long`.
+They must fit in the runtime bag's signed 64-bit range; out-of-range unsigned
+values and non-integer properties are ignored with a warning. In older text
+configurations, replace `scalar_int` with `int` and `scalar_uint` with `unsigned`.
+Older binary configurations containing plugin properties must be regenerated
+because the generic property's value fields use different wire numbers.
+
 ## 7. Native Metal architecture
 
 Metal follows the same public `Renderer` contract and `RenderScene` sequence, but its ownership and
