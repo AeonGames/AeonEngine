@@ -25,42 +25,18 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId OverTheShoulderCameraStringId{"OverTheShoulderCamera"};
-    const StringId& OverTheShoulderCamera::GetClassId()
+    const StringId& OverTheShoulderCamera::ClassId()
     {
         return OverTheShoulderCameraStringId;
     }
 
-    OverTheShoulderCamera::OverTheShoulderCamera() : Component{}
-    {
-    }
+    OverTheShoulderCamera::OverTheShoulderCamera() = default;
 
     OverTheShoulderCamera::~OverTheShoulderCamera() = default;
 
-    const StringId& OverTheShoulderCamera::GetId() const
+    const StringId& OverTheShoulderCamera::GetClassId() const
     {
         return OverTheShoulderCameraStringId;
-    }
-
-    static constexpr std::array<const StringId, 6> OverTheShoulderCameraPropertyIds
-    {
-        {
-            {"Shoulder Offset"},
-            {"Height Offset"},
-            {"Distance Behind"},
-            {"Field of View"},
-            {"Near Plane"},
-            {"Far Plane"}
-        }
-    };
-
-    size_t OverTheShoulderCamera::GetPropertyCount () const
-    {
-        return OverTheShoulderCameraPropertyIds.size();
-    }
-
-    const StringId* OverTheShoulderCamera::GetPropertyInfoArray () const
-    {
-        return OverTheShoulderCameraPropertyIds.data();
     }
 
     float OverTheShoulderCamera::GetShoulderOffset() const
@@ -111,56 +87,6 @@ namespace AeonGames
     void OverTheShoulderCamera::SetFarPlane ( float aFarPlane )
     {
         mFarPlane = aFarPlane;
-    }
-
-    Property OverTheShoulderCamera::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case OverTheShoulderCameraPropertyIds[0]:
-            return GetShoulderOffset();
-        case OverTheShoulderCameraPropertyIds[1]:
-            return GetHeightOffset();
-        case OverTheShoulderCameraPropertyIds[2]:
-            return GetDistanceBehind();
-        case OverTheShoulderCameraPropertyIds[3]:
-            return GetFieldOfView();
-        case OverTheShoulderCameraPropertyIds[4]:
-            return GetNearPlane();
-        case OverTheShoulderCameraPropertyIds[5]:
-            return GetFarPlane();
-        }
-        return Property{};
-    }
-
-    void OverTheShoulderCamera::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<float> ( aProperty ) )
-        {
-            return;
-        }
-        float value = std::get<float> ( aProperty );
-        switch ( aId )
-        {
-        case OverTheShoulderCameraPropertyIds[0]:
-            SetShoulderOffset ( value );
-            break;
-        case OverTheShoulderCameraPropertyIds[1]:
-            SetHeightOffset ( value );
-            break;
-        case OverTheShoulderCameraPropertyIds[2]:
-            SetDistanceBehind ( value );
-            break;
-        case OverTheShoulderCameraPropertyIds[3]:
-            SetFieldOfView ( value );
-            break;
-        case OverTheShoulderCameraPropertyIds[4]:
-            SetNearPlane ( value );
-            break;
-        case OverTheShoulderCameraPropertyIds[5]:
-            SetFarPlane ( value );
-            break;
-        }
     }
 
     void OverTheShoulderCamera::Update ( Node& aNode, double /*aDelta*/ )

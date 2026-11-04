@@ -47,9 +47,10 @@ missing or empty identifiers have CRC zero and are omitted when saved.
 Camera references use nonempty node identifiers; zero or empty camera lookup
 clears the camera instead of selecting an unnamed node.
 
-In text scenes, rename node-level `name` fields to `id`; scene, component, and
-property `name` fields are unchanged. The former `name` schema's field numbers
-are retained, so its binary scenes remain wire-compatible.
+In text scenes, rename node-level `name` fields to `id` and component-level
+`name` fields to `type`; scene and property `name` fields are unchanged. Both
+renames retain their original field numbers, so binary scenes remain
+wire-compatible and do not need recooking for these renames.
 
 ## Blender Python environment
 

@@ -81,6 +81,7 @@ namespace AeonGames
             @param aNodeMsg The message to populate. */
         DLL void Serialize ( NodeMsg& aNodeMsg ) const;
         /** Deserialize this node's state from a protobuf message.
+            An omitted transform uses the identity local transform.
             @param aNodeMsg The message to read from. */
         DLL void Deserialize ( const NodeMsg& aNodeMsg );
         /** Enables or disables a set of node flags.

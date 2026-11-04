@@ -29,43 +29,18 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId OrbitalCameraStringId{"OrbitalCamera"};
-    const StringId& OrbitalCamera::GetClassId()
+    const StringId& OrbitalCamera::ClassId()
     {
         return OrbitalCameraStringId;
     }
 
-    OrbitalCamera::OrbitalCamera() : Component{}
-    {
-    }
+    OrbitalCamera::OrbitalCamera() = default;
 
     OrbitalCamera::~OrbitalCamera() = default;
 
-    const StringId& OrbitalCamera::GetId() const
+    const StringId& OrbitalCamera::GetClassId() const
     {
         return OrbitalCameraStringId;
-    }
-
-    static constexpr std::array<const StringId, 7> OrbitalCameraPropertyIds
-    {
-        {
-            {"Distance"},
-            {"Azimuth"},
-            {"Elevation"},
-            {"Height Offset"},
-            {"Field of View"},
-            {"Near Plane"},
-            {"Far Plane"}
-        }
-    };
-
-    size_t OrbitalCamera::GetPropertyCount () const
-    {
-        return OrbitalCameraPropertyIds.size();
-    }
-
-    const StringId* OrbitalCamera::GetPropertyInfoArray () const
-    {
-        return OrbitalCameraPropertyIds.data();
     }
 
     float OrbitalCamera::GetDistance() const
@@ -124,61 +99,6 @@ namespace AeonGames
     void OrbitalCamera::SetFarPlane ( float aFarPlane )
     {
         mFarPlane = aFarPlane;
-    }
-
-    Property OrbitalCamera::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case OrbitalCameraPropertyIds[0]:
-            return GetDistance();
-        case OrbitalCameraPropertyIds[1]:
-            return GetAzimuth();
-        case OrbitalCameraPropertyIds[2]:
-            return GetElevation();
-        case OrbitalCameraPropertyIds[3]:
-            return GetHeightOffset();
-        case OrbitalCameraPropertyIds[4]:
-            return GetFieldOfView();
-        case OrbitalCameraPropertyIds[5]:
-            return GetNearPlane();
-        case OrbitalCameraPropertyIds[6]:
-            return GetFarPlane();
-        }
-        return Property{};
-    }
-
-    void OrbitalCamera::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<float> ( aProperty ) )
-        {
-            return;
-        }
-        float value = std::get<float> ( aProperty );
-        switch ( aId )
-        {
-        case OrbitalCameraPropertyIds[0]:
-            SetDistance ( value );
-            break;
-        case OrbitalCameraPropertyIds[1]:
-            SetAzimuth ( value );
-            break;
-        case OrbitalCameraPropertyIds[2]:
-            SetElevation ( value );
-            break;
-        case OrbitalCameraPropertyIds[3]:
-            SetHeightOffset ( value );
-            break;
-        case OrbitalCameraPropertyIds[4]:
-            SetFieldOfView ( value );
-            break;
-        case OrbitalCameraPropertyIds[5]:
-            SetNearPlane ( value );
-            break;
-        case OrbitalCameraPropertyIds[6]:
-            SetFarPlane ( value );
-            break;
-        }
     }
 
     void OrbitalCamera::Update ( Node& aNode, double /*aDelta*/ )

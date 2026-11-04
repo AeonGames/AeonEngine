@@ -5,13 +5,7 @@
             "intelliSenseMode": "gcc-x64",
             "compilerPath": "@CMAKE_CXX_COMPILER@",
             "includePath": [
-                @INCLIST@,
-                "@CMAKE_SOURCE_DIR@/include",
-                "@CMAKE_SOURCE_DIR@/engine/include",
-                "@CMAKE_SOURCE_DIR@/tools/worldeditor",
-                "@CMAKE_BINARY_DIR@/tools/worldeditor",
-                "@CMAKE_BINARY_DIR@/engine",
-                "@CMAKE_BINARY_DIR@/proto/"
+                @INCLIST@
             ],
             "defines": [],
             "cStandard": "c11",

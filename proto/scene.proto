@@ -21,7 +21,7 @@ import "vector4.proto";
 import "property.proto";
 
 message ComponentMsg {
-    string name = 1;
+    string type = 1;
     repeated PropertyMsg property = 2;
 }
 

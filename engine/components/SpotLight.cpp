@@ -28,96 +28,31 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId SpotLightStringId{"Spot Light"};
-    const StringId& SpotLight::GetClassId()
+    const StringId& SpotLight::ClassId()
     {
         return SpotLightStringId;
     }
 
-    SpotLight::SpotLight() : Component{} {}
+    SpotLight::SpotLight() = default;
     SpotLight::~SpotLight() = default;
 
-    const StringId& SpotLight::GetId() const
+    const StringId& SpotLight::GetClassId() const
     {
         return SpotLightStringId;
     }
 
-    static constexpr std::array<const StringId, 7> SpotLightPropertyIds
+    void SpotLight::SetInnerAngle ( float aAngle )
     {
+        mInnerAngle = aAngle;
+        if ( mInnerAngle > mOuterAngle )
         {
-            {"Color R"},
-            {"Color G"},
-            {"Color B"},
-            {"Intensity"},
-            {"Radius"},
-            {"Inner Angle"},
-            {"Outer Angle"}
+            mInnerAngle = mOuterAngle;
         }
-    };
-
-    size_t SpotLight::GetPropertyCount () const
-    {
-        return SpotLightPropertyIds.size();
     }
 
-    const StringId* SpotLight::GetPropertyInfoArray () const
+    void SpotLight::SetOuterAngle ( float aAngle )
     {
-        return SpotLightPropertyIds.data();
-    }
-
-    Property SpotLight::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case SpotLightPropertyIds[0]:
-            return mColorR;
-        case SpotLightPropertyIds[1]:
-            return mColorG;
-        case SpotLightPropertyIds[2]:
-            return mColorB;
-        case SpotLightPropertyIds[3]:
-            return mIntensity;
-        case SpotLightPropertyIds[4]:
-            return mRadius;
-        case SpotLightPropertyIds[5]:
-            return mInnerAngle;
-        case SpotLightPropertyIds[6]:
-            return mOuterAngle;
-        }
-        return Property{};
-    }
-
-    void SpotLight::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<float> ( aProperty ) )
-        {
-            return;
-        }
-        float value = std::get<float> ( aProperty );
-        switch ( aId )
-        {
-        case SpotLightPropertyIds[0]:
-            mColorR = value;
-            break;
-        case SpotLightPropertyIds[1]:
-            mColorG = value;
-            break;
-        case SpotLightPropertyIds[2]:
-            mColorB = value;
-            break;
-        case SpotLightPropertyIds[3]:
-            mIntensity = value;
-            break;
-        case SpotLightPropertyIds[4]:
-            mRadius = value;
-            break;
-        case SpotLightPropertyIds[5]:
-            mInnerAngle = value;
-            break;
-        case SpotLightPropertyIds[6]:
-            mOuterAngle = value;
-            break;
-        }
-        // Guarantee the smoothstep edges stay ordered: inner < outer.
+        mOuterAngle = aAngle;
         if ( mInnerAngle > mOuterAngle )
         {
             mInnerAngle = mOuterAngle;

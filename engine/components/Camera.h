@@ -15,14 +15,14 @@ limitations under the License.
 */
 #ifndef AEONGAMES_CAMERA_H
 #define AEONGAMES_CAMERA_H
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 
 namespace AeonGames
 {
     class Node;
     class Window;
     /** @brief Camera component providing perspective projection parameters for a scene node. */
-    class Camera final : public Component
+    class Camera final : public ComponentProperties<Camera>
     {
     public:
         /** @brief Default constructor. */
@@ -30,11 +30,7 @@ namespace AeonGames
         /** @name Overrides */
         ///@{
         ~Camera() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
@@ -54,8 +50,16 @@ namespace AeonGames
             @param aFarPlane Far plane distance. */
         void SetFarPlane ( float aFarPlane );
         /** @brief Returns the class identifier for the Camera component. */
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
     private:
+        friend class ComponentProperties<Camera>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<Camera>, 3> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<Camera>::Create<&Camera::GetFieldOfView, &Camera::SetFieldOfView> ( "Field of View" ),
+                ComponentPropertyDescriptor<Camera>::Create<&Camera::GetNearPlane, &Camera::SetNearPlane> ( "Near Plane" ),
+                ComponentPropertyDescriptor<Camera>::Create<&Camera::GetFarPlane, &Camera::SetFarPlane> ( "Far Plane" )
+            }};
         float mFieldOfView{60.0f};
         float mNearPlane{1.0f};
         float mFarPlane{16000.0f};

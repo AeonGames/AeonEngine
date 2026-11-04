@@ -15,7 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_FREECAMERA_HPP
 #define AEONGAMES_FREECAMERA_HPP
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 #include "aeongames/ActionMap.hpp"
 
 namespace AeonGames
@@ -43,18 +43,14 @@ namespace AeonGames
      * convention matches the other camera components: +X right, +Y forward,
      * +Z up, with the camera looking along +Y.
      */
-    class FreeCamera final : public Component
+    class FreeCamera final : public ComponentProperties<FreeCamera>
     {
     public:
         FreeCamera();
         /** @name Overrides */
         ///@{
         ~FreeCamera() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
@@ -77,7 +73,7 @@ namespace AeonGames
         ActionMap& GetActionMap();
         const ActionMap& GetActionMap() const;
 
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
 
         /** @brief Action identifiers consumed by this component. */
         enum Action : uint32_t
@@ -96,6 +92,17 @@ namespace AeonGames
         };
 
     private:
+        friend class ComponentProperties<FreeCamera>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<FreeCamera>, 6> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<FreeCamera>::Create<&FreeCamera::GetMoveSpeed, &FreeCamera::SetMoveSpeed> ( "Move Speed" ),
+                ComponentPropertyDescriptor<FreeCamera>::Create<&FreeCamera::GetBoostMultiplier, &FreeCamera::SetBoostMultiplier> ( "Boost Multiplier" ),
+                ComponentPropertyDescriptor<FreeCamera>::Create<&FreeCamera::GetLookSpeed, &FreeCamera::SetLookSpeed> ( "Look Speed" ),
+                ComponentPropertyDescriptor<FreeCamera>::Create<&FreeCamera::GetFieldOfView, &FreeCamera::SetFieldOfView> ( "Field of View" ),
+                ComponentPropertyDescriptor<FreeCamera>::Create<&FreeCamera::GetNearPlane, &FreeCamera::SetNearPlane> ( "Near Plane" ),
+                ComponentPropertyDescriptor<FreeCamera>::Create<&FreeCamera::GetFarPlane, &FreeCamera::SetFarPlane> ( "Far Plane" )
+            }};
         float mMoveSpeed{6.0f};        ///< meters / second
         float mBoostMultiplier{4.0f};  ///< speed factor while boosting
         float mLookSpeed{0.15f};       ///< degrees per mouse-pixel

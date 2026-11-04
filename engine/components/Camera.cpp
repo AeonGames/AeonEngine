@@ -28,39 +28,18 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId CameraStringId{"Camera"};
-    const StringId& Camera::GetClassId()
+    const StringId& Camera::ClassId()
     {
         return CameraStringId;
     }
 
-    Camera::Camera() : Component{}
-    {
-    }
+    Camera::Camera() = default;
 
     Camera::~Camera() = default;
 
-    const StringId& Camera::GetId() const
+    const StringId& Camera::GetClassId() const
     {
         return CameraStringId;
-    }
-
-    static constexpr std::array<const StringId, 3> CameraPropertyIds
-    {
-        {
-            {"Field of View"},
-            {"Near Plane"},
-            {"Far Plane"}
-        }
-    };
-
-    size_t Camera::GetPropertyCount () const
-    {
-        return CameraPropertyIds.size();
-    }
-
-    const StringId* Camera::GetPropertyInfoArray () const
-    {
-        return CameraPropertyIds.data();
     }
 
     float Camera::GetFieldOfView() const
@@ -86,45 +65,6 @@ namespace AeonGames
     void Camera::SetFarPlane ( float aFarPlane )
     {
         mFarPlane = aFarPlane;
-    }
-
-    Property Camera::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case CameraPropertyIds[0]:
-            return GetFieldOfView();
-        case CameraPropertyIds[1]:
-            return GetNearPlane();
-        case CameraPropertyIds[2]:
-            return GetFarPlane();
-        }
-        return Property{};
-    }
-
-    void Camera::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        switch ( aId )
-        {
-        case CameraPropertyIds[0]:
-            if ( std::holds_alternative<float> ( aProperty ) )
-            {
-                SetFieldOfView ( std::get<float> ( aProperty ) );
-            }
-            break;
-        case CameraPropertyIds[1]:
-            if ( std::holds_alternative<float> ( aProperty ) )
-            {
-                SetNearPlane ( std::get<float> ( aProperty ) );
-            }
-            break;
-        case CameraPropertyIds[2]:
-            if ( std::holds_alternative<float> ( aProperty ) )
-            {
-                SetFarPlane ( std::get<float> ( aProperty ) );
-            }
-            break;
-        }
     }
 
     void Camera::Update ( Node& aNode, double aDelta )

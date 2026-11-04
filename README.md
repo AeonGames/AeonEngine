@@ -51,6 +51,19 @@ This is the 3rd iteration of the engine, the first one was started circa 1996 an
 - **PointLight / SpotLight / DirectionalLight** — Scene illumination with radius attenuation and spot-cone falloff
 - **CharacterController** — Movement/turn controller wired to the input system
 
+Components can inherit the header-only `ComponentProperties<T>` helper in
+[ComponentProperties.hpp](include/aeongames/ComponentProperties.hpp). Grant the
+helper friendship and declare a private `inline static constexpr std::array`
+named `kPropertyDescriptors`, with entries of `ComponentPropertyDescriptor<T>`.
+Its declaration order is the serialization and editor property order.
+`Create<&T::Getter, &T::Setter>("Name")` binds accessors and rejects mismatched
+variant types; setters explicitly accepting `const Property&` can handle
+multiple alternatives. `Member<&T::mValue>("Name")` binds plain storage directly.
+The helper implements the existing property virtuals without per-instance
+storage or dispatch allocations; enum-value overrides remain available.
+See [PointLight.h](engine/components/PointLight.h) for accessor bindings and
+[ModelComponent.h](engine/components/ModelComponent.h) for resource setters.
+
 ### Asset Pipeline
 
 All game assets are serialized using [Protocol Buffers](https://protobuf.dev/), including meshes, materials, pipelines, skeletons, animations, scenes, and models. Shader pipelines under `game/shaders/` and cooked Blender outputs under `game/<asset>/` are generated from sources under `assets/`; edit the source shader or `.blend`, not the generated file.

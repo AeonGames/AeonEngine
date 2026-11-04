@@ -32,7 +32,7 @@ namespace AeonGames
 {
     static const StringId CollisionStringId{"Collision Component"};
 
-    const StringId& CollisionComponent::GetClassId()
+    const StringId& CollisionComponent::ClassId()
     {
         return CollisionStringId;
     }
@@ -40,56 +40,29 @@ namespace AeonGames
     CollisionComponent::CollisionComponent() = default;
     CollisionComponent::~CollisionComponent() = default;
 
-    const StringId& CollisionComponent::GetId() const
+    const StringId& CollisionComponent::GetClassId() const
     {
         return CollisionStringId;
     }
 
-    static constexpr std::array<const StringId, 1> CollisionComponentPropertyIds
+    std::string CollisionComponent::GetCollisionProperty() const
     {
+        return GetCollision().GetPathString();
+    }
+
+    void CollisionComponent::SetCollisionProperty ( const Property& aProperty )
+    {
+        if ( std::holds_alternative<std::string> ( aProperty ) )
         {
-            {"Collision"},
+            SetCollision ( {"Collision"_crc32, std::get<std::string> ( aProperty ) } );
         }
-    };
-
-    size_t CollisionComponent::GetPropertyCount () const
-    {
-        return CollisionComponentPropertyIds.size();
-    }
-
-    const StringId* CollisionComponent::GetPropertyInfoArray () const
-    {
-        return CollisionComponentPropertyIds.data();
-    }
-
-    Property CollisionComponent::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
+        else if ( std::holds_alternative<std::filesystem::path> ( aProperty ) )
         {
-        case CollisionComponentPropertyIds[0]:
-            return GetCollision().GetPathString();
+            SetCollision ( {"Collision"_crc32, std::get<std::filesystem::path> ( aProperty ).string() } );
         }
-        return Property{};
-    }
-
-    void CollisionComponent::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        switch ( aId )
+        else if ( std::holds_alternative<uint32_t> ( aProperty ) )
         {
-        case CollisionComponentPropertyIds[0]:
-            if ( std::holds_alternative<std::string> ( aProperty ) )
-            {
-                SetCollision ( {"Collision"_crc32, std::get<std::string> ( aProperty ) } );
-            }
-            else if ( std::holds_alternative<std::filesystem::path> ( aProperty ) )
-            {
-                SetCollision ( {"Collision"_crc32, std::get<std::filesystem::path> ( aProperty ).string() } );
-            }
-            else if ( std::holds_alternative<uint32_t> ( aProperty ) )
-            {
-                SetCollision ( {"Collision"_crc32, std::get<uint32_t> ( aProperty ) } );
-            }
-            break;
+            SetCollision ( {"Collision"_crc32, std::get<uint32_t> ( aProperty ) } );
         }
     }
 
@@ -203,7 +176,7 @@ namespace AeonGames
         float nearest = 1.0f;
         aScene.QueryAABB ( query_box, [&] ( const Node & node )
         {
-            Component* component = node.GetComponent ( CollisionComponent::GetClassId() );
+            Component* component = node.GetComponent ( CollisionComponent::ClassId() );
             if ( !component )
             {
                 return;
@@ -241,7 +214,7 @@ namespace AeonGames
             {
                 return;
             }
-            Component* component = node.GetComponent ( CollisionComponent::GetClassId() );
+            Component* component = node.GetComponent ( CollisionComponent::ClassId() );
             if ( !component )
             {
                 return;

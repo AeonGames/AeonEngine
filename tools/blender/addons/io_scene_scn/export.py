@@ -229,7 +229,7 @@ class SCN_OT_exporter(bpy.types.Operator):
     # -- component builders -------------------------------------------------
     def _add_model_component(self, node_msg, model_path):
         component = node_msg.component.add()
-        component.name = "Model Component"
+        component.type = "Model Component"
         prop = component.property.add()
         prop.name = "Model"
         prop.path = model_path
@@ -239,7 +239,7 @@ class SCN_OT_exporter(bpy.types.Operator):
             print("Marker", obj.name, "instances collection",
                   obj.instance_collection.name, "which is not exported")
         component = node_msg.component.add()
-        component.name = "Marker"
+        component.type = "Marker"
         prop = component.property.add()
         prop.name = "Type"
         prop.string = getattr(obj, _MARKER_TYPE_PROP, "") or ""
@@ -248,7 +248,7 @@ class SCN_OT_exporter(bpy.types.Operator):
         color = light.color  # linear RGB, 0..1
         if light.type == 'SUN':
             component = node_msg.component.add()
-            component.name = "Directional Light"
+            component.type = "Directional Light"
             self._add_float_property(component, "Color R", color[0])
             self._add_float_property(component, "Color G", color[1])
             self._add_float_property(component, "Color B", color[2])
@@ -256,7 +256,7 @@ class SCN_OT_exporter(bpy.types.Operator):
                                      light.energy * _SUN_INTENSITY_SCALE)
         elif light.type == 'SPOT':
             component = node_msg.component.add()
-            component.name = "Spot Light"
+            component.type = "Spot Light"
             self._add_float_property(component, "Color R", color[0])
             self._add_float_property(component, "Color G", color[1])
             self._add_float_property(component, "Color B", color[2])
@@ -274,7 +274,7 @@ class SCN_OT_exporter(bpy.types.Operator):
         else:
             # POINT (and AREA, which has no engine equivalent) -> Point Light.
             component = node_msg.component.add()
-            component.name = "Point Light"
+            component.type = "Point Light"
             self._add_float_property(component, "Color R", color[0])
             self._add_float_property(component, "Color G", color[1])
             self._add_float_property(component, "Color B", color[2])
@@ -287,7 +287,7 @@ class SCN_OT_exporter(bpy.types.Operator):
         component = node_msg.component.add()
         # Both Camera and Free Camera are driven by the same three values; the
         # free-fly ones (move/look speed) keep their component defaults.
-        component.name = getattr(obj, _CAMERA_COMPONENT_PROP, "") or "Camera"
+        component.type = getattr(obj, _CAMERA_COMPONENT_PROP, "") or "Camera"
         # The engine's Matrix4x4::Perspective takes the VERTICAL field of view
         # in DEGREES (tan(fov * PI / 360)).
         self._add_float_property(component, "Field of View",

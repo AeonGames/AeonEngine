@@ -77,7 +77,7 @@ namespace
 namespace AeonGames
 {
     static const StringId ModelStringId{"Model Component"};
-    const StringId& ModelComponent::GetClassId()
+    const StringId& ModelComponent::ClassId()
     {
         return ModelStringId;
     }
@@ -85,81 +85,36 @@ namespace AeonGames
     ModelComponent::ModelComponent() = default;
     ModelComponent::~ModelComponent() = default;
 
-    const StringId& ModelComponent::GetId() const
+    const StringId& ModelComponent::GetClassId() const
     {
         return ModelStringId;
     }
 
-    static constexpr std::array<const StringId, 3> ModelComponentPropertyIds
+    std::string ModelComponent::GetModelProperty() const
     {
+        return GetModel().GetPathString();
+    }
+
+    void ModelComponent::SetModelProperty ( const Property& aProperty )
+    {
+        if ( std::holds_alternative<std::string> ( aProperty ) )
         {
-            {"Model"},
-            {"Active Animation"},
-            {"Starting Frame"},
+            SetModel ( {"Model"_crc32, std::get<std::string> ( aProperty ) } );
         }
-    };
-
-    size_t ModelComponent::GetPropertyCount () const
-    {
-        return ModelComponentPropertyIds.size();
-    }
-
-    const StringId* ModelComponent::GetPropertyInfoArray () const
-    {
-        return ModelComponentPropertyIds.data();
-    }
-
-    Property ModelComponent::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-    {
-    case ModelComponentPropertyIds[0]:
-            return GetModel().GetPathString();
-        case ModelComponentPropertyIds[1]:
-            return GetActiveAnimation();
-        case ModelComponentPropertyIds[2]:
-            return GetStartingFrame();
-        }
-        return Property{};
-    }
-
-    void ModelComponent::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        switch ( aId )
+        else if ( std::holds_alternative<std::filesystem::path> ( aProperty ) )
         {
-        case ModelComponentPropertyIds[0]:
-            if ( std::holds_alternative<std::string> ( aProperty ) )
-            {
-                SetModel ( {"Model"_crc32, std::get<std::string> ( aProperty ) } );
-            }
-            else if ( std::holds_alternative<std::filesystem::path> ( aProperty ) )
-            {
-                SetModel ( {"Model"_crc32, std::get<std::filesystem::path> ( aProperty ).string() } );
-            }
-            else if ( std::holds_alternative<uint32_t> ( aProperty ) )
-            {
-                SetModel ( {"Model"_crc32, std::get<uint32_t> ( aProperty ) } );
-            }
-            break;
-        case ModelComponentPropertyIds[1]:
-            if ( std::holds_alternative<std::string> ( aProperty ) )
-            {
-                SetActiveAnimation ( std::get<std::string> ( aProperty ) );
-            }
-            break;
-        case ModelComponentPropertyIds[2]:
-            if ( std::holds_alternative<double> ( aProperty ) )
-            {
-                SetStartingFrame ( std::get<double> ( aProperty ) );
-            }
-            break;
+            SetModel ( {"Model"_crc32, std::get<std::filesystem::path> ( aProperty ).string() } );
+        }
+        else if ( std::holds_alternative<uint32_t> ( aProperty ) )
+        {
+            SetModel ( {"Model"_crc32, std::get<uint32_t> ( aProperty ) } );
         }
     }
 
     const std::vector<std::string>& ModelComponent::GetPropertyEnumValues ( const StringId& aId ) const
     {
         static const std::vector<std::string> empty{};
-        if ( aId == ModelComponentPropertyIds[1] )
+        if ( aId == kPropertyDescriptors[1].mId )
         {
             if ( auto model = mModel.Cast<Model>() )
             {

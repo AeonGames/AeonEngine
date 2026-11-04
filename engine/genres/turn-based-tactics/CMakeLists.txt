@@ -1,7 +1,9 @@
 set(NODES_HEADERS
+  TacticalGrid.hpp
 )
 set(NODES_SOURCES
   Plugin.cpp
+  TacticalGrid.cpp
 )
 
 add_library(TurnbasedTactics SHARED ${NODES_HEADERS} ${NODES_SOURCES})

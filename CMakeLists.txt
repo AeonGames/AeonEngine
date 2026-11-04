@@ -546,7 +546,13 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
                     string(STRIP "${CXX_INCLUDE_PATH}" CXX_INCLUDE_PATH)
   endif()
 
-  set(INCLIST "")
+  set(INCLIST
+      "${CMAKE_SOURCE_DIR}/include"
+      "${CMAKE_SOURCE_DIR}/engine/include"
+      "${CMAKE_SOURCE_DIR}/tools/worldeditor"
+      "${CMAKE_BINARY_DIR}/tools/worldeditor"
+      "${CMAKE_BINARY_DIR}/engine"
+      "${CMAKE_BINARY_DIR}/proto")
 
   if(Qt6_FOUND)
     list(APPEND INCLIST ${Qt6Core_INCLUDE_DIRS})
@@ -563,8 +569,15 @@ if(CMAKE_GENERATOR MATCHES "(MSYS|Unix|MinGW) Makefiles")
   list(APPEND INCLIST ${GLSlang_INCLUDE_DIR})
   list(APPEND INCLIST ${Vulkan_INCLUDE_DIR})
   list(APPEND INCLIST ${Protobuf_INCLUDE_DIR})
-  list(APPEND INCLIST ${CXX_INCLUDE_PATH})
 
+  list(REMOVE_DUPLICATES INCLIST)
+  set(CLANG_CXXFLAGS "-std=c++20")
+  foreach(include_directory IN LISTS INCLIST)
+    list(APPEND CLANG_CXXFLAGS "-I${include_directory}")
+  endforeach()
+  set(CLANG_CXXFLAGS "\"${CLANG_CXXFLAGS}\"")
+  string(REPLACE ";" "\",\n        \"" CLANG_CXXFLAGS "${CLANG_CXXFLAGS}")
+  list(APPEND INCLIST ${CXX_INCLUDE_PATH})
   list(REMOVE_DUPLICATES INCLIST)
   set(INCLIST "\"${INCLIST}\"")
   string(REPLACE ";"

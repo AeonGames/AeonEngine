@@ -1,0 +1,7 @@
+AEONSCN
+name: "Tactical Grid Scene"
+node {
+  component {
+    type: "Tactical Grid"
+  }
+}

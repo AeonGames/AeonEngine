@@ -14,7 +14,7 @@ node {
     }
   }
   component {
-    name: "Model Component"
+    type: "Model Component"
     property {
       name: "Model"
       string: "aerin/aerin"

@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_COLLISIONCOMPONENT_H
 #include <string>
 #include <vector>
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/AABB.hpp"
 #include "aeongames/Vector3.hpp"
@@ -38,7 +38,7 @@ namespace AeonGames
      *  Each instance also publishes the collision geometry's bounding box as the
      *  node's AABB during Update so the scene-wide query helpers can broad-phase
      *  cull candidate nodes before doing the (more expensive) Kd-tree query. */
-    class CollisionComponent final : public Component
+    class CollisionComponent final : public ComponentProperties<CollisionComponent>
     {
     public:
         /** @brief Default constructor. */
@@ -46,11 +46,7 @@ namespace AeonGames
         /** @name Overrides */
         ///@{
         ~CollisionComponent() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
@@ -96,8 +92,16 @@ namespace AeonGames
         ///@}
 
         /** @brief Returns the class identifier for the CollisionComponent. */
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
     private:
+        std::string GetCollisionProperty() const;
+        void SetCollisionProperty ( const Property& aProperty );
+        friend class ComponentProperties<CollisionComponent>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<CollisionComponent>, 1> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<CollisionComponent>::Create<&CollisionComponent::GetCollisionProperty, &CollisionComponent::SetCollisionProperty> ( "Collision" )
+            }};
         ResourceId mCollision{};
     };
 }

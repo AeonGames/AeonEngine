@@ -53,10 +53,10 @@ namespace AeonGames
          *  @param aProperty Value to assign to the property.
          */
         DLL void SetProperty ( const std::string& aId, const Property& aProperty );
-        /** @brief Get the unique identifier for this component type.
-         *  @return Reference to the component's StringId.
+        /** @brief Get the identifier of this component's concrete class.
+         *  @return Reference to the class's StringId.
          */
-        virtual const StringId& GetId() const = 0;
+        virtual const StringId& GetClassId() const = 0;
         /** @brief Get the number of properties exposed by this component.
          *  @return Property count.
          */

@@ -15,7 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_ORBITALCAMERA_HPP
 #define AEONGAMES_ORBITALCAMERA_HPP
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 #include "aeongames/Vector3.hpp"
 #include "aeongames/Quaternion.hpp"
 
@@ -24,18 +24,14 @@ namespace AeonGames
     class Node;
     /** @brief Orbital camera component.
      */
-    class OrbitalCamera final : public Component
+    class OrbitalCamera final : public ComponentProperties<OrbitalCamera>
     {
     public:
         OrbitalCamera();
         /** @name Overrides */
         ///@{
         ~OrbitalCamera() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
@@ -58,9 +54,21 @@ namespace AeonGames
         void SetNearPlane ( float aNearPlane );
         void SetFarPlane ( float aFarPlane );
 
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
 
     private:
+        friend class ComponentProperties<OrbitalCamera>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<OrbitalCamera>, 7> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<OrbitalCamera>::Create<&OrbitalCamera::GetDistance, &OrbitalCamera::SetDistance> ( "Distance" ),
+                ComponentPropertyDescriptor<OrbitalCamera>::Create<&OrbitalCamera::GetAzimuth, &OrbitalCamera::SetAzimuth> ( "Azimuth" ),
+                ComponentPropertyDescriptor<OrbitalCamera>::Create<&OrbitalCamera::GetElevation, &OrbitalCamera::SetElevation> ( "Elevation" ),
+                ComponentPropertyDescriptor<OrbitalCamera>::Create<&OrbitalCamera::GetHeightOffset, &OrbitalCamera::SetHeightOffset> ( "Height Offset" ),
+                ComponentPropertyDescriptor<OrbitalCamera>::Create<&OrbitalCamera::GetFieldOfView, &OrbitalCamera::SetFieldOfView> ( "Field of View" ),
+                ComponentPropertyDescriptor<OrbitalCamera>::Create<&OrbitalCamera::GetNearPlane, &OrbitalCamera::SetNearPlane> ( "Near Plane" ),
+                ComponentPropertyDescriptor<OrbitalCamera>::Create<&OrbitalCamera::GetFarPlane, &OrbitalCamera::SetFarPlane> ( "Far Plane" )
+            }};
         float mDistance{1.0f};
         float mAzimuth{};
         float mElevation{};

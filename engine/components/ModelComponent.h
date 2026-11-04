@@ -20,7 +20,7 @@ limitations under the License.
 #include <string>
 #include <string_view>
 #include <vector>
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 #include "aeongames/ResourceId.hpp"
 #include "aeongames/BufferAccessor.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -33,7 +33,7 @@ namespace AeonGames
     class Buffer;
     class Model;
     /** @brief Component that attaches a 3D model with skeletal animation support to a scene node. */
-    class ModelComponent final : public Component
+    class ModelComponent final : public ComponentProperties<ModelComponent>
     {
     public:
         /** @brief Default constructor. */
@@ -41,11 +41,7 @@ namespace AeonGames
         /** @name Overrides */
         ///@{
         ~ModelComponent() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         const std::vector<std::string>& GetPropertyEnumValues ( const StringId& aId ) const final;
         void Update ( Node& aNode, double aDelta ) final;
         void Collect ( const Node& aNode, std::vector<RenderItem>& aQueue ) const final;
@@ -78,8 +74,18 @@ namespace AeonGames
         float GetBlendDuration() const noexcept;
         ///@}
         /** @brief Returns the class identifier for the ModelComponent. */
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
     private:
+        std::string GetModelProperty() const;
+        void SetModelProperty ( const Property& aProperty );
+        friend class ComponentProperties<ModelComponent>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<ModelComponent>, 3> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<ModelComponent>::Create<&ModelComponent::GetModelProperty, &ModelComponent::SetModelProperty> ( "Model" ),
+                ComponentPropertyDescriptor<ModelComponent>::Create<&ModelComponent::GetActiveAnimation, &ModelComponent::SetActiveAnimation> ( "Active Animation" ),
+                ComponentPropertyDescriptor<ModelComponent>::Create<&ModelComponent::GetStartingFrame, &ModelComponent::SetStartingFrame> ( "Starting Frame" )
+            }};
         // Properties
         ResourceId mModel{};
         std::string mActiveAnimation{};

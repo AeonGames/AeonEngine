@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2018,2019,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2018,2019,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ namespace AeonGames
         }
         if ( role == Qt::DisplayRole )
         {
-            return QString ( mNode->GetComponentByIndex ( index.row() )->GetId().GetString() );
+            return QString ( mNode->GetComponentByIndex ( index.row() )->GetClassId().GetString() );
         }
         return QVariant();
     }

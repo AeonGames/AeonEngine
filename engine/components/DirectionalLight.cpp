@@ -27,77 +27,17 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId DirectionalLightStringId{"Directional Light"};
-    const StringId& DirectionalLight::GetClassId()
+    const StringId& DirectionalLight::ClassId()
     {
         return DirectionalLightStringId;
     }
 
-    DirectionalLight::DirectionalLight() : Component{} {}
+    DirectionalLight::DirectionalLight() = default;
     DirectionalLight::~DirectionalLight() = default;
 
-    const StringId& DirectionalLight::GetId() const
+    const StringId& DirectionalLight::GetClassId() const
     {
         return DirectionalLightStringId;
-    }
-
-    static constexpr std::array<const StringId, 4> DirectionalLightPropertyIds
-    {
-        {
-            {"Color R"},
-            {"Color G"},
-            {"Color B"},
-            {"Intensity"}
-        }
-    };
-
-    size_t DirectionalLight::GetPropertyCount () const
-    {
-        return DirectionalLightPropertyIds.size();
-    }
-
-    const StringId* DirectionalLight::GetPropertyInfoArray () const
-    {
-        return DirectionalLightPropertyIds.data();
-    }
-
-    Property DirectionalLight::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case DirectionalLightPropertyIds[0]:
-            return mColorR;
-        case DirectionalLightPropertyIds[1]:
-            return mColorG;
-        case DirectionalLightPropertyIds[2]:
-            return mColorB;
-        case DirectionalLightPropertyIds[3]:
-            return mIntensity;
-        }
-        return Property{};
-    }
-
-    void DirectionalLight::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<float> ( aProperty ) )
-        {
-            return;
-        }
-        float value = std::get<float> ( aProperty );
-        switch ( aId )
-        {
-        case DirectionalLightPropertyIds[0]:
-            mColorR = value;
-            break;
-        case DirectionalLightPropertyIds[1]:
-            mColorG = value;
-            break;
-        case DirectionalLightPropertyIds[2]:
-            mColorB = value;
-            break;
-        case DirectionalLightPropertyIds[3]:
-            mIntensity = value;
-            break;
-        }
     }
 
     void DirectionalLight::Update ( Node& aNode, double /*aDelta*/ )

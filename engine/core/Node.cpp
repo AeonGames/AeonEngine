@@ -31,6 +31,7 @@ limitations under the License.
 #include "aeongames/ProtoBufClasses.hpp"
 #include "aeongames/ProtoBufUtils.hpp"
 #include "aeongames/CRC.hpp"
+#include "aeongames/LogLevel.hpp"
 #ifdef _MSC_VER
 #pragma warning( push )
 #pragma warning( disable : PROTOBUF_WARNINGS )
@@ -249,7 +250,7 @@ namespace AeonGames
         for ( auto& i : mComponents )
         {
             ComponentMsg* component_buffer = aNodeMsg.add_component();
-            ( *component_buffer->mutable_name() ) = i->GetId().GetString();
+            component_buffer->set_type ( i->GetClassId().GetString() );
             const StringId* PropertyIds = i->GetPropertyInfoArray();
             for ( size_t j = 0; j < i->GetPropertyCount(); ++j )
             {
@@ -322,9 +323,20 @@ namespace AeonGames
         {
             SetGlobalTransform ( GetTransform ( aNodeMsg.global() ) );
         }
+        else
+        {
+            SetLocalTransform ( Transform{} );
+        }
         for ( auto& i : aNodeMsg.component() )
         {
-            Component* component = AddComponent ( ConstructComponent ( i.name() ) );
+            auto constructed_component = ConstructComponent ( i.type() );
+            if ( !constructed_component )
+            {
+                std::cerr << LogLevel::Error << "Unable to construct component \"" << i.type()
+                          << "\" on node \"" << GetStringId() << "\"; skipping component." << std::endl;
+                continue;
+            }
+            Component* component = AddComponent ( std::move ( constructed_component ) );
             for ( auto& j : i.property() )
             {
                 component->SetProperty ( j.name(), GetProperty ( j ) );
@@ -629,15 +641,15 @@ namespace AeonGames
     {
         auto i = std::find_if ( mComponents.begin(), mComponents.end(), [&aComponent] ( const std::unique_ptr<Component>& aIteratorComponent )
         {
-            return aComponent->GetId() == aIteratorComponent->GetId();
+            return aComponent->GetClassId() == aIteratorComponent->GetClassId();
         } );
         if ( i != mComponents.end() )
         {
-            std::cout << "Overwriting node data for " << aComponent->GetId().GetString() << std::endl;
+            std::cout << "Overwriting node data for " << aComponent->GetClassId().GetString() << std::endl;
             i->swap ( aComponent );
             return i->get();
         }
-        mComponentDependencyMap.Insert ( {aComponent->GetId(),/** @todo Get Node Data dependencies. */{}, aComponent->GetId() } );
+        mComponentDependencyMap.Insert ( {aComponent->GetClassId(),/** @todo Get Node Data dependencies. */{}, aComponent->GetClassId() } );
         mComponents.emplace_back ( std::move ( aComponent ) );
         return mComponents.back().get();
     }
@@ -646,7 +658,7 @@ namespace AeonGames
     {
         auto i = std::find_if ( mComponents.begin(), mComponents.end(), [aId] ( const std::unique_ptr<Component>& aComponent )
         {
-            return aComponent->GetId() == aId;
+            return aComponent->GetClassId() == aId;
         } );
         if ( i != mComponents.end() )
         {
@@ -661,7 +673,7 @@ namespace AeonGames
         std::unique_ptr<Component> result{};
         auto i = std::find_if ( mComponents.begin(), mComponents.end(), [aId] ( const std::unique_ptr<Component>& aComponent )
         {
-            return aComponent->GetId() == aId;
+            return aComponent->GetClassId() == aId;
         } );
         if ( i != mComponents.end() )
         {

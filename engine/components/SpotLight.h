@@ -15,25 +15,21 @@ limitations under the License.
 */
 #ifndef AEONGAMES_SPOTLIGHT_H
 #define AEONGAMES_SPOTLIGHT_H
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 
 namespace AeonGames
 {
     class Node;
     /** @brief Spot light component. Cone aimed along the node's local -Z axis. */
-    class SpotLight final : public Component
+    class SpotLight final : public ComponentProperties<SpotLight>
     {
     public:
         SpotLight();
         ~SpotLight() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
     private:
         float mColorR{1.0f};
         float mColorG{1.0f};
@@ -45,6 +41,20 @@ namespace AeonGames
         // cos(inner) for a soft edge.
         float mInnerAngle{20.0f};
         float mOuterAngle{30.0f};
+        void SetInnerAngle ( float aAngle );
+        void SetOuterAngle ( float aAngle );
+        friend class ComponentProperties<SpotLight>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<SpotLight>, 7> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<SpotLight>::Member<&SpotLight::mColorR> ( "Color R" ),
+                ComponentPropertyDescriptor<SpotLight>::Member<&SpotLight::mColorG> ( "Color G" ),
+                ComponentPropertyDescriptor<SpotLight>::Member<&SpotLight::mColorB> ( "Color B" ),
+                ComponentPropertyDescriptor<SpotLight>::Member<&SpotLight::mIntensity> ( "Intensity" ),
+                ComponentPropertyDescriptor<SpotLight>::Member<&SpotLight::mRadius> ( "Radius" ),
+                ComponentPropertyDescriptor<SpotLight>::Create<&SpotLight::mInnerAngle, &SpotLight::SetInnerAngle> ( "Inner Angle" ),
+                ComponentPropertyDescriptor<SpotLight>::Create<&SpotLight::mOuterAngle, &SpotLight::SetOuterAngle> ( "Outer Angle" )
+            }};
     };
 }
 #endif

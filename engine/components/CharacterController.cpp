@@ -30,14 +30,14 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId CharacterControllerStringId{"Character Controller"};
-    const StringId& CharacterController::GetClassId()
+    const StringId& CharacterController::ClassId()
     {
         return CharacterControllerStringId;
     }
 
     // Default key bindings. KeyCode names physical keys, so these follow the
     // WASD block wherever the active layout puts its labels.
-    CharacterController::CharacterController() : Component{}
+    CharacterController::CharacterController()
     {
         mActionMap.Bind ( Action_MoveForward,  KeyCode::W );
         mActionMap.Bind ( Action_MoveForward,  KeyCode::Up );
@@ -51,27 +51,9 @@ namespace AeonGames
 
     CharacterController::~CharacterController() = default;
 
-    const StringId& CharacterController::GetId() const
+    const StringId& CharacterController::GetClassId() const
     {
         return CharacterControllerStringId;
-    }
-
-    static constexpr std::array<const StringId, 2> CharacterControllerPropertyIds
-    {
-        {
-            {"Move Speed"},
-            {"Turn Speed"}
-        }
-    };
-
-    size_t CharacterController::GetPropertyCount () const
-    {
-        return CharacterControllerPropertyIds.size();
-    }
-
-    const StringId* CharacterController::GetPropertyInfoArray () const
-    {
-        return CharacterControllerPropertyIds.data();
     }
 
     float CharacterController::GetMoveSpeed() const
@@ -98,36 +80,6 @@ namespace AeonGames
     const ActionMap& CharacterController::GetActionMap() const
     {
         return mActionMap;
-    }
-
-    Property CharacterController::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case CharacterControllerPropertyIds[0]:
-            return GetMoveSpeed();
-        case CharacterControllerPropertyIds[1]:
-            return GetTurnSpeed();
-        }
-        return Property{};
-    }
-
-    void CharacterController::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<float> ( aProperty ) )
-        {
-            return;
-        }
-        float value = std::get<float> ( aProperty );
-        switch ( aId )
-        {
-        case CharacterControllerPropertyIds[0]:
-            SetMoveSpeed ( value );
-            break;
-        case CharacterControllerPropertyIds[1]:
-            SetTurnSpeed ( value );
-            break;
-        }
     }
 
     void CharacterController::Update ( Node& aNode, double aDelta )
@@ -210,7 +162,7 @@ namespace AeonGames
             desired_animation = "Right Turn";
         }
 
-        if ( Component * component = aNode.GetComponent ( ModelComponent::GetClassId() ) )
+        if ( Component * component = aNode.GetComponent ( ModelComponent::ClassId() ) )
         {
             auto* model_component = static_cast<ModelComponent*> ( component );
             if ( model_component->GetActiveAnimation() != desired_animation )

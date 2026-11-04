@@ -28,7 +28,7 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId FreeCameraStringId{"Free Camera"};
-    const StringId& FreeCamera::GetClassId()
+    const StringId& FreeCamera::ClassId()
     {
         return FreeCameraStringId;
     }
@@ -42,7 +42,7 @@ namespace AeonGames
         constexpr float kMaxPitch = 89.0f;
     }
 
-    FreeCamera::FreeCamera() : Component{}
+    FreeCamera::FreeCamera()
     {
         mActionMap.Bind ( Action_MoveForward,  KeyCode::W );
         mActionMap.Bind ( Action_MoveBackward, KeyCode::S );
@@ -59,31 +59,9 @@ namespace AeonGames
 
     FreeCamera::~FreeCamera() = default;
 
-    const StringId& FreeCamera::GetId() const
+    const StringId& FreeCamera::GetClassId() const
     {
         return FreeCameraStringId;
-    }
-
-    static constexpr std::array<const StringId, 6> FreeCameraPropertyIds
-    {
-        {
-            {"Move Speed"},
-            {"Boost Multiplier"},
-            {"Look Speed"},
-            {"Field of View"},
-            {"Near Plane"},
-            {"Far Plane"}
-        }
-    };
-
-    size_t FreeCamera::GetPropertyCount () const
-    {
-        return FreeCameraPropertyIds.size();
-    }
-
-    const StringId* FreeCamera::GetPropertyInfoArray () const
-    {
-        return FreeCameraPropertyIds.data();
     }
 
     float FreeCamera::GetMoveSpeed() const
@@ -143,56 +121,6 @@ namespace AeonGames
     const ActionMap& FreeCamera::GetActionMap() const
     {
         return mActionMap;
-    }
-
-    Property FreeCamera::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-    {
-    case FreeCameraPropertyIds[0]:
-            return GetMoveSpeed();
-        case FreeCameraPropertyIds[1]:
-            return GetBoostMultiplier();
-        case FreeCameraPropertyIds[2]:
-            return GetLookSpeed();
-        case FreeCameraPropertyIds[3]:
-            return GetFieldOfView();
-        case FreeCameraPropertyIds[4]:
-            return GetNearPlane();
-        case FreeCameraPropertyIds[5]:
-            return GetFarPlane();
-        }
-        return Property{};
-    }
-
-    void FreeCamera::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<float> ( aProperty ) )
-        {
-            return;
-        }
-        float value = std::get<float> ( aProperty );
-        switch ( aId )
-        {
-        case FreeCameraPropertyIds[0]:
-            SetMoveSpeed ( value );
-            break;
-        case FreeCameraPropertyIds[1]:
-            SetBoostMultiplier ( value );
-            break;
-        case FreeCameraPropertyIds[2]:
-            SetLookSpeed ( value );
-            break;
-        case FreeCameraPropertyIds[3]:
-            SetFieldOfView ( value );
-            break;
-        case FreeCameraPropertyIds[4]:
-            SetNearPlane ( value );
-            break;
-        case FreeCameraPropertyIds[5]:
-            SetFarPlane ( value );
-            break;
-        }
     }
 
     void FreeCamera::Update ( Node& aNode, double aDelta )

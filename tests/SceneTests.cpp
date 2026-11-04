@@ -18,11 +18,14 @@ limitations under the License.
 #include <algorithm>
 #include <span>
 #include <vector>
+#include <iostream>
+#include <sstream>
 #include "gtest/gtest.h"
 #include "aeongames/CRC.hpp"
 #include "aeongames/Node.hpp"
 #include "aeongames/Scene.hpp"
 #include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 #include "aeongames/Frustum.hpp"
 #include "aeongames/AABB.hpp"
 #include "aeongames/Matrix4x4.hpp"
@@ -109,6 +112,330 @@ namespace AeonGames
         Node* n{};
         Scene mScene{};
     };
+
+    class DescriptorTestComponent final : public ComponentProperties<DescriptorTestComponent>
+    {
+    public:
+        float GetValue() const
+        {
+            return mValue;
+        }
+        void SetValue ( float aValue )
+        {
+            mValue = aValue;
+            ++mSetterCalls;
+        }
+        const std::string& GetText() const
+        {
+            return mText;
+        }
+        void SetText ( const std::string& aText )
+        {
+            mText = aText;
+        }
+        void SetFlexibleText ( const Property& aProperty )
+        {
+            if ( const auto * text = std::get_if<std::string> ( &aProperty ) )
+            {
+                SetText ( *text );
+            }
+            else if ( const auto * path = std::get_if<std::filesystem::path> ( &aProperty ) )
+            {
+                SetText ( path->string() );
+            }
+        }
+        size_t GetSetterCalls() const
+        {
+            return mSetterCalls;
+        }
+        const StringId& GetClassId() const final
+        {
+            static constexpr StringId identifier{"Descriptor Test"};
+            return identifier;
+        }
+        void Update ( Node&, double ) final {}
+        void ProcessMessage ( Node&, uint32_t, const void* ) final {}
+    private:
+        friend class ComponentProperties<DescriptorTestComponent>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<DescriptorTestComponent>, 3> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<DescriptorTestComponent>::Create<&DescriptorTestComponent::GetValue, &DescriptorTestComponent::SetValue> ( "Value" ),
+                ComponentPropertyDescriptor<DescriptorTestComponent>::Create<&DescriptorTestComponent::GetText, &DescriptorTestComponent::SetText> ( "Text" ),
+                ComponentPropertyDescriptor<DescriptorTestComponent>::Create<&DescriptorTestComponent::GetText, &DescriptorTestComponent::SetFlexibleText> ( "Flexible Text" )
+            }};
+        float mValue{};
+        std::string mText{};
+        size_t mSetterCalls{};
+    };
+
+    TEST ( ComponentPropertiesTest, MetadataPreservesDeclarationOrder )
+    {
+        DescriptorTestComponent component;
+        ASSERT_EQ ( component.GetPropertyCount(), 3u );
+        const StringId* identifiers = component.GetPropertyInfoArray();
+        ASSERT_NE ( identifiers, nullptr );
+        EXPECT_EQ ( identifiers[0], "Value"_crc32 );
+        EXPECT_EQ ( identifiers[1], "Text"_crc32 );
+        EXPECT_EQ ( identifiers[2], "Flexible Text"_crc32 );
+        EXPECT_EQ ( component.GetPropertyInfoArray(), identifiers );
+    }
+
+    TEST ( ComponentPropertiesTest, DispatchesTypedGettersAndSetters )
+    {
+        DescriptorTestComponent component;
+        component.SetProperty ( "Value"_crc32, 3.5f );
+        component.SetProperty ( std::string{"Text"}, std::string{"example"} );
+        EXPECT_EQ ( std::get<float> ( component.GetProperty ( "Value" ) ), 3.5f );
+        EXPECT_EQ ( std::get<std::string> ( component.GetProperty ( "Text" ) ), "example" );
+        EXPECT_EQ ( component.GetSetterCalls(), 1u );
+    }
+
+    TEST ( ComponentPropertiesTest, IgnoresUnknownIdsAndMismatchedTypes )
+    {
+        DescriptorTestComponent component;
+        component.SetProperty ( "Value"_crc32, 3.5f );
+        component.SetProperty ( "Value"_crc32, 7.0 );
+        component.SetProperty ( "Value"_crc32, std::string{"wrong type"} );
+        component.SetProperty ( "Unknown"_crc32, 8.0f );
+        component.SetProperty ( "Text"_crc32, 42 );
+        EXPECT_EQ ( component.GetValue(), 3.5f );
+        EXPECT_EQ ( component.GetSetterCalls(), 1u );
+        EXPECT_TRUE ( component.GetText().empty() );
+        EXPECT_EQ ( component.GetProperty ( "Unknown" ), Property{} );
+    }
+
+    TEST ( ComponentPropertiesTest, CustomSettersAcceptMultiplePropertyAlternatives )
+    {
+        DescriptorTestComponent component;
+        component.SetProperty ( "Flexible Text"_crc32, std::filesystem::path{"models/example.txt"} );
+        EXPECT_EQ ( component.GetText(), "models/example.txt" );
+        component.SetProperty ( "Flexible Text"_crc32, std::string{"second"} );
+        EXPECT_EQ ( component.GetText(), "second" );
+        component.SetProperty ( "Flexible Text"_crc32, 12 );
+        EXPECT_EQ ( component.GetText(), "second" );
+    }
+
+    class EmptyDescriptorTestComponent final : public ComponentProperties<EmptyDescriptorTestComponent>
+    {
+    public:
+        const StringId& GetClassId() const final
+        {
+            static constexpr StringId identifier{"Empty Descriptor Test"};
+            return identifier;
+        }
+        void Update ( Node&, double ) final {}
+        void ProcessMessage ( Node&, uint32_t, const void* ) final {}
+    private:
+        friend class ComponentProperties<EmptyDescriptorTestComponent>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<EmptyDescriptorTestComponent>, 0> kPropertyDescriptors{};
+    };
+
+    TEST ( ComponentPropertiesTest, EmptyTablePreservesEmptyComponentContract )
+    {
+        EmptyDescriptorTestComponent component;
+        EXPECT_EQ ( component.GetPropertyCount(), 0u );
+        EXPECT_EQ ( component.GetPropertyInfoArray(), nullptr );
+        EXPECT_EQ ( component.GetProperty ( "Unknown" ), Property{} );
+        component.SetProperty ( "Unknown"_crc32, 1.0f );
+    }
+
+    TEST ( ComponentPropertiesTest, FactoryMetadataAndTypeCheckingRemainStable )
+    {
+        auto check_properties = [] ( const StringId & aType, std::initializer_list<const char*> aNames )
+        {
+            SCOPED_TRACE ( aType.GetString() );
+            auto component = ConstructComponent ( aType );
+            ASSERT_NE ( component, nullptr );
+            EXPECT_EQ ( component->GetClassId(), aType );
+            ASSERT_EQ ( component->GetPropertyCount(), aNames.size() );
+            const StringId* identifiers = component->GetPropertyInfoArray();
+            ASSERT_NE ( identifiers, nullptr );
+            EXPECT_EQ ( component->GetPropertyInfoArray(), identifiers );
+            size_t index = 0;
+            for ( const char * name : aNames )
+            {
+                EXPECT_STREQ ( identifiers[index].GetString(), name );
+                const Property initial = component->GetProperty ( identifiers[index] );
+                const Property mismatch = std::holds_alternative<float> ( initial ) ? Property{std::string{"wrong type"}} :
+                                          Property{2.0f};
+                component->SetProperty ( identifiers[index], mismatch );
+                EXPECT_EQ ( component->GetProperty ( identifiers[index] ), initial );
+                ++index;
+            }
+            EXPECT_EQ ( component->GetProperty ( "Unknown" ), Property{} );
+        };
+        check_properties ( "Point Light", {"Color R", "Color G", "Color B", "Intensity", "Radius"} );
+        check_properties ( "Spot Light", {"Color R", "Color G", "Color B", "Intensity", "Radius", "Inner Angle", "Outer Angle"} );
+        check_properties ( "Directional Light", {"Color R", "Color G", "Color B", "Intensity"} );
+        check_properties ( "Marker", {"Type"} );
+        check_properties ( "Camera", {"Field of View", "Near Plane", "Far Plane"} );
+        check_properties ( "Character Controller", {"Move Speed", "Turn Speed"} );
+        check_properties ( "Free Camera", {"Move Speed", "Boost Multiplier", "Look Speed", "Field of View", "Near Plane", "Far Plane"} );
+        check_properties ( "OrbitalCamera", {"Distance", "Azimuth", "Elevation", "Height Offset", "Field of View", "Near Plane", "Far Plane"} );
+        check_properties ( "OverTheShoulderCamera", {"Shoulder Offset", "Height Offset", "Distance Behind", "Field of View", "Near Plane", "Far Plane"} );
+        check_properties ( "Model Component", {"Model", "Active Animation", "Starting Frame"} );
+        check_properties ( "Collision Component", {"Collision"} );
+    }
+
+    TEST ( ComponentPropertiesTest, SpotLightRetainsAngleClamping )
+    {
+        auto component = ConstructComponent ( std::string{"Spot Light"} );
+        ASSERT_NE ( component, nullptr );
+        component->SetProperty ( "Inner Angle"_crc32, 80.0f );
+        EXPECT_EQ ( std::get<float> ( component->GetProperty ( "Inner Angle" ) ), 30.0f );
+        component->SetProperty ( "Outer Angle"_crc32, 10.0f );
+        EXPECT_EQ ( std::get<float> ( component->GetProperty ( "Inner Angle" ) ), 10.0f );
+        EXPECT_EQ ( std::get<float> ( component->GetProperty ( "Outer Angle" ) ), 10.0f );
+    }
+
+    TEST ( ComponentPropertiesTest, ResourcePropertiesRetainSupportedAlternatives )
+    {
+        auto check_resource = [] ( const StringId & aType, const StringId & aPropertyId, const std::string & aPath )
+        {
+            SCOPED_TRACE ( aType.GetString() );
+            auto component = ConstructComponent ( aType );
+            ASSERT_NE ( component, nullptr );
+            const std::array<Property, 3> alternatives
+            {{aPath, std::filesystem::path{aPath}, crc32i ( aPath.c_str(), aPath.size() ) }};
+            for ( const Property& value : alternatives )
+            {
+                component->SetProperty ( aPropertyId, value );
+                EXPECT_EQ ( std::get<std::string> ( component->GetProperty ( aPropertyId ) ), aPath );
+            }
+        };
+        check_resource ( "Model Component", "Model", "models/simple_phong_cube.txt" );
+        check_resource ( "Collision Component", "Collision", "meshes/cube_collision.cln" );
+    }
+
+    TEST ( ComponentPropertiesTest, DescriptorComponentsRoundTripThroughScene )
+    {
+        for ( bool as_binary :
+              {
+                  false, true
+              } )
+        {
+            Scene source;
+            Node* node = source.Add ( std::make_unique<Node>() );
+            Component* light = node->AddComponent ( ConstructComponent ( std::string{"Point Light"} ) );
+            ASSERT_NE ( light, nullptr );
+            light->SetProperty ( "Radius"_crc32, 7.5f );
+            Component* marker = node->AddComponent ( ConstructComponent ( std::string{"Marker"} ) );
+            ASSERT_NE ( marker, nullptr );
+            marker->SetProperty ( "Type"_crc32, std::string{"Spawn"} );
+            const std::string serialized = source.Serialize ( as_binary );
+            Scene restored;
+            restored.Deserialize ( serialized );
+            ASSERT_EQ ( restored.GetChildrenCount(), 1u );
+            EXPECT_EQ ( restored.Serialize ( as_binary ), serialized );
+        }
+    }
+
+    TEST_F ( SceneTest, TacticalGridFactoryConstructsAndDestroys )
+    {
+        auto component = ConstructComponent ( std::string{"Tactical Grid"} );
+        ASSERT_NE ( component, nullptr );
+        EXPECT_EQ ( component->GetClassId(), "Tactical Grid"_crc32 );
+        EXPECT_EQ ( component->GetPropertyCount(), 0u );
+        EXPECT_EQ ( component->GetPropertyInfoArray(), nullptr );
+        component.reset();
+        EXPECT_EQ ( component, nullptr );
+    }
+
+    TEST_F ( SceneTest, TacticalGridSceneLoadsRegisteredComponent )
+    {
+        Scene scene;
+        std::ostringstream errors;
+        std::streambuf* previous = std::cerr.rdbuf ( errors.rdbuf() );
+        EXPECT_NO_THROW ( scene.Deserialize ( "AEONSCN\nnode { component { type: \"Tactical Grid\" } }\n" ) );
+        std::cerr.rdbuf ( previous );
+        EXPECT_TRUE ( errors.str().empty() );
+        ASSERT_EQ ( scene.GetChildrenCount(), 1u );
+        ASSERT_EQ ( scene[0].GetComponentCount(), 1u );
+        EXPECT_NE ( scene[0].GetComponent ( "Tactical Grid"_crc32 ), nullptr );
+    }
+
+    TEST_F ( SceneTest, UnknownComponentLogsErrorAndContinuesLoading )
+    {
+        constexpr char kScene[] =
+            "AEONSCN\n"
+            "node {\n"
+            "  id: \"Mixed\"\n"
+            "  component {\n"
+            "    type: \"Unregistered Component Test\"\n"
+            "    property { name: \"Ignored\" }\n"
+            "  }\n"
+            "  component {\n"
+            "    type: \"Marker\"\n"
+            "    property { name: \"Type\" string: \"Spawn\" }\n"
+            "  }\n"
+            "}\n"
+            "node { id: \"Following\" }\n";
+        Scene scene;
+        std::ostringstream errors;
+        std::streambuf* previous = std::cerr.rdbuf ( errors.rdbuf() );
+        EXPECT_NO_THROW ( scene.Deserialize ( kScene ) );
+        std::cerr.rdbuf ( previous );
+        EXPECT_NE ( errors.str().find ( "Unregistered Component Test" ), std::string::npos );
+        EXPECT_NE ( errors.str().find ( "Mixed" ), std::string::npos );
+        ASSERT_EQ ( scene.GetChildrenCount(), 2u );
+        EXPECT_EQ ( scene[1].GetStringId(), "Following" );
+        ASSERT_EQ ( scene[0].GetComponentCount(), 1u );
+        const Component* marker = scene[0].GetComponent ( "Marker"_crc32 );
+        ASSERT_NE ( marker, nullptr );
+        EXPECT_EQ ( std::get<std::string> ( marker->GetProperty ( "Type" ) ), "Spawn" );
+    }
+
+    TEST_F ( SceneTest, MissingComponentTypeLogsErrorAndIsSkipped )
+    {
+        NodeMsg message;
+        message.add_component();
+        Node node;
+        std::ostringstream errors;
+        std::streambuf* previous = std::cerr.rdbuf ( errors.rdbuf() );
+        EXPECT_NO_THROW ( node.Deserialize ( message ) );
+        std::cerr.rdbuf ( previous );
+        EXPECT_NE ( errors.str().find ( "Unable to construct component" ), std::string::npos );
+        EXPECT_EQ ( node.GetComponentCount(), 0u );
+    }
+
+    TEST_F ( SceneTest, ComponentTypeRetainsWireCompatibility )
+    {
+        const std::string legacy_binary{"\x0a\x06Marker", 8};
+        ComponentMsg message;
+        ASSERT_TRUE ( message.ParseFromString ( legacy_binary ) );
+        EXPECT_EQ ( message.type(), "Marker" );
+        EXPECT_EQ ( message.SerializeAsString(), legacy_binary );
+        NodeMsg node_message;
+        *node_message.add_component() = message;
+        Node node;
+        node.Deserialize ( node_message );
+        ASSERT_EQ ( node.GetComponentCount(), 1u );
+        EXPECT_EQ ( node.GetComponentByIndex ( 0 )->GetClassId(), "Marker"_crc32 );
+    }
+
+    TEST_F ( SceneTest, MissingTransformResetsToIdentity )
+    {
+        Node node;
+        node.SetLocalTransform ( Transform{Vector3{2, 3, 4}, Quaternion{0, 1, 0, 0}, Vector3{5, 6, 7}} );
+        NodeMsg message;
+        node.Deserialize ( message );
+        EXPECT_EQ ( node.GetLocalTransform().GetScale(), ( Vector3{1, 1, 1} ) );
+        EXPECT_EQ ( node.GetLocalTransform().GetRotation(), ( Quaternion{1, 0, 0, 0} ) );
+        EXPECT_EQ ( node.GetLocalTransform().GetTranslation(), Vector3{} );
+        EXPECT_EQ ( node.GetGlobalTransform(), Transform{} );
+    }
+
+    TEST_F ( SceneTest, MissingTransformInheritsParentTransform )
+    {
+        const Transform parent_transform{Vector3{2, 3, 4}, Quaternion{1, 0, 0, 0}, Vector3{5, 6, 7}};
+        a->SetLocalTransform ( parent_transform );
+        Node* child = a->Add ( std::make_unique<Node>() );
+        NodeMsg message;
+        child->Deserialize ( message );
+        EXPECT_EQ ( child->GetLocalTransform(), Transform{} );
+        EXPECT_EQ ( child->GetGlobalTransform(), parent_transform );
+    }
 
     TEST_F ( SceneTest, NodeDefaultsToNoId )
     {
@@ -471,7 +798,7 @@ namespace AeonGames
             "      Translation { y: 2 }\n"
             "    }\n"
             "    component {\n"
-            "      name: \"Marker\"\n"
+            "      type: \"Marker\"\n"
             "      property { name: \"Type\" string: \"Spawn\" }\n"
             "    }\n"
             "  }\n"
@@ -718,7 +1045,7 @@ namespace AeonGames
             FakeRenderComponent ( const Mesh* aMesh, const Pipeline* aPipeline,
                                   const Material* aMaterial, const BufferAccessor* aSkinned )
                 : mMesh{aMesh}, mPipeline{aPipeline}, mMaterial{aMaterial}, mSkinned{aSkinned} {}
-            const StringId& GetId() const final
+            const StringId& GetClassId() const final
             {
                 static const StringId id{ "FakeRenderComponent" };
                 return id;

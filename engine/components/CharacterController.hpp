@@ -15,7 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_CHARACTERCONTROLLER_HPP
 #define AEONGAMES_CHARACTERCONTROLLER_HPP
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 #include "aeongames/ActionMap.hpp"
 
 namespace AeonGames
@@ -34,18 +34,14 @@ namespace AeonGames
      * (W/A/S/D and arrow keys). Other platforms will need a key-code
      * translation layer in the front-end before bindings make sense there.
      */
-    class CharacterController final : public Component
+    class CharacterController final : public ComponentProperties<CharacterController>
     {
     public:
         CharacterController();
         /** @name Overrides */
         ///@{
         ~CharacterController() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
@@ -59,7 +55,7 @@ namespace AeonGames
         ActionMap& GetActionMap();
         const ActionMap& GetActionMap() const;
 
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
 
         /** @brief Action identifiers consumed by this component. */
         enum Action : uint32_t
@@ -73,6 +69,13 @@ namespace AeonGames
         };
 
     private:
+        friend class ComponentProperties<CharacterController>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<CharacterController>, 2> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<CharacterController>::Create<&CharacterController::GetMoveSpeed, &CharacterController::SetMoveSpeed> ( "Move Speed" ),
+                ComponentPropertyDescriptor<CharacterController>::Create<&CharacterController::GetTurnSpeed, &CharacterController::SetTurnSpeed> ( "Turn Speed" )
+            }};
         float mMoveSpeed{3.0f};   ///< meters / second
         float mTurnSpeed{120.0f}; ///< degrees / second
         ActionMap mActionMap{};

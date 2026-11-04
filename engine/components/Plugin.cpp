@@ -34,47 +34,47 @@ extern "C"
 {
     bool AeonEngineComponentsStartUp()
     {
-        AeonGames::RegisterComponentConstructor ( AeonGames::ModelComponent::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::ModelComponent::ClassId(), []()
         {
             return std::make_unique<AeonGames::ModelComponent>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::Camera::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::Camera::ClassId(), []()
         {
             return std::make_unique<AeonGames::Camera>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::Marker::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::Marker::ClassId(), []()
         {
             return std::make_unique<AeonGames::Marker>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::OverTheShoulderCamera::ClassId(), []()
         {
             return std::make_unique<AeonGames::OverTheShoulderCamera>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::OrbitalCamera::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::OrbitalCamera::ClassId(), []()
         {
             return std::make_unique<AeonGames::OrbitalCamera>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::CharacterController::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::CharacterController::ClassId(), []()
         {
             return std::make_unique<AeonGames::CharacterController>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::FreeCamera::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::FreeCamera::ClassId(), []()
         {
             return std::make_unique<AeonGames::FreeCamera>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::PointLight::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::PointLight::ClassId(), []()
         {
             return std::make_unique<AeonGames::PointLight>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::SpotLight::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::SpotLight::ClassId(), []()
         {
             return std::make_unique<AeonGames::SpotLight>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::DirectionalLight::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::DirectionalLight::ClassId(), []()
         {
             return std::make_unique<AeonGames::DirectionalLight>();
         } );
-        AeonGames::RegisterComponentConstructor ( AeonGames::CollisionComponent::GetClassId(), []()
+        AeonGames::RegisterComponentConstructor ( AeonGames::CollisionComponent::ClassId(), []()
         {
             return std::make_unique<AeonGames::CollisionComponent>();
         } );
@@ -83,17 +83,17 @@ extern "C"
 
     void AeonEngineComponentsShutdown()
     {
-        AeonGames::UnregisterComponentConstructor ( AeonGames::ModelComponent::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::Camera::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::Marker::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::OverTheShoulderCamera::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::OrbitalCamera::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::CharacterController::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::FreeCamera::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::SpotLight::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::DirectionalLight::GetClassId() );
-        AeonGames::UnregisterComponentConstructor ( AeonGames::CollisionComponent::GetClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::ModelComponent::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::Camera::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::Marker::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::OverTheShoulderCamera::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::OrbitalCamera::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::CharacterController::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::FreeCamera::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::PointLight::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::SpotLight::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::DirectionalLight::ClassId() );
+        AeonGames::UnregisterComponentConstructor ( AeonGames::CollisionComponent::ClassId() );
     }
 
     PLUGIN PluginModuleInterface PMI =

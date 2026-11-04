@@ -1,4 +1,4 @@
-# Copyright (C) 2016-2021,2023,2024,2025 Rodrigo Jose Hernandez Cordoba
+# Copyright (C) 2016-2021,2023,2024,2025,2026 Rodrigo Jose Hernandez Cordoba
 #
 # Licensed under the Apache License, Version 2.0 (the "License"); you may not
 # use this file except in compliance with the License. You may obtain a copy of
@@ -70,6 +70,7 @@ set(ENGINE_CORE_HEADERS
     ${CMAKE_SOURCE_DIR}/include/aeongames/Scene.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Node.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Component.hpp
+    ${CMAKE_SOURCE_DIR}/include/aeongames/ComponentProperties.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/StringId.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/AeonEngine.hpp
     ${CMAKE_SOURCE_DIR}/include/aeongames/Pipeline.hpp

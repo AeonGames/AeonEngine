@@ -15,7 +15,7 @@ limitations under the License.
 */
 #ifndef AEONGAMES_OVERTHESHOULDERCAMERA_HPP
 #define AEONGAMES_OVERTHESHOULDERCAMERA_HPP
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 
 namespace AeonGames
 {
@@ -31,18 +31,14 @@ namespace AeonGames
      * the scene. The renderer then picks these up via Scene::GetViewMatrix()
      * and the field-of-view / near / far getters.
      */
-    class OverTheShoulderCamera final : public Component
+    class OverTheShoulderCamera final : public ComponentProperties<OverTheShoulderCamera>
     {
     public:
         OverTheShoulderCamera();
         /** @name Overrides */
         ///@{
         ~OverTheShoulderCamera() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
         ///@}
@@ -67,9 +63,20 @@ namespace AeonGames
         void SetNearPlane ( float aNearPlane );
         void SetFarPlane ( float aFarPlane );
 
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
 
     private:
+        friend class ComponentProperties<OverTheShoulderCamera>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<OverTheShoulderCamera>, 6> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<OverTheShoulderCamera>::Create<&OverTheShoulderCamera::GetShoulderOffset, &OverTheShoulderCamera::SetShoulderOffset> ( "Shoulder Offset" ),
+                ComponentPropertyDescriptor<OverTheShoulderCamera>::Create<&OverTheShoulderCamera::GetHeightOffset, &OverTheShoulderCamera::SetHeightOffset> ( "Height Offset" ),
+                ComponentPropertyDescriptor<OverTheShoulderCamera>::Create<&OverTheShoulderCamera::GetDistanceBehind, &OverTheShoulderCamera::SetDistanceBehind> ( "Distance Behind" ),
+                ComponentPropertyDescriptor<OverTheShoulderCamera>::Create<&OverTheShoulderCamera::GetFieldOfView, &OverTheShoulderCamera::SetFieldOfView> ( "Field of View" ),
+                ComponentPropertyDescriptor<OverTheShoulderCamera>::Create<&OverTheShoulderCamera::GetNearPlane, &OverTheShoulderCamera::SetNearPlane> ( "Near Plane" ),
+                ComponentPropertyDescriptor<OverTheShoulderCamera>::Create<&OverTheShoulderCamera::GetFarPlane, &OverTheShoulderCamera::SetFarPlane> ( "Far Plane" )
+            }};
         float mShoulderOffset{0.5f};
         float mHeightOffset{1.7f};
         float mDistanceBehind{3.0f};

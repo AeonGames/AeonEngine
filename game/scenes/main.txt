@@ -25,7 +25,7 @@ node {
     }
   }
   component {
-    name: "Point Light"
+    type: "Point Light"
     property {
       name: "Color R"
       float: 1
@@ -66,7 +66,7 @@ node {
     }
   }
   component {
-    name: "Spot Light"
+    type: "Spot Light"
     property {
       name: "Color R"
       float: 0.2
@@ -113,7 +113,7 @@ node {
     }
   }
   component {
-    name: "Directional Light"
+    type: "Directional Light"
     property {
       name: "Color R"
       float: 1
@@ -148,14 +148,14 @@ node {
     }
   }
   component {
-    name: "Model Component"
+    type: "Model Component"
     property {
       name: "Model"
       string: "aerin/aerin"
     }
   }
   component {
-    name: "Character Controller"
+    type: "Character Controller"
     property {
       name: "Move Speed"
       float: 3
@@ -166,7 +166,7 @@ node {
     }
   }
   component {
-    name: "OrbitalCamera"
+    type: "OrbitalCamera"
     property {
       name: "Distance"
       float: 2
@@ -212,7 +212,7 @@ node {
     }
   }
   component {
-    name: "Model Component"
+    type: "Model Component"
     property {
       name: "Model"
       string: "polesign/polesign.txt"

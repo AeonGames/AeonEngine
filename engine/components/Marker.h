@@ -16,7 +16,7 @@ limitations under the License.
 #ifndef AEONGAMES_MARKER_H
 #define AEONGAMES_MARKER_H
 #include <string>
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 
 namespace AeonGames
 {
@@ -24,21 +24,23 @@ namespace AeonGames
     /** @brief Names a point in a scene: a spawn point, an attachment socket or
      *  any other location gameplay code looks up by node name. The marker is
      *  inert; all it carries is the Type used to tell one kind from another. */
-    class Marker final : public Component
+    class Marker final : public ComponentProperties<Marker>
     {
     public:
         Marker();
         ~Marker() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
     private:
         std::string mType{};
+        friend class ComponentProperties<Marker>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<Marker>, 1> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<Marker>::Member<&Marker::mType> ( "Type" )
+            }};
     };
 }
 #endif

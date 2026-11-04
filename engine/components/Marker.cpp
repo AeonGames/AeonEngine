@@ -20,58 +20,17 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId MarkerStringId{"Marker"};
-    const StringId& Marker::GetClassId()
+    const StringId& Marker::ClassId()
     {
         return MarkerStringId;
     }
 
-    Marker::Marker() : Component{} {}
+    Marker::Marker() = default;
     Marker::~Marker() = default;
 
-    const StringId& Marker::GetId() const
+    const StringId& Marker::GetClassId() const
     {
         return MarkerStringId;
-    }
-
-    static constexpr std::array<const StringId, 1> MarkerPropertyIds
-    {
-        {
-            {"Type"}
-        }
-    };
-
-    size_t Marker::GetPropertyCount () const
-    {
-        return MarkerPropertyIds.size();
-    }
-
-    const StringId* Marker::GetPropertyInfoArray () const
-    {
-        return MarkerPropertyIds.data();
-    }
-
-    Property Marker::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case MarkerPropertyIds[0]:
-            return mType;
-        }
-        return Property{};
-    }
-
-    void Marker::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<std::string> ( aProperty ) )
-        {
-            return;
-        }
-        switch ( aId )
-        {
-        case MarkerPropertyIds[0]:
-            mType = std::get<std::string> ( aProperty );
-            break;
-        }
     }
 
     void Marker::Update ( Node& /*aNode*/, double /*aDelta*/ )

@@ -15,31 +15,36 @@ limitations under the License.
 */
 #ifndef AEONGAMES_DIRECTIONALLIGHT_H
 #define AEONGAMES_DIRECTIONALLIGHT_H
-#include "aeongames/Component.hpp"
+#include "aeongames/ComponentProperties.hpp"
 
 namespace AeonGames
 {
     class Node;
     /** @brief Directional light component. Shines along the node's local -Z axis,
      *  with no positional falloff (sun-like). */
-    class DirectionalLight final : public Component
+    class DirectionalLight final : public ComponentProperties<DirectionalLight>
     {
     public:
         DirectionalLight();
         ~DirectionalLight() final;
-        const StringId& GetId() const final;
-        size_t GetPropertyCount () const final;
-        const StringId* GetPropertyInfoArray () const final;
-        Property GetProperty ( const StringId& aId ) const final;
-        void SetProperty ( uint32_t, const Property& aProperty ) final;
+        const StringId& GetClassId() const final;
         void Update ( Node& aNode, double aDelta ) final;
         void ProcessMessage ( Node& aNode, uint32_t aMessageType, const void* aMessageData ) final;
-        static const StringId& GetClassId();
+        static const StringId& ClassId();
     private:
         float mColorR{1.0f};
         float mColorG{1.0f};
         float mColorB{1.0f};
         float mIntensity{1.0f};
+        friend class ComponentProperties<DirectionalLight>;
+        inline static constexpr std::array<ComponentPropertyDescriptor<DirectionalLight>, 4> kPropertyDescriptors
+        {
+            {
+                ComponentPropertyDescriptor<DirectionalLight>::Member<&DirectionalLight::mColorR> ( "Color R" ),
+                ComponentPropertyDescriptor<DirectionalLight>::Member<&DirectionalLight::mColorG> ( "Color G" ),
+                ComponentPropertyDescriptor<DirectionalLight>::Member<&DirectionalLight::mColorB> ( "Color B" ),
+                ComponentPropertyDescriptor<DirectionalLight>::Member<&DirectionalLight::mIntensity> ( "Intensity" )
+            }};
     };
 }
 #endif

@@ -31,41 +31,18 @@ limitations under the License.
 namespace AeonGames
 {
     static const StringId PointLightStringId{"Point Light"};
-    const StringId& PointLight::GetClassId()
+    const StringId& PointLight::ClassId()
     {
         return PointLightStringId;
     }
 
-    PointLight::PointLight() : Component{}
-    {
-    }
+    PointLight::PointLight() = default;
 
     PointLight::~PointLight() = default;
 
-    const StringId& PointLight::GetId() const
+    const StringId& PointLight::GetClassId() const
     {
         return PointLightStringId;
-    }
-
-    static constexpr std::array<const StringId, 5> PointLightPropertyIds
-    {
-        {
-            {"Color R"},
-            {"Color G"},
-            {"Color B"},
-            {"Intensity"},
-            {"Radius"}
-        }
-    };
-
-    size_t PointLight::GetPropertyCount () const
-    {
-        return PointLightPropertyIds.size();
-    }
-
-    const StringId* PointLight::GetPropertyInfoArray () const
-    {
-        return PointLightPropertyIds.data();
     }
 
     float PointLight::GetColorR()    const
@@ -107,51 +84,6 @@ namespace AeonGames
     void  PointLight::SetRadius ( float v )
     {
         mRadius = v;
-    }
-
-    Property PointLight::GetProperty ( const StringId& aId ) const
-    {
-        switch ( aId )
-        {
-        case PointLightPropertyIds[0]:
-            return mColorR;
-        case PointLightPropertyIds[1]:
-            return mColorG;
-        case PointLightPropertyIds[2]:
-            return mColorB;
-        case PointLightPropertyIds[3]:
-            return mIntensity;
-        case PointLightPropertyIds[4]:
-            return mRadius;
-        }
-        return Property{};
-    }
-
-    void PointLight::SetProperty ( uint32_t aId, const Property& aProperty )
-    {
-        if ( !std::holds_alternative<float> ( aProperty ) )
-        {
-            return;
-        }
-        float value = std::get<float> ( aProperty );
-        switch ( aId )
-        {
-        case PointLightPropertyIds[0]:
-            mColorR    = value;
-            break;
-        case PointLightPropertyIds[1]:
-            mColorG    = value;
-            break;
-        case PointLightPropertyIds[2]:
-            mColorB    = value;
-            break;
-        case PointLightPropertyIds[3]:
-            mIntensity = value;
-            break;
-        case PointLightPropertyIds[4]:
-            mRadius    = value;
-            break;
-        }
     }
 
     void PointLight::Update ( Node& aNode, double aDelta )

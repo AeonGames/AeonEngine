@@ -176,7 +176,7 @@ namespace AeonGames
             TestRenderComponent ( const Mesh& aMesh, const Pipeline& aPipeline, const Material& aMaterial ) :
                 mMesh{aMesh}, mPipeline{aPipeline}, mMaterial{aMaterial} {}
 
-            const StringId& GetId() const final
+            const StringId& GetClassId() const final
             {
                 static const StringId id{"MetalRendererParityComponent"};
                 return id;
