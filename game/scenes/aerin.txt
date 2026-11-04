@@ -1,7 +1,6 @@
 AEONSCN
 name: "Scene"
 node {
-  name: "Node"
   local {
     Scale {
       x: 1

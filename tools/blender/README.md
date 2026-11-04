@@ -38,6 +38,19 @@ CMake chooses the newest installed Blender. Pass
 bundled Python cannot be found, configuration succeeds and omits the asset
 targets.
 
+### Node identifiers
+
+Nodes remain generic component containers and may have an optional string
+`NodeMsg.id`. Use `Node::SetId()` to assign or clear it, `GetStringId()` to read
+the string, and `GetId()` to read its CRC32 hash. New nodes have no identifier;
+missing or empty identifiers have CRC zero and are omitted when saved.
+Camera references use nonempty node identifiers; zero or empty camera lookup
+clears the camera instead of selecting an unnamed node.
+
+In text scenes, rename node-level `name` fields to `id`; scene, component, and
+property `name` fields are unchanged. The former `name` schema's field numbers
+are retained, so its binary scenes remain wire-compatible.
+
 ## Blender Python environment
 
 The exporters use generated Python protobuf modules, but Blender does not ship

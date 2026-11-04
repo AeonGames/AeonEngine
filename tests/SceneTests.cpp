@@ -31,6 +31,7 @@ limitations under the License.
 #include "aeongames/Pipeline.hpp"
 #include "aeongames/ProtoBufClasses.hpp"
 #include "pipeline.pb.h"
+#include "scene.pb.h"
 
 using namespace ::testing;
 namespace AeonGames
@@ -60,20 +61,20 @@ namespace AeonGames
             l = e->Add ( std::make_unique<Node>() );
             m = f->Add ( std::make_unique<Node>() );
             n = f->Add ( std::make_unique<Node>() );
-            a->SetName ( "a" );
-            b->SetName ( "b" );
-            c->SetName ( "c" );
-            d->SetName ( "d" );
-            e->SetName ( "e" );
-            f->SetName ( "f" );
-            g->SetName ( "g" );
-            h->SetName ( "h" );
-            i->SetName ( "i" );
-            j->SetName ( "j" );
-            k->SetName ( "k" );
-            l->SetName ( "l" );
-            m->SetName ( "m" );
-            n->SetName ( "n" );
+            a->SetId ( "a" );
+            b->SetId ( "b" );
+            c->SetId ( "c" );
+            d->SetId ( "d" );
+            e->SetId ( "e" );
+            f->SetId ( "f" );
+            g->SetId ( "g" );
+            h->SetId ( "h" );
+            i->SetId ( "i" );
+            j->SetId ( "j" );
+            k->SetId ( "k" );
+            l->SetId ( "l" );
+            m->SetId ( "m" );
+            n->SetId ( "n" );
         }
         virtual void TearDown()
         {
@@ -108,6 +109,100 @@ namespace AeonGames
         Node* n{};
         Scene mScene{};
     };
+
+    TEST_F ( SceneTest, NodeDefaultsToNoId )
+    {
+        Node node;
+        EXPECT_TRUE ( node.GetStringId().empty() );
+        EXPECT_EQ ( node.GetId(), 0u );
+        NodeMsg message;
+        message.set_id ( "stale" );
+        node.Serialize ( message );
+        EXPECT_FALSE ( message.has_id() );
+    }
+
+    TEST_F ( SceneTest, NodeIdRoundTrips )
+    {
+        Node node;
+        node.SetId ( "Camera" );
+        EXPECT_EQ ( node.GetStringId(), "Camera" );
+        EXPECT_EQ ( node.GetId(), "Camera"_crc32 );
+        NodeMsg message;
+        node.Serialize ( message );
+        ASSERT_TRUE ( message.has_id() );
+        EXPECT_EQ ( message.id(), "Camera" );
+        Node restored;
+        restored.Deserialize ( message );
+        EXPECT_EQ ( restored.GetStringId(), "Camera" );
+        EXPECT_EQ ( restored.GetId(), "Camera"_crc32 );
+    }
+
+    TEST_F ( SceneTest, NodeEmptyIdClearsIdentity )
+    {
+        Node node;
+        node.SetId ( "Camera" );
+        node.SetId ( "" );
+        EXPECT_TRUE ( node.GetStringId().empty() );
+        EXPECT_EQ ( node.GetId(), 0u );
+        NodeMsg message;
+        node.Serialize ( message );
+        EXPECT_FALSE ( message.has_id() );
+    }
+
+    TEST_F ( SceneTest, NodeDeserializeOptionalIdClearsPreviousIdentity )
+    {
+        for ( bool has_id :
+              {
+                  false, true
+              } )
+        {
+            NodeMsg message;
+            if ( has_id )
+            {
+                message.set_id ( "" );
+            }
+            Node node;
+            node.SetId ( "Camera" );
+            node.Deserialize ( message );
+            EXPECT_TRUE ( node.GetStringId().empty() );
+            EXPECT_EQ ( node.GetId(), 0u );
+            node.Serialize ( message );
+            EXPECT_FALSE ( message.has_id() );
+        }
+    }
+
+    TEST_F ( SceneTest, ZeroCameraIdClearsCamera )
+    {
+        mScene.Add ( std::make_unique<Node>() );
+        mScene.SetCamera ( a );
+        mScene.SetCamera ( uint32_t{0} );
+        EXPECT_EQ ( mScene.GetCamera(), nullptr );
+        mScene.SetCamera ( a );
+        mScene.SetCamera ( std::string{} );
+        EXPECT_EQ ( mScene.GetCamera(), nullptr );
+    }
+
+    TEST_F ( SceneTest, AnonymousNodesRoundTripWithoutCamera )
+    {
+        for ( bool as_binary :
+              {
+                  false, true
+              } )
+        {
+            Scene source;
+            source.Add ( std::make_unique<Node>() );
+            source.Add ( std::make_unique<Node>() )->SetId ( "Named" );
+            std::string serialized = source.Serialize ( as_binary );
+            Scene restored;
+            restored.Deserialize ( serialized );
+            ASSERT_EQ ( restored.GetChildrenCount(), 2u );
+            EXPECT_TRUE ( restored[0].GetStringId().empty() );
+            EXPECT_EQ ( restored[0].GetId(), 0u );
+            EXPECT_EQ ( restored[1].GetStringId(), "Named" );
+            EXPECT_EQ ( restored.GetCamera(), nullptr );
+            EXPECT_EQ ( restored.Serialize ( as_binary ), serialized );
+        }
+    }
 
     TEST_F ( SceneTest, LoopTraverseDFSPostOrderTraversesAllNodes )
     {
@@ -362,14 +457,14 @@ namespace AeonGames
             "AEONSCN\n"
             "name: \"markers\"\n"
             "node {\n"
-            "  name: \"Anchor\"\n"
+            "  id: \"Anchor\"\n"
             "  local {\n"
             "    Scale { x: 1 y: 1 z: 1 }\n"
             "    Rotation { w: 1 }\n"
             "    Translation { x: 3 }\n"
             "  }\n"
             "  node {\n"
-            "    name: \"Mark\"\n"
+            "    id: \"Mark\"\n"
             "    local {\n"
             "      Scale { x: 1 y: 1 z: 1 }\n"
             "      Rotation { w: 1 }\n"
@@ -386,7 +481,7 @@ namespace AeonGames
 
         const Node* mark = scene.Find ( [] ( const Node & aNode )
         {
-            return aNode.GetName() == "Mark";
+            return aNode.GetStringId() == "Mark";
         } );
         ASSERT_NE ( mark, nullptr );
         EXPECT_EQ ( mark->GetGlobalTransform().GetTranslation(), ( Vector3{3, 2, 0} ) );

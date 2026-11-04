@@ -71,12 +71,12 @@ namespace AeonGames
         /** Construct a node with the given initial flags.
             @param aFlags Bitmask of FlagBits to enable. Defaults to AllBits. */
         DLL Node ( uint32_t aFlags = AllBits );
-        /** Set the name of this node.
-            @param aName The new name string. */
-        DLL void SetName ( const std::string& aName );
-        /** Get the name of this node.
-            @return A const reference to the node name. */
-        DLL const std::string& GetName() const;
+        /** Set the optional identifier of this node.
+            @param aId The identifier string, or empty to clear it. */
+        DLL void SetId ( const std::string& aId );
+        /** Get the optional identifier string of this node.
+            @return The identifier string, or empty when no identifier is set. */
+        DLL const std::string& GetStringId() const;
         /** Serialize this node's state into a protobuf message.
             @param aNodeMsg The message to populate. */
         DLL void Serialize ( NodeMsg& aNodeMsg ) const;
@@ -211,8 +211,8 @@ namespace AeonGames
         /** Get this node's index within its parent's child list.
             @return The index position. */
         DLL size_t GetIndex() const;
-        /** Get the unique identifier of this node.
-            @return The node id. */
+        /** Get the CRC32 identifier of this node.
+            @return The identifier string's CRC32 hash, or zero when unset. */
         DLL uint32_t GetId() const;
         /** @name Node Data */
         /** @{ */
@@ -254,7 +254,7 @@ namespace AeonGames
         DLL void ProcessMessage ( uint32_t aMessageType, const void* aMessageData );
     private:
         friend class Scene;
-        std::string mName{};
+        std::string mStringId{};
         NodeParent mParent{};
         Transform mLocalTransform{};
         Transform mGlobalTransform{};
@@ -268,8 +268,8 @@ namespace AeonGames
         /** Tree iteration helper.
             Mutable to allow for constant iterations (EC++ Item 3).*/
         mutable std::vector<Node*>::size_type mIterator{ 0 };
-        uint32_t mId{};
         std::bitset<8> mFlags{};
+        uint32_t mId{};
     };
 }
 #endif

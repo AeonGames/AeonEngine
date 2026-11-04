@@ -528,7 +528,7 @@ class SCN_OT_exporter(bpy.types.Operator):
             parent, container = stack.pop()
             for obj in children.get(parent, ()):
                 node = container.node.add()
-                node.name = obj.name
+                node.id = obj.name
                 # Matches obj.matrix_local for plain object parenting, and
                 # stays correct when an ancestor was skipped or the object is
                 # bone/vertex parented.

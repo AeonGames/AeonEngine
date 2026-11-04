@@ -1,5 +1,5 @@
 /*
-Copyright (C) 2015,2018-2020,2025 Rodrigo Jose Hernandez Cordoba
+Copyright (C) 2015,2018-2020,2025,2026 Rodrigo Jose Hernandez Cordoba
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -113,8 +113,10 @@ namespace AeonGames
                 switch ( index.column() )
                 {
                 case 0:
-                    return QString ( reinterpret_cast<Node*> ( index.internalPointer() )->GetName().c_str() );
-                    break;
+                {
+                    const std::string& node_id = reinterpret_cast<Node*> ( index.internalPointer() )->GetStringId();
+                    return QString ( ( role == Qt::DisplayRole && node_id.empty() ) ? "Node" : node_id.c_str() );
+                }
                 }
             }
         }
@@ -147,7 +149,7 @@ namespace AeonGames
         Node* node = reinterpret_cast<Node*> ( index.internalPointer() );
         if  ( role == Qt::EditRole )
         {
-            node->SetName ( value.toString().toUtf8().constData() );
+            node->SetId ( value.toString().toUtf8().constData() );
             emit dataChanged ( index, index );
             return true;
         }

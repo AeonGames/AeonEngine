@@ -118,12 +118,12 @@ namespace AeonGames
 
     void Scene::SetCamera ( uint32_t aNodeId )
     {
-        SetCamera ( Find ( [aNodeId] ( const Node & aNode ) -> bool { return aNode.GetId() == aNodeId; } ) );
+        SetCamera ( aNodeId == 0 ? nullptr : Find ( [aNodeId] ( const Node & aNode ) -> bool { return aNode.GetId() == aNodeId; } ) );
     }
 
-    void Scene::SetCamera ( const std::string& aNodeName )
+    void Scene::SetCamera ( const std::string& aNodeId )
     {
-        SetCamera ( crc32i ( aNodeName.c_str(), aNodeName.size() ) );
+        SetCamera ( crc32i ( aNodeId.c_str(), aNodeId.size() ) );
     }
 
     const Node* Scene::GetCamera() const
@@ -1009,7 +1009,7 @@ namespace AeonGames
             {
                 if ( !parent->Remove ( aNode.get() ) )
                 {
-                    std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    std::cout << LogLevel::Warning << "Parent for node " << aNode->GetStringId() << " did not have it as a child.";
                 }
             }
         },
@@ -1044,7 +1044,7 @@ namespace AeonGames
             {
                 if ( !parent->Remove ( aNode.get() ) )
                 {
-                    std::cout << LogLevel::Warning << "Parent for node " << aNode->GetName() << " did not have it as a child.";
+                    std::cout << LogLevel::Warning << "Parent for node " << aNode->GetStringId() << " did not have it as a child.";
                 }
             }
         },
@@ -1205,7 +1205,7 @@ namespace AeonGames
         *scene_buffer.mutable_name() = mName;
         if ( mCamera )
         {
-            *scene_buffer.mutable_camera()->mutable_node() = mCamera->GetName();
+            *scene_buffer.mutable_camera()->mutable_node() = mCamera->GetStringId();
             scene_buffer.mutable_camera()->set_field_of_view ( mFieldOfView );
             scene_buffer.mutable_camera()->set_near_plane ( mNear );
             scene_buffer.mutable_camera()->set_far_plane ( mFar );

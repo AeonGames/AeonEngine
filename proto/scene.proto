@@ -41,7 +41,7 @@ message ComponentMsg {
 }
 
 message NodeMsg {
-    string name = 1;
+    optional string id = 1;
     oneof transform {
         TransformMsg local = 2;
         TransformMsg global = 3;

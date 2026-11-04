@@ -17,7 +17,7 @@ limitations under the License.
 /*! \file
 \brief Implementation file for the Scene Node class.
 \author Rodrigo Hernandez.
-\copyright 2014-2018 Rodrigo Hernandez
+\copyright 2014-2018,2026 Rodrigo Hernandez
 */
 
 #include <cassert>
@@ -43,13 +43,13 @@ limitations under the License.
 namespace AeonGames
 {
     Node::Node ( uint32_t aFlags ) :
-        mName ( "Node" ),
+        mStringId{},
         mParent{},
         mLocalTransform(),
         mGlobalTransform(),
         mNodes(),
-        mId{crc32i ( mName.c_str(), mName.size() ) },
-        mFlags ( aFlags )
+        mFlags ( aFlags ),
+        mId{}
     {
     }
 
@@ -207,15 +207,15 @@ namespace AeonGames
         }
     }
 
-    void Node::SetName ( const std::string& aName )
+    void Node::SetId ( const std::string& aId )
     {
-        mId = crc32i ( aName.c_str(), aName.size() );
-        mName = aName;
+        mStringId = aId;
+        mId = mStringId.empty() ? 0 : crc32i ( mStringId.c_str(), mStringId.size() );
     }
 
-    const std::string& Node::GetName() const
+    const std::string& Node::GetStringId() const
     {
-        return mName;
+        return mStringId;
     }
 
     uint32_t Node::GetId() const
@@ -228,7 +228,14 @@ namespace AeonGames
 
     void Node::Serialize ( NodeMsg& aNodeMsg ) const
     {
-        *aNodeMsg.mutable_name() = GetName();
+        if ( mStringId.empty() )
+        {
+            aNodeMsg.clear_id();
+        }
+        else
+        {
+            aNodeMsg.set_id ( GetStringId() );
+        }
         aNodeMsg.mutable_local()->mutable_scale()->set_x ( GetLocalTransform().GetScale() [0] );
         aNodeMsg.mutable_local()->mutable_scale()->set_y ( GetLocalTransform().GetScale() [1] );
         aNodeMsg.mutable_local()->mutable_scale()->set_z ( GetLocalTransform().GetScale() [2] );
@@ -306,7 +313,7 @@ namespace AeonGames
 
     void Node::Deserialize ( const NodeMsg& aNodeMsg )
     {
-        SetName ( aNodeMsg.name() );
+        SetId ( aNodeMsg.id() );
         if ( aNodeMsg.has_local() )
         {
             SetLocalTransform ( GetTransform ( aNodeMsg.local() ) );

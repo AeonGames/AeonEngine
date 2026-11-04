@@ -10,7 +10,7 @@ lighting_pipeline {
   path: "shaders/lighting"
 }
 node {
-  name: "Light"
+  id: "Light"
   local {
     Scale {
       x: 1
@@ -49,7 +49,7 @@ node {
   }
 }
 node {
-  name: "SpotLight"
+  id: "SpotLight"
   local {
     Scale {
       x: 1
@@ -98,7 +98,7 @@ node {
   }
 }
 node {
-  name: "Sun"
+  id: "Sun"
   local {
     Scale {
       x: 1
@@ -133,7 +133,7 @@ node {
   }
 }
 node {
-  name: "Player"
+  id: "Player"
   local {
     Scale {
       x: 1
@@ -198,7 +198,7 @@ node {
   }
 }
 node {
-  name: "Sign"
+  id: "Sign"
   local {
     Scale {
       x: 1

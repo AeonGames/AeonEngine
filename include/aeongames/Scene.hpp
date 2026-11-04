@@ -17,7 +17,7 @@ limitations under the License.
 #define AEONGAMES_SCENE_H
 /*! \file
     \brief Header for the Scene class.
-    \copyright 2014-2019
+    \copyright 2014-2019,2026
     \author Rodrigo Hernandez.
 */
 #include "aeongames/Platform.hpp"
@@ -157,12 +157,12 @@ namespace AeonGames
          * @param aNode pointer to the node for which camera location and orientation will be extracted.
          * @todo Need a way to uniquely identify nodes for messaging and camera assignment. */
         DLL void SetCamera ( Node* aNode );
-        /** Set rendering camera by node id.
-            @param aNodeId Identifier of the camera node. */
+        /** Set rendering camera by node identifier CRC32.
+            @param aNodeId CRC32 identifier of the camera node, or zero to clear it. */
         DLL void SetCamera ( uint32_t aNodeId );
-        /** Set rendering camera by node name.
-            @param aNodeName Name of the camera node. */
-        DLL void SetCamera ( const std::string& aNodeName );
+        /** Set rendering camera by node identifier string.
+            @param aNodeId Identifier of the camera node, or empty to clear it. */
+        DLL void SetCamera ( const std::string& aNodeId );
         /** Get the current camera node.
             @return Pointer to the camera node, or nullptr if unset. */
         DLL const Node* GetCamera() const;
