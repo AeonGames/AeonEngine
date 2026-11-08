@@ -314,10 +314,10 @@ namespace AeonGames
          *  Traverses the scene, frustum-culls each node individually (via
          *  CullVisible), and asks every visible node's components to append the
          *  draws they contribute (Node::Collect / Component::Collect). The
-         *  resulting items are sorted so that draws sharing pipeline, material
-         *  and mesh become adjacent, ready for ForEachRenderBatch to merge them
-         *  into instanced draws. Components never touch the Renderer; they only
-         *  declare what to draw here.
+         *  resulting items are sorted so that draws sharing pipeline, material,
+         *  mesh and topology become adjacent, ready for ForEachRenderBatch to
+         *  merge them into instanced draws. Components never touch the Renderer;
+         *  they only declare what to draw here.
          *
          *  Runs once per frame and performs no per-call heap allocation in
          *  steady state: the queue buffer's capacity persists across calls
@@ -343,19 +343,20 @@ namespace AeonGames
          *  be drawn as a single instanced batch.
          *
          *  After BuildRenderQueue's sort, a maximal run of non-skinned items
-         *  sharing pipeline, material and mesh forms one batch; skinned items
-         *  (which carry a per-node posed vertex buffer) and otherwise unique
-         *  items each form a length-1 batch. The spans are slices into the
-         *  queue and are only valid for the duration of the callback.
+         *  sharing pipeline, material, mesh and topology forms one batch;
+         *  skinned items (which carry a per-node posed vertex buffer) and
+         *  otherwise unique items each form a length-1 batch. The spans are
+         *  slices into the queue and are only valid during the callback.
          *  @param aCallback Invoked once per batch with the batch's items. */
         DLL void ForEachRenderBatch ( const std::function<void ( std::span<const RenderItem> ) >& aCallback ) const;
         /** @brief Issue the built render queue to a renderer.
          *
          *  Draws every batch from ForEachRenderBatch: length-1 batches via
          *  Renderer::Render (passing the skinned vertex buffer when present),
-         *  larger batches via a single Renderer::RenderInstanced. Safe to call
-         *  more than once per BuildRenderQueue (e.g. depth pre-pass then shading)
-         *  and performs no per-frame heap allocation in steady state.
+         *  larger batches via a single Renderer::RenderInstanced, forwarding
+         *  each batch's topology. Safe to call more than once per
+         *  BuildRenderQueue (e.g. depth pre-pass then shading) and performs no
+         *  per-frame heap allocation in steady state.
          *  @param aRenderer Renderer to submit the draws to.
          *  @param aWindowId Platform-specific window identifier.
          *  @param aRenderPass Pass these draws feed; forwarded to the renderer so

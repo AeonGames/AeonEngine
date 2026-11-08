@@ -1043,8 +1043,9 @@ namespace AeonGames
         {
         public:
             FakeRenderComponent ( const Mesh* aMesh, const Pipeline* aPipeline,
-                                  const Material* aMaterial, const BufferAccessor* aSkinned )
-                : mMesh{aMesh}, mPipeline{aPipeline}, mMaterial{aMaterial}, mSkinned{aSkinned} {}
+                                  const Material* aMaterial, const BufferAccessor* aSkinned,
+                                  Topology aTopology )
+                : mMesh{aMesh}, mPipeline{aPipeline}, mMaterial{aMaterial}, mSkinned{aSkinned}, mTopology{aTopology} {}
             const StringId& GetClassId() const final
             {
                 static const StringId id{ "FakeRenderComponent" };
@@ -1066,7 +1067,7 @@ namespace AeonGames
             void Update ( Node&, double ) final {}
             void Collect ( const Node& aNode, std::vector<RenderItem>& aQueue ) const final
             {
-                aQueue.push_back ( RenderItem{ mMesh, mPipeline, mMaterial, mSkinned, aNode.GetGlobalTransform() } );
+                aQueue.push_back ( RenderItem{ mMesh, mPipeline, mMaterial, mSkinned, aNode.GetGlobalTransform(), mTopology } );
             }
             void ProcessMessage ( Node&, uint32_t, const void* ) final {}
         private:
@@ -1074,16 +1075,18 @@ namespace AeonGames
             const Pipeline* mPipeline;
             const Material* mMaterial;
             const BufferAccessor* mSkinned;
+            Topology mTopology;
         };
 
         // Add a visible unit-AABB node that declares one draw of the given
         // resources. Mirrors AddPositioned but attaches the fake component.
         Node* AddDrawable ( Scene& aScene, const Vector3& aPosition, const Mesh* aMesh,
                             const Pipeline* aPipeline, const Material* aMaterial,
-                            const BufferAccessor* aSkinned = nullptr )
+                            const BufferAccessor* aSkinned = nullptr,
+                            Topology aTopology = Topology::TRIANGLE_LIST )
         {
             Node* node = AddPositioned ( aScene, aPosition );
-            node->AddComponent ( std::make_unique<FakeRenderComponent> ( aMesh, aPipeline, aMaterial, aSkinned ) );
+            node->AddComponent ( std::make_unique<FakeRenderComponent> ( aMesh, aPipeline, aMaterial, aSkinned, aTopology ) );
             return node;
         }
 
@@ -1099,6 +1102,12 @@ namespace AeonGames
             std::sort ( sizes.begin(), sizes.end() );
             return sizes;
         }
+    }
+
+    TEST ( SceneRenderQueue, RenderItemsDefaultToTriangleList )
+    {
+        const RenderItem item{ kMeshA, kPipeline, kMaterial, nullptr, Matrix4x4{} };
+        EXPECT_EQ ( item.mTopology, Topology::TRIANGLE_LIST );
     }
 
     TEST ( SceneRenderQueue, CollectsVisibleNodesIntoQueue )
@@ -1123,6 +1132,34 @@ namespace AeonGames
         EXPECT_EQ ( scene.GetRenderQueue().size(), 3u );
         // Two share kMeshA (batched), the kMeshB item draws alone.
         EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 1u, 2u } ) );
+    }
+
+    TEST ( SceneRenderQueue, SeparatesDistinctTopologiesIntoBatches )
+    {
+        Scene scene;
+        for ( Topology topology :
+              {
+                  Topology::LINE_LIST, Topology::TRIANGLE_LIST, Topology::LINE_STRIP,
+                  Topology::LINE_LIST, Topology::TRIANGLE_LIST
+              } )
+        {
+            AddDrawable ( scene, Vector3 { 0.0f, 50.0f, 0.0f }, kMeshA, kPipeline, kMaterial, nullptr, topology );
+        }
+        scene.BuildRenderQueue ( MakeCullFrustum() );
+        ASSERT_EQ ( scene.GetRenderQueue().size(), 5u );
+        EXPECT_EQ ( RenderBatchSizes ( scene ), ( std::vector<size_t> { 1u, 2u, 2u } ) );
+        const auto& queue = scene.GetRenderQueue();
+        EXPECT_TRUE ( std::is_sorted ( queue.begin(), queue.end(), [] ( const RenderItem & aLhs, const RenderItem & aRhs )
+        {
+            return aLhs.mTopology < aRhs.mTopology;
+        } ) );
+        scene.ForEachRenderBatch ( [] ( std::span<const RenderItem> aBatch )
+        {
+            for ( const RenderItem& item : aBatch )
+            {
+                EXPECT_EQ ( item.mTopology, aBatch.front().mTopology );
+            }
+        } );
     }
 
     TEST ( SceneRenderQueue, CullsItemsOutsideTheFrustum )

@@ -19,6 +19,7 @@ limitations under the License.
     \brief Header for the RenderItem draw-submission record.
 */
 #include "aeongames/Matrix4x4.hpp"
+#include "aeongames/Pipeline.hpp"
 
 namespace AeonGames
 {
@@ -47,9 +48,9 @@ namespace AeonGames
 
         Components append RenderItems to the scene's render queue from
         Component::Collect instead of issuing draws themselves. A later submit
-        phase sorts the queue and merges items that share geometry, pipeline and
-        material into instanced draws, so components never talk to the Renderer
-        directly and instancing is decided in one place. */
+        phase sorts the queue and merges items that share geometry, pipeline,
+        material and topology into instanced draws, so components never talk to
+        the Renderer directly and instancing is decided in one place. */
     struct RenderItem
     {
         /// Geometry to draw. Never null for a valid item.
@@ -63,6 +64,8 @@ namespace AeonGames
         const BufferAccessor* mSkinnedVertices{};
         /// World-space model matrix for this draw.
         Matrix4x4 mTransform{};
+        /// Primitive topology, defaulting to triangles for existing components.
+        Topology mTopology{Topology::TRIANGLE_LIST};
     };
 }
 #endif

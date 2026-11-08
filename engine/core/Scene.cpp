@@ -829,6 +829,10 @@ namespace AeonGames
             {
                 return aLhs.mMesh < aRhs.mMesh;
             }
+            if ( aLhs.mTopology != aRhs.mTopology )
+            {
+                return aLhs.mTopology < aRhs.mTopology;
+            }
             return aLhs.mSkinnedVertices < aRhs.mSkinnedVertices;
         } );
     }
@@ -859,7 +863,8 @@ namespace AeonGames
                         ( data[j].mPipeline == nullptr || data[j].mPipeline->GetBlendState().enabled != PipelineToggle::ENABLED ) &&
                         data[j].mPipeline == head.mPipeline &&
                         data[j].mMaterial == head.mMaterial &&
-                        data[j].mMesh == head.mMesh )
+                        data[j].mMesh == head.mMesh &&
+                        data[j].mTopology == head.mTopology )
                 {
                     ++j;
                 }
@@ -882,7 +887,7 @@ namespace AeonGames
                     *head.mMesh,
                     *head.mPipeline,
                     head.mMaterial,
-                    Topology::TRIANGLE_LIST,
+                    head.mTopology,
                     0,
                     0xffffffff,
                     1,
@@ -905,7 +910,7 @@ namespace AeonGames
                 *head.mMesh,
                 *head.mPipeline,
                 head.mMaterial,
-                Topology::TRIANGLE_LIST,
+                head.mTopology,
                 0,
                 0xffffffff,
                 aRenderPass );
